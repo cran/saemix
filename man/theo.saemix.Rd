@@ -72,7 +72,9 @@ saemix.model<-saemixModel(model=model1cpt,
   psi0=matrix(c(1.,20,0.5,0.1,0,-0.01),ncol=3,byrow=TRUE, 
   dimnames=list(NULL, c("ka","V","CL"))),transform.par=c(1,1,1))
 
-saemix.options<-list(seed=632545)
+# Note: remove the options save=FALSE and save.graphs=FALSE 
+# to save the results and graphs
+saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
 saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
@@ -85,7 +87,7 @@ saemix.model<-saemixModel(model=model1cpt,
   covariance.model=matrix(c(1,0,0,0,1,1,0,1,1),ncol=3,byrow=TRUE),
   omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="combined")
 
-saemix.options<-list(seed=39546)
+saemix.options<-list(seed=39546,save=FALSE,save.graphs=FALSE)
 
 saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 }

@@ -68,7 +68,8 @@ saemix.model<-saemixModel(model=modelemax,description="Emax growth model",
   fixed.estim=c(1,1,1),covariance.model=matrix(c(1,0,0,0,1,0,0,0,1),
   ncol=3,byrow=TRUE),error.model="constant")
 
-saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,seed=42)
+saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,seed=42,
+  save=FALSE,save.graphs=FALSE)
 
 # Plotting the data
 plot(saemix.data,main="Simulated data PD1")
@@ -88,7 +89,7 @@ model2<-saemixModel(model=modelemax,description="Emax growth model",
   covariate.model=matrix(c(0,0,1), ncol=3,byrow=TRUE),fixed.estim=c(1,1,1))
 
 saemix.options<-list(algorithms=c(0,1,1),nb.chains=3,seed=765754, 
-  nbiter.saemix=c(500,300))
+  nbiter.saemix=c(500,300),save=FALSE,save.graphs=FALSE)
 
 fit1<-saemix(model1,saemix.data,saemix.options)
 fit2<-saemix(model2,saemix.data,saemix.options)

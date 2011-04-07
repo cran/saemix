@@ -45,7 +45,7 @@ saemix.model<-saemixModel(model=model1cpt,
   covariance.model=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),
   omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE), error.model="constant")
 
-saemix.options<-list(seed=632545)
+saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
 saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 

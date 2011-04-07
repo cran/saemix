@@ -613,44 +613,46 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
   if(saemix.options$print) print(saemixObject,digits=2)
 
 #### Save the results to a file
-  xfail<-FALSE
+  xsave<-TRUE
   if(saemix.options$save | saemix.options$save.graphs) {
 # create directory to save the results
-     cmd<-paste("mkdir ",saemix.options$directory," 2>&1")
-     if(version$os=='Microsoft Windows' || version$os=='Win32' || version$os=='mingw32')  {
-       xtry<-try(shell(cmd,intern=TRUE))
-       xtry2<-try(shell(paste("if exist ",saemix.options$directory,"/NUL echo (Directory found) else echo Directory not found",sep=""),intern=TRUE))
-     } else { 
-       xtry<-try(system(cmd,intern=TRUE)) 
-       xtry2<-try(system(paste("[ -d",saemix.options$directory," ] && echo 'Directory found' || echo 'Directory not found'"),intern=TRUE))
+     if(saemix.options$directory!="") xsave<-dir.create(saemix.options$directory)
+     if(!xsave) {
+# Check that we're not trying to create a directory with the same name as a file
+       if(!file_test("-d",saemix.options$directory)) {
+         cat("Unable to create directory",saemix.options$directory)
+         saemix.options$directory<-"newdir"
+         dir.create(saemix.options$directory)         
+         xsave<-file_test("-d",saemix.options$directory)
+         if(!xsave) {
+           saemix.options$directory<-""
+           xsave<-TRUE
+           cat(", saving in current directory.\n")
+         } else cat(", saving results in newdir instead.\n")
+       }
      }
-    if(xtry2=="Directory not found") {
-      cat("Unable to open directory",saemix.options$directory,", saving results in newdir instead.\n")
-      saemix.options$directory<-"newdir"
-      cmd<-paste("mkdir ",saemix.options$directory," 2>&1")
-     if(version$os=='Microsoft Windows' || version$os=='Win32' || version$os=='mingw32') xtry<-try(shell(cmd,intern=TRUE)) else xtry<-try(system(cmd,intern=TRUE)) 
-    }
-# where is the directory (depends on OS and whether the directory is given as a relative or absolute path)
-    if(version$os=='Microsoft Windows' || version$os=='Win32' || version$os=='mingw32') {
-      zedir<-ifelse(substr(saemix.options$directory,2,2)==":", saemix.options$directory, paste(getwd(),saemix.options$directory,sep="/"))
-    } else {
-      zedir<-ifelse(substr(saemix.options$directory,1,1)=="/", saemix.options$directory, paste(getwd(),saemix.options$directory,sep="/"))
-    }
-    cat("Results will be saved in directory",zedir,"\n")
-  }
-  if(saemix.options$save & !xfail) {
-    sink(paste(saemix.options$directory,"pop_parameters.txt",sep="/"))
+   }
+  if(saemix.options$save & xsave) {
+    namres<-ifelse(saemix.options$directory=="",saemix.options$directory, file.path(saemix.options$directory,"pop_parameters.txt"))
+    xtry<-try(sink(namres))
+    if(class(xtry)!="try-error") {
     print(saemixObject)
     sink()
+    namres<-ifelse(saemix.options$directory=="",saemix.options$directory, file.path(saemix.options$directory,"indiv_parameters.txt"))
     if(length(saemixObject["results"]["map.psi"])>0)
-       write.table(saemixObject["results"]["map.psi"], paste(saemix.options$directory,"indiv_parameters.txt",sep="/"),quote=FALSE, row.names=FALSE)
+       write.table(saemixObject["results"]["map.psi"],namres,quote=FALSE, row.names=FALSE)
+     } else {
+       cat("Unable to save results, check writing permissions and/or path to directory.\n")
+     }
   }
 
 # ECO TODO finish, adding all
-  if(saemix.options$save.graphs & !xfail) {
+  if(saemix.options$save.graphs & xsave) {
     saemixObject<-predict(saemixObject)
-    namgr<-paste(saemix.options$directory,"diagnostic_graphs.ps",sep="/")
-    postscript(namgr,horizontal=TRUE)
+    if(saemix.options$directory=="") namgr<-"diagnostic_graphs.ps" else
+      namgr<-file.path(saemix.options$directory,"diagnostic_graphs.ps")
+    xtry<-try(postscript(namgr,horizontal=TRUE))
+    if(class(xtry)!="try-error") {
     par(mfrow=c(1,1))
     plot(saemixObject,plot.type="data")
 
@@ -670,12 +672,16 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
 # Note: can replace all this by:
 #    default.saemix.plots(saemixObject)
 
-    dev.off()    
+    dev.off()
     
-    namgr<-paste(saemix.options$directory,"individual_fits.ps",sep="/")
+    if(saemix.options$directory=="") namgr<-"individual_fits.ps" else
+      namgr<-file.path(saemix.options$directory,"individual_fits.ps")
     postscript(namgr,horizontal=FALSE)
     plot(saemixObject,plot.type="individual.fit")
     dev.off()
+    } else {
+       cat("Unable to save results, check writing permissions and/or path to directory.\n")
+     }
   }
 
   options(warn=opt.warn)

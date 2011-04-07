@@ -50,7 +50,8 @@ saemix.model<-saemixModel(model=growth.linear,description="Linear model",
   transform.par=c(1,0),covariance.model=matrix(c(1,1,1,1),ncol=2,byrow=TRUE), 
   error.model="constant")
 
-saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,seed=201004)
+saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,seed=201004,
+  save=FALSE,save.graphs=FALSE)
 
 # plot the data
 plot(saemix.data)
