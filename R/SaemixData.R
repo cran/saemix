@@ -12,7 +12,7 @@ setClass(
     sep="character",		# if file, separator
     na="character",		# if file, NA symbol(s)
     name.group="character",	# name of column with ID
-    name.predictors="character",# name of column(s) with predictors 
+    name.predictors="character",# name of column(s) with predictors
     name.response="character",	# name of column with response
     name.covariates="character",# name of column(s) with covariates
     name.X="character",		# name of predictor used on X axis for graphs
@@ -60,7 +60,7 @@ setClass(
     NM="numeric",		# number of subjects, replicated
     IdM="numeric",		# subject id
     XM="data.frame",		# matrix of predictors
-    yM="numeric",		# vector of responses 
+    yM="numeric",		# vector of responses
     nrep="numeric"		# number of replicates
   ),
   validity=function(object){
@@ -117,7 +117,7 @@ setMethod(
     }
 # ECO TODO: reconnaissance automatique (avant affectation a la valeur 2) ?
     if(missing(name.predictors)) {
-      name.predictors<-"2"      
+      name.predictors<-"2"
       cat("   Missing predictors identifier, assuming there is one predictor in column 2 of the dataset.\n")
     }
     if(missing(name.response)) {
@@ -146,7 +146,7 @@ setMethod(
     .Object@name.X<-name.X
     if(missing(N)) N<-0
     .Object@N<-N
-# For completion: these items will be filled by a call to read.saemixData 
+# For completion: these items will be filled by a call to read.saemixData
     if(FALSE) {
       if(missing(tab)) tab<-data.frame()
       .Object@tab<-tab
@@ -394,8 +394,8 @@ setMethod("read.saemixData","SaemixData",
       if(is.null(sep)) sep<-""
       na.strings<-object@na
       if(is.null(na.strings)) na.strings<-"NA"
-      dat<-try(read.table(object@name.data,header=header,sep=sep,na=na.strings))
-      if(class(dat)=="try-error") stop("The file ",object@name.data," does not exist. Please check the name and path.\n")      
+      dat<-try(read.table(object@name.data,header=header,sep=sep,na.strings=na.strings))
+      if(class(dat)=="try-error") stop("The file ",object@name.data," does not exist. Please check the name and path.\n")
       cat("These are the first lines of the dataset as read into R. Please check the format of the data is appropriate, if not, modify the na and/or sep items and retry:\n")
       print(head(dat))
     }
@@ -403,7 +403,7 @@ setMethod("read.saemixData","SaemixData",
       cat("The dataset contains only one column. The non-linear mixed effect model requires at least 3 columns, with subject ID, predictor (at least one) and response. \nPlease check the field separator, currently given as:", paste("sep=\"",object@sep,"\"",sep=""),"\n")
       return("Creation of saemixData failed")
     }
-# Automatic recognition of columns 
+# Automatic recognition of columns
 #    ID (one of id, subject or sujet regardless of case)
 #    response (one of Y, conc, concentration, resp, response regardless of case)
 #    predictors (time and/or dose, regardless of case)
@@ -430,7 +430,7 @@ setMethod("read.saemixData","SaemixData",
       return("Creation of saemixData failed")
     }
    i1<-as.integer(object@name.predictors[!is.na(as.integer(object@name.predictors))])
-    if(length(i1)>0) { 
+    if(length(i1)>0) {
       object@name.predictors[!is.na(as.integer(object@name.predictors))]<- colnames(dat)[i1]
     }
     if(is.na(object@name.predictors)) object@name.predictors<-""
@@ -452,13 +452,13 @@ setMethod("read.saemixData","SaemixData",
       cat("Please provide at least one predictor.\n")
       return("Creation of saemixData failed")
     }
-    if(!is.na(as.integer(object@name.response))) { 
+    if(!is.na(as.integer(object@name.response))) {
 # response given as a column number
       object@name.response<-colnames(dat)[as.integer(object@name.response)]
     }
     if(object@name.response=="") {
       i1<-match("y",tolower(colnames(dat)))
-      if(length(i1)==0 | is.na(i1)) { 
+      if(length(i1)==0 | is.na(i1)) {
         i1<-c(grep("response",tolower(colnames(dat)),fixed=TRUE), match(c("resp","conc"),tolower(colnames(dat))),grep("concentration", tolower(colnames(dat)),fixed=TRUE))
         i1<-i1[!is.na(i1)]
       }
@@ -486,7 +486,7 @@ setMethod("read.saemixData","SaemixData",
         cat("Attribute name.X",object@name.X,"does not correspond to a valid column in the dataset, setting the X axis for graphs to",object@name.predictors[1],".\n")
 	object@name.X<-object@name.predictors[1]
       } else object@name.X<-colnames(dat)[as.integer(object@name.X)]
-    } 
+    }
     if(match(object@name.X,object@name.predictors,nomatch=0)==0) {
       cat("Attribute name.X",object@name.X,"does not correspond to a valid column in the dataset, setting the X axis for graphs to",object@name.predictors[1],".\n")
       object@name.X<-object@name.predictors[1]
@@ -497,7 +497,7 @@ setMethod("read.saemixData","SaemixData",
 # ECO TODO: what about missing data in covariates & predictor columns
 #    for(i in object@name.covariates) dat<-dat[!is.na(dat[,i]),]
     object@tab<-dat
-  
+
     id<-dat[,object@name.group]
     object@y<-dat[,object@name.response]
     object@id<-as.character(id)
@@ -731,7 +731,7 @@ saemix.data.setoptions<-function(saemix.data) {
     cex.axis=1,
     cex.lab=1,
     cex.main=1)
-        
+
      if(is.null(plot.opt$name.X))
         plot.opt$name.X<-saemix.data["name.predictors"][1]
     plot.opt$xlab<-paste(plot.opt$name.X," (",plot.opt$units$x,")", sep="")
@@ -745,7 +745,7 @@ replace.data.options<-function(plot.opt,...) {
   if(length(args1)>2) {
 # Other arguments
     for(i in 3:length(args1)) {
-      if(match(names(args1)[i],names(plot.opt),nomatch=0)>0)    
+      if(match(names(args1)[i],names(plot.opt),nomatch=0)>0)
     plot.opt[[names(args1)[i]]]<-eval(args1[[i]]) else {
       if(names(args1)[i]!="plot.type") cat("Argument",names(args1)[i],"not available, check spelling.\n")
     }

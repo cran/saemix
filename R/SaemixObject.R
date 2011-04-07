@@ -67,7 +67,7 @@ if(FALSE){
     }
 #covariate.model<-rbind(rep(1,nb.parameters),model@covariate.model)
     .Object@model@covariate.model<-covariate.model
-}    
+}
     .Object@model@name.cov<-.Object@data@name.covariates
     if(length(.Object@model@name.cov)>0 & sum(.Object@model@covariate.model)>0) {
       try(rownames(.Object@model@covariate.model)<-.Object@model@name.cov)
@@ -162,10 +162,10 @@ setMethod("summary","SaemixObject",
       colnames(tab)<-c("Parameter","Estimate")
     } else {
       tab<-data.frame(c(object@results@name.fixed, object@results@name.res[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]),c(object@results@se.fixed,object@results@se.respar[object@results@indx.res]), stringsAsFactors=FALSE)
-      tab<-cbind(tab,100*abs(as.real(tab[,3])/as.real(tab[,2])))
+      tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
       if(length(object@results@indx.cov)>0) {
-      wstat<-as.real(tab[,2])/as.real(tab[,3])
+      wstat<-as.double(tab[,2])/as.double(tab[,3])
       pval<-rep("-",length(wstat))
       pval[object@results@indx.cov]<-1-normcdf(abs(wstat[object@results@indx.cov]))
       tab<-cbind(tab,"p-value"=pval,stringsAsFactors=FALSE)
@@ -173,7 +173,7 @@ setMethod("summary","SaemixObject",
     }
     tab.fix<-tab
     for(i in 2:dim(tab)[2]) {
-     xcol<-as.real(as.character(tab[,i]))
+     xcol<-as.double(as.character(tab[,i]))
      idx<-which(!is.na(xcol) & xcol!="-")
      tab[idx,i]<-format(xcol[idx],digits=digits,nsmall=nsmall)
     }
@@ -187,12 +187,12 @@ setMethod("summary","SaemixObject",
       colnames(tab)<-c("Parameter","Estimate")
     } else {
       tab<-data.frame(object@results@name.random, diag(object@results@omega)[object@results@indx.omega], object@results@se.omega2[object@results@indx.omega])
-      tab<-cbind(tab,100*as.real(tab[,3])/as.real(tab[,2]))
+      tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
     }
     tab.random<-tab
-    for(i in 2:dim(tab)[2]) 
-      tab[,i]<-format(as.real(as.character(tab[,i])),digits=digits,nsmall=nsmall)
+    for(i in 2:dim(tab)[2])
+      tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits,nsmall=nsmall)
     print(tab,quote=FALSE)
     cat("----------------------------------------------------\n")
     cat("------  Correlation matrix of random effects  ------\n")
@@ -200,7 +200,7 @@ setMethod("summary","SaemixObject",
     tab<-cov2cor(object@results@omega[object@results@indx.omega, object@results@indx.omega])
     tab.corr<-tab
     for(i in 1:dim(tab)[2])
-      tab[,i]<-format(as.real(as.character(tab[,i])),digits=digits,nsmall=nsmall)
+      tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits,nsmall=nsmall)
     try(colnames(tab)<-rownames(tab)<-object@results@name.random)
     print(tab,quote=FALSE)
     l1<-rep(NA,3)
@@ -222,7 +222,7 @@ setMethod("summary","SaemixObject",
     cat("      AIC =",object@results@aic.is,"\n")
     cat("      BIC =",object@results@bic.is,"\n")
     tab.ll[2,2:4]<-c((-2*object@results@ll.is),object@results@aic.is, object@results@bic.is)
-    }  
+    }
     if(length(object@results@ll.gq)>0) {
     cat("\nLikelihood computed by Gaussian quadrature\n")
     cat("      -2LL=",(-2*object@results@ll.gq),"\n")
@@ -247,7 +247,7 @@ setMethod("summary","SaemixObject",
      if(length(object@results@wres)>0 | length(object@results@iwres)>0  | length(object@results@icwres)>0 | length(object@results@pd)>0) {
       res$residuals<-list(population=list(wres=object@results@wres), individual=list(map.iwres=object@results@iwres,cond.iwres=object@results@icwres, pd=object@results@pd, npde=object@results@npde))
     }
-   
+
     invisible(res)
  }
 )
@@ -271,7 +271,7 @@ setMethod("print","SaemixObject",
     cat("----    Key algorithm options  ----\n")
     cat("-----------------------------------\n")
     algs<-c("MAP","FIM","LL by IS")
-    if(sum(x@options$algorithms)>0) 
+    if(sum(x@options$algorithms)>0)
       cat("    Algorithms:",paste(algs[x@options$algorithms==1],collapse=", "),"\n") else cat("    Algorithms: estimation only\n")
     st1<-paste(c("K1=","K2="),x@options$nbiter.saemix,sep="",collapse=", ")
     cat("    Number of iterations: ",st1,"\n")
@@ -313,12 +313,12 @@ setMethod("show","SaemixObject",
     cat("     error model:",object@model@error.model,"\n")
     if(dim(object@model@covariate.model)[1]>0) {
       cat("     covariate model:\n")
-      print(object@model@covariate.model) 
+      print(object@model@covariate.model)
     } else cat("     No covariate\n")
     cat("\n")
     cat("Key options\n")
     algs<-c("MAP","FIM","LL by IS")
-    if(sum(object@options$algorithms)>0) 
+    if(sum(object@options$algorithms)>0)
       cat("    Algorithms:",paste(algs[object@options$algorithms==1],collapse=", "),"\n") else cat("    Algorithms: estimation only\n")
     st1<-paste(c("K1=","K2="),object@options$nbiter.saemix,sep="",collapse=", ")
     cat("    Number of iterations: ",st1,"\n")
@@ -327,10 +327,10 @@ setMethod("show","SaemixObject",
     cat("    Number of MCMC iterations for IS: ",object@options$nmc.is,"\n")
     cat("    Input/output\n")
     if(object@options$save)
-      cat("        save the results to a file: ",object@options$save,"\n") else 
+      cat("        save the results to a file: ",object@options$save,"\n") else
       cat("        no graphs\n")
     if(object@options$save.graphs)
-      cat("        save the graphs to files: ",object@options$save.graphs,"\n") else 
+      cat("        save the graphs to files: ",object@options$save.graphs,"\n") else
       cat("        no graphs\n")
     if(object@options$save | object@options$save.graphs)
       cat("        directory where results are saved: ",object@options$directory,"\n")
@@ -371,7 +371,7 @@ setMethod("showall","SaemixObject",
     cat("----      Algorithm options    ----\n")
     cat("-----------------------------------\n")
     algs<-c("MAP","FIM","LL by IS")
-    if(sum(object@options$algorithms)>0) 
+    if(sum(object@options$algorithms)>0)
       cat("    Algorithms:",paste(algs[object@options$algorithms==1],collapse=", "),"\n") else cat("    Algorithms: estimation only\n")
     st1<-paste(c("K1=","K2="),object@options$nbiter.saemix,sep="",collapse=", ")
     cat("    Number of chains: ",object@options$nb.chains,"\n")
@@ -474,7 +474,7 @@ setMethod(f="plot",
 #    cat("plot.type=",plot.type,"\n")
     if(plot.type[1]=="reduced") plot.type<-c("data","convergence","likelihood", "observations.vs.predictions")
     if(plot.type[1]=="full") plot.type<-c("data","convergence","likelihood", "observations.vs.predictions","residuals.scatter","residuals.distribution","vpc")
-    
+
     pltyp<-c("data","convergence","likelihood","individual.fit", "population.fit", "both.fit","observations.vs.predictions","residuals.scatter", "residuals.distribution","vpc","npde","random.effects","marginal.distribution", "correlations","parameters.vs.covariates","randeff.vs.covariates")
     ifnd<-pmatch(plot.type,pltyp)
     if(sum(is.na(ifnd))>0) {
@@ -533,13 +533,13 @@ setMethod(f="plot",
        cat("Plotting convergence plots\n")
        saemix.plot.convergence(x,...)
     },
-    "likelihood"={  
+    "likelihood"={
        cat("Plotting the likelihood\n")
        saemix.plot.llis(x,...)
     },
     "observations.vs.predictions"={
       if(length(x["results"]["ipred"])>0) {
-        cat("Plotting observations versus predictions\n")      
+        cat("Plotting observations versus predictions\n")
         saemix.plot.obsvspred(x,...)
       }
     },
@@ -692,7 +692,7 @@ setMethod("coef","SaemixObject",
     pfix<-object@results@fixed.effects[object@results@indx.fix]
     names(pfix)<-object@results@name.fixed[object@results@indx.fix]
 #c(object@results@fixed.effects,object@name.res[object@indx.res])
-#    names(pfix)<-c(object@results@name.fixed,object@name.res[object@indx.res])    
+#    names(pfix)<-c(object@results@name.fixed,object@name.res[object@indx.res])
     pop.phi<-object@results@mean.phi
     pop.psi<-transphi(pop.phi,object@model@transform.par)
     ind.psi<-list(map=object@results@map.psi[,-c(1)], cond=object@results@cond.mean.psi)

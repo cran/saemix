@@ -27,7 +27,7 @@ setClass(
     indx.cov="numeric",	# index of cov param estimated (was indx.betaC)
     indx.omega="numeric",	# index of random param estimated (was i1.omega2)
     indx.res="numeric",	# index of param of residual errors estimated (was indx.res)
-    MCOV="matrix",		# 
+    MCOV="matrix",		#
 # Individual parameters
     cond.mean.phi="matrix",	# Cond mean estimates of Phi
     cond.mean.psi="matrix",	# Cond mean estimates of Psi
@@ -276,10 +276,10 @@ setMethod("print","SaemixRes",
       colnames(tab)<-c("Parameter","Estimate")
     } else {
       tab<-cbind(c(x@name.fixed,x@name.res[x@indx.res]), c(x@fixed.effects,x@respar[x@indx.res]),c(x@se.fixed,x@se.respar[x@indx.res]))
-      tab<-cbind(tab,100*abs(as.real(tab[,3])/as.real(tab[,2])))
+      tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
       if(length(x@indx.cov)>0) {
-      wstat<-as.real(tab[,2])/as.real(tab[,3])
+      wstat<-as.double(tab[,2])/as.double(tab[,3])
       pval<-rep("-",length(wstat))
       pval[x@indx.cov]<-1-normcdf(abs(wstat[x@indx.cov]))
       tab<-cbind(tab,"p-value"=pval)
@@ -287,7 +287,7 @@ setMethod("print","SaemixRes",
     }
     if(digits>0) {
       for(i in 2:dim(tab)[2]) {
-       xcol<-as.real(as.character(tab[,i]))
+       xcol<-as.double(as.character(tab[,i]))
        idx<-which(!is.na(xcol))
        tab[idx,i]<-format(xcol[idx],digits=digits)
       }
@@ -302,12 +302,12 @@ setMethod("print","SaemixRes",
       colnames(tab)<-c("Parameter","Estimate")
     } else {
       tab<-cbind(x@name.random,diag(x@omega)[x@indx.omega],x@se.omega2[x@indx.omega])
-      tab<-cbind(tab,100*as.real(tab[,3])/as.real(tab[,2]))
+      tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
     }
     if(digits>0) {
-      for(i in 2:dim(tab)[2]) 
-         tab[,i]<-format(as.real(as.character(tab[,i])),digits=digits)
+      for(i in 2:dim(tab)[2])
+         tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits)
     }
     print(tab,quote=FALSE)
     cat("----------------------------------------------------\n")
@@ -315,7 +315,7 @@ setMethod("print","SaemixRes",
     cat("----------------------------------------------------\n")
     tab<-cov2cor(x@omega[x@indx.omega,x@indx.omega])
     if(digits>0) {
-      for(i in 1:dim(tab)[2]) tab[,i]<-format(as.real(as.character(tab[,i])),digits=digits)
+      for(i in 1:dim(tab)[2]) tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits)
     }
     try(colnames(tab)<-rownames(tab)<-x@name.random)
     print(tab,quote=FALSE)
@@ -335,7 +335,7 @@ setMethod("print","SaemixRes",
     cat("      -2LL=",(-2*x@ll.is),"\n")
     cat("      AIC =",x@aic.is,"\n")
     cat("      BIC =",x@bic.is,"\n")
-    }  
+    }
     if(length(x@ll.gq)>0) {
     cat("\nLikelihood computed by Gaussian quadrature\n")
     cat("      -2LL=",(-2*x@ll.gq),"\n")
@@ -366,17 +366,17 @@ setMethod("show","SaemixRes",
       colnames(tab)<-c("Parameter","Estimate")
     } else {
       tab<-cbind(c(object@name.fixed,object@name.res[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]), c(object@se.fixed,object@se.respar[object@indx.res]))
-      tab<-cbind(tab,100*abs(as.real(tab[,3])/as.real(tab[,2])))
+      tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","  SE"," CV(%)")
       if(length(object@indx.cov)>0) {
-      wstat<-as.real(tab[,2])/as.real(tab[,3])
+      wstat<-as.double(tab[,2])/as.double(tab[,3])
       pval<-rep("-",length(wstat))
       pval[object@indx.cov]<-1-normcdf(abs(wstat[object@indx.cov]))
       tab<-cbind(tab,"p-value"=pval)
       }
     }
       for(i in 2:dim(tab)[2]) {
-       xcol<-as.real(as.character(tab[,i]))
+       xcol<-as.double(as.character(tab[,i]))
        idx<-which(!is.na(xcol))
        tab[idx,i]<-format(xcol[idx],digits=3)
       }
@@ -390,11 +390,11 @@ setMethod("show","SaemixRes",
       colnames(tab)<-c("Parameter","Estimate")
     } else {
       tab<-cbind(object@name.random,diag(object@omega),object@se.omega2)
-      tab<-cbind(tab,100*as.real(tab[,3])/as.real(tab[,2]))
+      tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
       colnames(tab)<-c("Parameter","Estimate","  SE"," CV(%)")
     }
-      for(i in 2:dim(tab)[2]) 
-         tab[,i]<-format(as.real(as.character(tab[,i])),digits=3)
+      for(i in 2:dim(tab)[2])
+         tab[,i]<-format(as.double(as.character(tab[,i])),digits=3)
     rownames(tab)<-rep("",dim(tab)[1])
     print(tab,quote=FALSE)
     if(length(object@ll.lin)>0 | length(object@ll.is)>0 | length(object@ll.gq)>0) {
@@ -404,8 +404,8 @@ setMethod("show","SaemixRes",
     if(sum(abs(mat1-diag(diag(mat1))))>0) {
     cat("\nCorrelation matrix of random effects\n")
     tab<-cov2cor(object@omega[object@indx.omega,object@indx.omega])
-    for(i in 1:dim(tab)[2]) 
-      tab[,i]<-format(as.real(as.character(tab[,i])),digits=3)
+    for(i in 1:dim(tab)[2])
+      tab[,i]<-format(as.double(as.character(tab[,i])),digits=3)
     try(colnames(tab)<-rownames(tab)<-object@name.random)
     print(tab,quote=FALSE)
     }
@@ -421,7 +421,7 @@ setMethod("show","SaemixRes",
     cat("      -2LL=",(-2*object@ll.is),"\n")
     cat("       AIC=",object@aic.is,"\n")
     cat("       BIC=",object@bic.is,"\n")
-    }  
+    }
     if(length(object@ll.gq)>0) {
     cat("Likelihood computed by Gaussian quadrature\n")
     cat("      -2LL=",(-2*object@ll.gq),"\n")
@@ -443,17 +443,17 @@ setMethod("showall","SaemixRes",
       colnames(tab)<-c("Parameter","Estimate")
     } else {
       tab<-cbind(c(object@name.fixed,object@name.res[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]), c(object@se.fixed,object@se.respar[object@indx.res]))
-      tab<-cbind(tab,100*abs(as.real(tab[,3])/as.real(tab[,2])))
+      tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
       if(length(object@indx.cov)>0) {
-      wstat<-as.real(tab[,2])/as.real(tab[,3])
+      wstat<-as.double(tab[,2])/as.double(tab[,3])
       pval<-rep("-",length(wstat))
       pval[object@indx.cov]<-1-normcdf(abs(wstat[object@indx.cov]))
       tab<-cbind(tab,"p-value"=pval)
       }
     }
       for(i in 2:dim(tab)[2]) {
-       xcol<-as.real(as.character(tab[,i]))
+       xcol<-as.double(as.character(tab[,i]))
        idx<-which(!is.na(xcol))
        tab[idx,i]<-format(xcol[idx],digits=3)
       }
@@ -467,11 +467,11 @@ setMethod("showall","SaemixRes",
       colnames(tab)<-c("Parameter","Estimate")
     } else {
       tab<-cbind(object@name.random,diag(object@omega),object@se.omega2)
-      tab<-cbind(tab,100*as.real(tab[,3])/as.real(tab[,2]))
+      tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
     }
-      for(i in 2:dim(tab)[2]) 
-         tab[,i]<-format(as.real(as.character(tab[,i])),digits=3)
+      for(i in 2:dim(tab)[2])
+         tab[,i]<-format(as.double(as.character(tab[,i])),digits=3)
     print(tab,quote=FALSE)
     cat("----------------------------------------------------\n")
     cat("---------------  Statistical criteria  -------------\n")
@@ -488,7 +488,7 @@ setMethod("showall","SaemixRes",
     cat("      -2LL=",(-2*object@ll.is),"\n")
     cat("      AIC =",object@aic.is,"\n")
     cat("      BIC =",object@bic.is,"\n")
-    }  
+    }
     if(length(object@ll.gq)>0) {
     cat("\nLikelihood computed by Gaussian quadrature\n")
     cat("      -2LL=",(-2*object@ll.gq),"\n")
