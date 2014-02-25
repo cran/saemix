@@ -73,9 +73,9 @@ By default, the following plots are produced:
 Each plot can be customised by modifying options, either through a list of options set by the \code{\link{saemix.plot.setoptions}} function, or on the fly by passing an option in the call to the plot (see examples).
 }
 \value{None}
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -110,49 +110,51 @@ saemix.model<-saemixModel(model=model1cpt,
 
 saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 # Simulate data and compute weighted residuals and npde
-saemix.fit<-compute.sres(saemix.fit)
+# saemix.fit<-compute.sres(saemix.fit)
 
 # Data
-saemix.plot.data(saemix.fit)
+# saemix.plot.data(saemix.fit)
 
 # Convergence
-saemix.plot.convergence(saemix.fit)
+# saemix.plot.convergence(saemix.fit)
 
 # Individual plot for subject 1, smoothed
-saemix.plot.fits(saemix.fit,ilist=1,smooth=TRUE)
+# saemix.plot.fits(saemix.fit,ilist=1,smooth=TRUE)
 
 # Individual plot for subject 1 to 12, with ask set to TRUE 
 # (the system will pause before a new graph is produced)
-saemix.plot.fits(saemix.fit,ilist=c(1:12),ask=TRUE)
+# saemix.plot.fits(saemix.fit,ilist=c(1:12),ask=TRUE)
 
 # Diagnostic plot: observations versus population predictions
-par(mfrow=c(1,1))
-saemix.plot.obsvspred(saemix.fit,level=0,new=FALSE)
+# par(mfrow=c(1,1))
+# saemix.plot.obsvspred(saemix.fit,level=0,new=FALSE)
 
 # LL by Importance Sampling
-saemix.plot.llis(saemix.fit)
+# saemix.plot.llis(saemix.fit)
 
 # Scatter plot of residuals
-saemix.plot.scatterresiduals(saemix.fit)
+# saemix.plot.scatterresiduals(saemix.fit)
 
 # Boxplot of random effects
-saemix.plot.randeff(saemix.fit)
+# saemix.plot.randeff(saemix.fit)
 
 # Relationships between parameters and covariates
-saemix.plot.parcov(saemix.fit)
+# saemix.plot.parcov(saemix.fit)
 
 # Relationships between parameters and covariates, on the same page
-par(mfrow=c(3,2))
-saemix.plot.parcov(saemix.fit,new=FALSE)
+# par(mfrow=c(3,2))
+# saemix.plot.parcov(saemix.fit,new=FALSE)
 
 # VPC, default options (10 bins, equal number of observations in each bin)
-saemix.plot.vpc(saemix.fit)
+# Not run (time constraints for CRAN)
+# saemix.plot.vpc(saemix.fit)
 
 # VPC, user-defined breaks for binning
-saemix.plot.vpc(saemix.fit,vpc.method="user",
-  vpc.breaks=c(0.4,0.8,1.5,2.5,4,5.5,8,10,13))
+# Not run (time constraints for CRAN)
+# saemix.plot.vpc(saemix.fit,vpc.method="user", vpc.breaks=c(0.4,0.8,1.5,2.5,4,5.5,8,10,13))
 }
 \keyword{plot}

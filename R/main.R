@@ -47,55 +47,46 @@ stepsize[(saemix.options$nbiter.saemix[1]+1):saemix.options$nbiter.tot]<-1/
   alpha1.sa<-saemix.options$alpha.sa
   alpha0.sa<-10^(-3/saemix.options$nbiter.sa)
 
-# Initialisation: modify omega.init and covariate.model according to estimated parameters (done in the creation of saemixObject)
-# previously: create local copies modified of omega.init and covariate.model in saemix.model, now: also updating saemix.model
-
-# Initialisation:
-# create local copies modified of omega.init and covariate.model in saemix.model
-# setting the names of the fixed effects
-  if(dim(saemix.model["covariate.model"])[1]>0) {
-    nam.with.cov<-rep("",length(saemix.model["covariate.model"]))
-    row1<-matrix(rep(saemix.model["name.modpar"], length(saemix.data["name.covariates"])),ncol=length(saemix.model["name.modpar"]), byrow=TRUE)
-    col1<-matrix(rep(saemix.data["name.covariates"], length(saemix.model["name.modpar"])),ncol=length(saemix.model["name.modpar"]))
-    idcov<-which(saemix.model["covariate.model"]==1)
-    nam.with.cov[idcov]<-paste("beta_",col1[idcov],"(",row1[idcov],")",sep="")
-    nam1<-rbind(saemix.model["name.modpar"],matrix(nam.with.cov, ncol=length(saemix.model["name.modpar"])))
-    nam1<-c(nam1)
-    saemix.model["name.fixed"]<-nam1[nam1!=""]
-  } else saemix.model["name.fixed"]<-saemix.model["name.modpar"]
-
-# A la fin: i1.omega2 renomme en indx.omega et ind.res en indx.res
-  i0.omega2<-which((1-diag(saemix.model["covariance.model"]))>0)
-  indest.omega<-which(saemix.model["covariance.model"]>0)
-#  i1.omega2<-which(diag(saemix.model$covariance.model)>0)
-  i1.omega2<-saemix.model@indx.omega
-  saemix.model["name.random"]<-paste("omega2",saemix.model["name.modpar"][i1.omega2], sep=".")
-  ind.res<-saemix.model["indx.res"]
-
 # Random generator
   OLDRAND<-TRUE
   set.seed(saemix.options$seed)
 
+# ECO TODO: integrate all this section in the object creation ?
+# Initialisation: 
+# create local copies modified of omega.init and covariate.model in saemix.model
+# A la fin: i1.omega2 renomme en indx.omega et ind.res en indx.res
+  i0.omega2<-which((1-mydiag(saemix.model["covariance.model"]))>0) # index of parameters without IIV
+  indest.omega<-which(saemix.model["covariance.model"]>0)
+#  i1.omega2<-which(mydiag(saemix.model$covariance.model)>0)
+  i1.omega2<-saemix.model@indx.omega # index of parameters with IIV
+  ind.res<-saemix.model["indx.res"]
+
 # Covariate model & design matrix
-  if(length(saemix.data["name.covariates"])==0) tab<-matrix(saemix.data["id"],ncol=1) else {
-    tab<-cbind(id=saemix.data["id"],saemix.data["cov"]) }
-  temp<-unique(tab)
+  id<-saemix.data["data"][,saemix.data["name.group"]]
+  if(length(saemix.data["name.covariates"])==0) tab<-data.frame(id=id) else
+    tab<-data.frame(id=id,saemix.data["data"][, saemix.data["name.covariates",drop=FALSE]])
+   temp2<-unique(tab)
+   temp<-tab[!duplicated(id),,drop=FALSE]
+   if(dim(temp)[1]!=dim(temp2)[1]) cat("Some covariates have time-varying values; only the first is taken into account in the current version of the algorithm.\n")
 #temp<-temp[order(temp[,1]),]
   if(length(saemix.data["name.covariates"])>0) {
-    Mcovariates<-matrix(c(rep(1,N),as.matrix(temp[,2:dim(temp)[2]])),nrow=N)} else {
-    Mcovariates<-matrix(rep(1,N),nrow=N)
+    Mcovariates<-data.frame(id=rep(1,N),temp[,2:dim(temp)[2]])} else {
+    Mcovariates<-data.frame(id=rep(1,N))
    }
 # removing from model unused lines
   j.cov<-which(rowSums(saemix.model["betaest.model"])>0)
   betaest.model<-saemix.model["betaest.model"][j.cov,,drop=FALSE]
   Mcovariates<-Mcovariates[,j.cov,drop=FALSE] # eliminate all the unused covariates
+  for(icol in dim(Mcovariates)[2])
+    if(is.factor(Mcovariates[,icol])) Mcovariates[,icol]<-as.numeric(Mcovariates[,icol])-1
+  
 #  if(length(j.cov)==1) {
 #    betaest.model<-matrix(betaest.model,nrow=1, dimnames=list(c("Fixed"),colnames(saemix.model["betaest.model"])))
 #    Mcovariates<-matrix(Mcovariates)
 #  }
   saemix.model["betaest.model"]<-betaest.model
   temp1<-betaest.model[-c(1),,drop=FALSE]
-#  if(is.null(dim(temp1))) temp1<-matrix(temp1,nrow=1, dimnames=list(rownames(betaest.model)[-c(1)], colnames(betaest.model)))
+#  if(is.null(dim(temp1))) temp1<-matrix(temp1,nrow=1, dimnames=list(rownames(betaest.model)[-c(1)], colnames(betaest.model)))  
   saemix.model["covariate.model"]<-temp1
 
   fixedpsi.ini<-saemix.model["psi0"][1,] # initial fixed effects (original parametrization)
@@ -120,7 +111,7 @@ stepsize[(saemix.options$nbiter.saemix[1]+1):saemix.options$nbiter.tot]<-1/
 
 #covariate.estim<-matrix(c(rep(saemix.model$fixed.estim,nr.psi0),t1),byrow=TRUE, nrow=nr.cov)
   covariate.estim<-matrix(rep(saemix.model["fixed.estim"],nr.psi0),byrow=TRUE, ncol=length(saemix.model["fixed.estim"]))
-#if(!is.null(dim(t1))) covariate.estim<-rbind(covariate.estim,t1)
+#if(!is.null(dim(t1))) covariate.estim<-rbind(covariate.estim,t1) 
   covariate.estim<-covariate.estim*saemix.model["betaest.model"]
 
   betas.ini<-fixed.ini[which(saemix.model["betaest.model"]>0)]
@@ -130,12 +121,9 @@ stepsize[(saemix.options$nbiter.saemix[1]+1):saemix.options$nbiter.tot]<-1/
   ind.covariate<-which(saemix.model["betaest.model"]==1)
 #matrix(which(covariate.model==1),nrow=1)
 
-# Initialisation
-  ares.ini<-saemix.model["error.init"][1] # initial residual error model : constant coefficient
-  bres.ini<-saemix.model["error.init"][2] #  initial residual error model : proportional coefficient
-  ares<-ares.ini
-  bres<-bres.ini
-  pres<-c(ares,bres)
+# Initialising
+  yobs<-saemix.data["data"][,saemix.data["name.response"]]
+
 
 # # Residual Error model.
 # error models are a + bf described by [a b]
@@ -144,25 +132,20 @@ stepsize[(saemix.options$nbiter.saemix[1]+1):saemix.options$nbiter.tot]<-1/
 #   proportional        y = f + b*f*e
 #   combined            y = f + (a+b*f)*e
 #   exponential         y = f*exp(a*e)    ( <=>  log(y) = log(f) + a*e )
-
-#ECO TODO check error ? position of cutoff(y)
-  if(saemix.model["error.model"]=='exponential') {
-    y<-log(cutoff(saemix.data["y"]))
-    saemix.data["yorig"]<-saemix.data["y"]
-    saemix.data["y"]<-y
-  }
+  ares.ini<-saemix.model["error.init"][1] # initial residual error model : constant coefficient
+  bres.ini<-saemix.model["error.init"][2] #  initial residual error model : proportional coefficient
+  ares<-ares.ini
+  bres<-bres.ini
+  pres<-c(ares,bres)
 
   nb.theta<-nb.parameters+length(i1.omega2)+length(ind.res)
-# ECO TODO enlever parpop et le definir comme sous-ensemble de allpar
   parpop<-matrix(data=0,nrow=(saemix.options$nbiter.tot+1),ncol=nb.theta)
   colnames(parpop)<-c(saemix.model["name.modpar"],saemix.model["name.random"], saemix.model["name.res"][ind.res])
   allpar<-matrix(data=0,nrow=(saemix.options$nbiter.tot+1), ncol=(nb.betas+length(i1.omega2)+length(ind.res)))
   colnames(allpar)<-c(saemix.model["name.fixed"],saemix.model["name.random"], saemix.model["name.res"][ind.res])
-  var.eta<-diag(saemix.model["omega.init"])
+  var.eta<-mydiag(saemix.model["omega.init"])
   theta0<-c(fixedpsi.ini,var.eta[i1.omega2],pres[ind.res])
   parpop[1,]<-theta0
-
-# the covariates
 
 # the covariates
 LCOV<-MCOV<-matrix(data=0,nrow=nb.betas,ncol=nb.parameters)
@@ -173,7 +156,7 @@ mean.phi<-matrix(data=0,nrow=N,ncol=nb.parameters)
 for(j in 1:nb.parameters) {
   jcov<-which(saemix.model["betaest.model"][,j]==1)
   lambdaj<-fixed.ini[jcov,j]
-  aj<-Mcovariates[,jcov]
+  aj<-as.matrix(Mcovariates[,jcov])
   COV<-cbind(COV,aj)
   nlj<-length(lambdaj)
   j2<-j1+nlj-1
@@ -200,7 +183,7 @@ betas<-betas.ini
 ind.fix1<-which(covariate.estim[ind.covariate]==1)
 ind.fix0<-which(covariate.estim[ind.covariate]==0)
 COV1<-COV[,ind.fix1]
-#if(length(ind.fix0)==1) dstatphi<-matrix(COV[,ind.fix0],ncol=1)%*%MCOV[ind.fix0,] else
+#if(length(ind.fix0)==1) dstatphi<-matrix(COV[,ind.fix0],ncol=1)%*%MCOV[ind.fix0,] else 
 dstatphi<-COV[,ind.fix0,drop=FALSE]%*%MCOV[ind.fix0,]
 
 covariate.estim1<-covariate.estim
@@ -218,9 +201,9 @@ flag.fmin<-as.integer(sum(covariate.estim0[1,])>0)
 # using several Markov chains
   chdat<-new(Class="SaemixRepData",data=saemix.data, nb.chains=saemix.options$nb.chains)
   NM<-chdat["NM"]
-  IdM<-chdat["IdM"]
-  yM<-chdat["yM"]
-  XM<-chdat["XM"]
+  IdM<-chdat["dataM"]$IdM
+  yM<-chdat["dataM"]$yM
+  XM<-chdat["dataM"][,saemix.data["name.predictors"],drop=FALSE]
   io<-matrix(data=0,nrow=N,ncol=max(saemix.data["nind.obs"]))
   for(i in 1:N)
     io[i,1:saemix.data["nind.obs"][i]]<-1
@@ -233,9 +216,9 @@ if(length(i0.omega2)>0) {
   xmat<-covariate.estim[,i0.omega2]
   if(is.null(dim(xmat))) xmat<-matrix(xmat,ncol=length(i0.omega2))
   i0.temp<-which(colSums(xmat)==0)
-  ind0.eta<-i0.omega2[i0.temp]
+  ind0.eta<-i0.omega2[i0.temp] # ind0.eta: index of parameters without IIV
 } else ind0.eta<-c()
-if(length(ind0.eta)>0) {
+if(length(ind0.eta)>0) { # ind.eta: index of parameters with IIV
   idx<-1:nb.parameters
   ind.eta<-idx[-c(ind0.eta)]
 } else ind.eta<-1:nb.parameters
@@ -252,7 +235,10 @@ fixed.psi<-fixedpsi.ini
 omega<-saemix.model["omega.init"]
 chol.omega<-try(chol(omega[ind.eta,ind.eta]),silent=TRUE)
 if(class(chol.omega)=="try-error") {
-  chol.omega<-saemix.model["omega.init"][ind.eta,ind.eta]<-omega[ind.eta, ind.eta]<-diag(nrow=length(ind.eta),ncol=length(ind.eta))
+#	cat("ind.eta=",ind.eta,"\n")
+#	print(saemix.model["omega.init"])
+#	print(omega[ind.eta,ind.eta])
+	chol.omega<-saemix.model["omega.init"][ind.eta,ind.eta]<-omega[ind.eta, ind.eta]<-mydiag(nrow=length(ind.eta),ncol=length(ind.eta))
   cat("Problem inverting covariance matrix, setting initial Omega to diagonal.\n")
 }
 
@@ -262,9 +248,9 @@ if(class(chol.omega)=="try-error") {
 phiMc<-mean.phiM
 while (ltest.phi>0) {
     kt<-kt+1
-    if (kt==100)
+    if (kt==100) 
         stop("stats:fit.saemix:FailedInitialParameterGuess\nFailed to find a valid initial parameter guess\n")
-    end
+    end   
     etaMc<-0.5*matrix(rnorm(NM*nb.etas),ncol=nb.etas)%*%chol.omega
     phiMc[,ind.eta]<-mean.phiM[,ind.eta]+etaMc
     etaM[itest.phi,]<-etaMc[itest.phi,]
@@ -286,9 +272,9 @@ statrese<-0
 ############################################
 #  The Algorithm
 
-omega.eta<-omega[ind.eta,ind.eta]
-diag.omega<-diag(omega)
-domega2<-do.call(cbind,rep(list((sqrt(diag(omega.eta)))*saemix.options$rw.ini),nb.etas))
+omega.eta<-omega[ind.eta,ind.eta] # IIV matrix for estimated parameters
+diag.omega<-mydiag(omega)
+domega2<-do.call(cbind,rep(list((sqrt(mydiag(omega.eta)))*saemix.options$rw.ini),nb.etas))
 VK<-rep(c(1:nb.etas),2)
 
 Uargs<-list(i0.omega2=i0.omega2,MCOV0=MCOV0,COV0=COV0,j0.covariate=j0.covariate,
@@ -303,27 +289,30 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
 
   if(kiter%%saemix.options$nbdisplay==0) {
     cat(".")
-    if(saemix.options$displayProgress)
-      convplot.infit(allpar,saemix.options$nbiter.saemix[1],niter=(kiter-2))
+    if(saemix.options$displayProgress)    
+      try(convplot.infit(allpar,saemix.options$nbiter.saemix[1],niter=(kiter-2)))
   }
 
   if(flag.fmin && kiter==saemix.options$nbiter.sa) {
-    COV1<-COV[,ind.fix11]
-    ind0.eta<-i0.omega2
-    ind.eta<-1:nb.parameters
-    if(length(ind0.eta)>0) ind.eta<-ind.eta[-ind0.eta]
-    nb.etas<-length(ind.eta)
-    domega2<-domega2[ind.eta,ind.eta]
+  	COV1<-COV[,ind.fix11]
+  	ind.prov<-!(ind.eta %in% i0.omega2)
+  	domega2<-domega2[ind.prov,ind.prov,drop=FALSE] # keep in domega2 only indices of parameters with IIV
+  	ind0.eta<-i0.omega2
+    ind.eta<-1:nb.parameters  	
+    if(length(ind0.eta)>0) ind.eta<-ind.eta[!(ind.eta %in% ind0.eta)] # update ind.eta, now only parameters with IIV
+  	nb.etas<-length(ind.eta)
     VK<-rep(c(1:nb.etas),2)
     statphi1<-0
     statphi2<-0
     statphi3<-0
   }
 
-  domega<-cutoff(diag(omega[ind.eta,ind.eta]),.Machine$double.eps)
-  omega.eta<-omega[ind.eta,ind.eta]
-  omega.eta<-omega.eta-diag(diag(omega[ind.eta,ind.eta]))+diag(domega)
-  chol.omega<-chol(omega.eta)
+  nb.etas<-length(ind.eta)
+  domega<-cutoff(mydiag(omega[ind.eta,ind.eta]),.Machine$double.eps)
+  omega.eta<-omega[ind.eta,ind.eta,drop=FALSE]
+  omega.eta<-omega.eta-mydiag(mydiag(omega[ind.eta,ind.eta]))+mydiag(domega)
+#  print(omega.eta)
+  chol.omega<-try(chol(omega.eta))
 # "/" dans Matlab = division matricielle, selon la doc "roughly" B*INV(A) (et *= produit matriciel...)
   d1.omega<-LCOV[,ind.eta]%*%solve(omega.eta)
   d2.omega<-d1.omega%*%t(LCOV[,ind.eta])
@@ -370,7 +359,7 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
     for (u in 1:saemix.options$nbiter.mcmc[2]) {
      for(vk2 in 1:nb.etas) {
        etaMc<-etaM
-       etaMc[,vk2]<-etaM[,vk2]+matrix(rnorm(NM*nrs2), ncol=nrs2)%*%diag(domega2[vk2,nrs2],nrow=1) # 2e noyau ? ou 1er noyau+permutation?
+       etaMc[,vk2]<-etaM[,vk2]+matrix(rnorm(NM*nrs2), ncol=nrs2)%*%mydiag(domega2[vk2,nrs2],nrow=1) # 2e noyau ? ou 1er noyau+permutation?
        phiMc[,ind.eta]<-mean.phiM[,ind.eta]+etaMc
        psiMc<-transphi(phiMc,saemix.model["transform.par"])
        fpred<-structural.model(psiMc, IdM, XM)
@@ -395,19 +384,20 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
   if(saemix.options$nbiter.mcmc[3]>0) {
     nt2<-nbc2<-matrix(data=0,nrow=nb.etas,ncol=1)
     nrs2<-kiter%%(nb.etas-1)+2
-#    if(is.nan(nrs2)) nrs2<-1 # to deal with case nb.etas=1
+    if(is.nan(nrs2)) nrs2<-1 # to deal with case nb.etas=1
     for (u in 1:saemix.options$nbiter.mcmc[3]) {
       if(nrs2<nb.etas) {
         vk<-c(0,sample(c(1:(nb.etas-1)),nrs2-1))
         nb.iter2<-nb.etas
       } else {
         vk<-0:(nb.etas-1)
+#        if(nb.etas==1) vk<-c(0)
         nb.iter2<-1
       }
       for(k2 in 1:nb.iter2) {
         vk2<-VK[k2+vk]
         etaMc<-etaM
-        etaMc[,vk2]<-etaM[,vk2]+matrix(rnorm(NM*nrs2), ncol=nrs2)%*%diag(domega2[vk2,nrs2])
+        etaMc[,vk2]<-etaM[,vk2]+matrix(rnorm(NM*nrs2), ncol=nrs2)%*%mydiag(domega2[vk2,nrs2])
         phiMc[,ind.eta]<-mean.phiM[,ind.eta]+etaMc
         psiMc<-transphi(phiMc,saemix.model["transform.par"])
         fpred<-structural.model(psiMc, IdM, XM)
@@ -420,6 +410,10 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
         deltu<-Uc.y-U.y+Uc.eta-U.eta
         ind<-which(deltu<(-log(runif(NM))))
         etaM[ind,]<-etaMc[ind,]
+#        if(kiter<20 | (kiter>150 & kiter<170)) {
+#        	cat("kiter=",kiter,length(ind),"  ind.eta=",ind.eta,"  nrs2=",nrs2,"\n")
+#        	print(head(etaMc))
+#        }
         U.y[ind]<-Uc.y[ind] # Warning: Uc.y, Uc.eta = vecteurs
         U.eta[ind]<-Uc.eta[ind]
         nbc2[vk2]<-nbc2[vk2]+length(ind)
@@ -428,7 +422,7 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
     }
     domega2[,nrs2]<-domega2[,nrs2]*(1+saemix.options$stepsize.rw* (nbc2/nt2-saemix.options$proba.mcmc))
   }
-
+  
   phiM[,ind.eta]<-mean.phiM[,ind.eta]+etaM
   psiM<-transphi(phiM,saemix.model["transform.par"])
 
@@ -443,18 +437,18 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
     for(k in 1:saemix.options$nb.chains) phi[,,k]<-phiM[((k-1)*N+1):(k*N),]
 # overall speed similar
 #    phi<-aperm(array(phiM,c(N,saemix.options$nb.chains,3)),c(1,3,2))
-    stat1<-apply(phi[,ind.eta,],c(1,2),sum) # sommer sur les composantes ind.eta de phi, à travers la 3ème dimension
+    stat1<-apply(phi[,ind.eta,,drop=FALSE],c(1,2),sum) # sommer sur les composantes ind.eta de phi, ? travers la 3?me dimension
     stat2<-matrix(data=0,nrow=nb.etas,ncol=nb.etas)
-    stat3<-apply(phi**2,c(1,2),sum) # somme sur phi**2, à travers la 3ème dimension
+    stat3<-apply(phi**2,c(1,2),sum) # somme sur phi**2, ? travers la 3?me dimension
     statr<-0
     for(k in 1:saemix.options$nb.chains) {
      phik<-phi[,ind.eta,k]
      stat2<-stat2+t(phik)%*%phik
      fk<-ff[,k]
      if(!is.na(match(saemix.model["error.model"],c("constant","exponential"))))
-      resk<-sum((saemix.data["y"]-fk)**2) else {
+      resk<-sum((yobs-fk)**2) else {
       if(saemix.model["error.model"]=="proportional")
-       resk<-sum((saemix.data["y"]-fk)**2/cutoff(fk**2,.Machine$double.eps)) else resk<-0
+       resk<-sum((yobs-fk)**2/cutoff(fk**2,.Machine$double.eps)) else resk<-0
      }
      statr<-statr+resk
     }
@@ -469,37 +463,37 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
 
     if (flag.fmin && kiter>=saemix.options$nbiter.sa) {
     temp<-d1.omega[ind.fix11,]*(t(COV1)%*%(statphi1-dstatphi[,ind.eta]))
-    betas[ind.fix11]<-solve(comega[ind.fix11,ind.fix11],rowSums(temp))
+    betas[ind.fix11]<-solve(comega[ind.fix11,ind.fix11],rowSums(temp)) 
 # ECO TODO: utiliser optimise dans le cas de la dimension 1
     beta0<-optim(par=betas[ind.fix10],fn=compute.Uy,phi=phiM,ares=ares,bres=bres, args=Uargs,DYF=DYF,control=list(maxit=saemix.options$maxim.maxiter))$par # else
     betas[ind.fix10]<-betas[ind.fix10]+stepsize[kiter]*(beta0-betas[ind.fix10])
     } else {
     temp<-d1.omega[ind.fix1,]*(t(COV1)%*%(statphi1-dstatphi[,ind.eta]))
-    betas[ind.fix1]<-solve(comega[ind.fix1,ind.fix1],rowSums(temp))
+    betas[ind.fix1]<-solve(comega[ind.fix1,ind.fix1],rowSums(temp)) 
     }
-
+ 
     MCOV[j.covariate]<-betas
     mean.phi<-COV%*%MCOV
-    e1.phi<-mean.phi[,ind.eta]
-
+    e1.phi<-mean.phi[,ind.eta,drop=FALSE]
+    
 # Covariance of the random effects
     omega.full<-matrix(data=0,nrow=nb.parameters,ncol=nb.parameters)
     omega.full[ind.eta,ind.eta]<-statphi2/N + t(e1.phi)%*%e1.phi/N - t(statphi1)%*%e1.phi/N - t(e1.phi)%*%statphi1/N
     omega[indest.omega]<-omega.full[indest.omega]
-
+    
 # Simulated annealing (applied to the diagonal elements of omega)
     if (kiter<=saemix.options$nbiter.sa) {
-        diag.omega.full<-diag(omega.full)
+        diag.omega.full<-mydiag(omega.full)
         vec1<-diag.omega.full[i1.omega2]
 	vec2<-diag.omega[i1.omega2]*alpha1.sa
 	idx<-as.integer(vec1<vec2)
 	diag.omega[i1.omega2]<-idx*vec2+(1-idx)*vec1
         diag.omega[i0.omega2]<-diag.omega[i0.omega2]*alpha0.sa
     } else {
-        diag.omega<-diag(omega)
+        diag.omega<-mydiag(omega)
     }
-    omega<-omega-diag(diag(omega))+diag(diag.omega)
-
+    omega<-omega-mydiag(mydiag(omega))+mydiag(diag.omega)
+  
 # Residual error
     if (saemix.model["error.model"]=="constant" | saemix.model["error.model"]=="exponential") {
       sig2<-statrese/saemix.data["ntot.obs"]
@@ -510,7 +504,7 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
       bres<-sqrt(sig2)
     }
     if (saemix.model["error.model"]=="combined") {
-# ECO TODO: à vérifier (ici fpred<0 donc NaN, et puis que faire si bres<0 ???)
+# ECO TODO: ? v?rifier (ici fpred<0 donc NaN, et puis que faire si bres<0 ???)
       ABres<-optim(par=c(ares,bres),fn=error,y=yM,f=fpred)$par
       if (kiter<=saemix.options$nbiter.saemix[1]) {
         ares<-max(ares*alpha1.sa,ABres[1])
@@ -524,7 +518,7 @@ for (kiter in 1:saemix.options$nbiter.tot) { # Iterative portion of algorithm
     beta.I<-betas[indx.betaI]
     fixed.psi<-transphi(matrix(beta.I,nrow=1),saemix.model["transform.par"])
     betaC<-betas[indx.betaC]
-    var.eta<-diag(omega)
+    var.eta<-mydiag(omega)
     l1<-betas.ini
     l1[indx.betaI]<-fixed.psi
     l1[indx.betaC]<-betaC
@@ -593,6 +587,7 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
   saemixObject["model"]<-saemix.model
   saemixObject["results"]<-saemix.res
   saemixObject["options"]<-saemix.options
+  saemixObject["rep.data"]<-chdat # Utile ? maybe remove rep.data
 
 # ECO TODO check
 # a la fin: mais verifier, pe pb de distribution ??? ie allpar sur l'echelle des betas et pas parpop ? a verifier
@@ -600,7 +595,7 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
 # saemix.res["parpop"]<-allpar[,-c(indx.betaC)]
 
 #### Final computations
-# Compute the MAP estimates of the PSI_i's
+# Compute the MAP estimates of the PSI_i's 
   if(saemix.options$algorithms[1]) saemixObject<-map.saemix(saemixObject)
 
 # Compute the Fisher Information Matrix & update saemix.res
@@ -613,7 +608,6 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
   if(saemix.options$print) print(saemixObject,digits=2)
 
 #### Save the results to a file
-  xsave<-TRUE
   if(saemix.options$save | saemix.options$save.graphs) {
 # create directory to save the results
      if(saemix.options$directory!="") xsave<-dir.create(saemix.options$directory)
@@ -622,23 +616,26 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
        if(!file_test("-d",saemix.options$directory)) {
          cat("Unable to create directory",saemix.options$directory)
          saemix.options$directory<-"newdir"
-         dir.create(saemix.options$directory)
+         dir.create(saemix.options$directory)         
          xsave<-file_test("-d",saemix.options$directory)
          if(!xsave) {
            saemix.options$directory<-""
            xsave<-TRUE
            cat(", saving in current directory.\n")
          } else cat(", saving results in newdir instead.\n")
+       } else {
+       xsave<-TRUE
+       cat("Overwriting files in directory",saemix.options$directory,"\n")
        }
      }
    }
-  if(saemix.options$save & xsave) {
-    namres<-ifelse(saemix.options$directory=="",saemix.options$directory, file.path(saemix.options$directory,"pop_parameters.txt"))
+  if(saemix.options$save) {
+    namres<-ifelse(saemix.options$directory=="","pop_parameters.txt", file.path(saemix.options$directory,"pop_parameters.txt"))
     xtry<-try(sink(namres))
     if(class(xtry)!="try-error") {
     print(saemixObject)
     sink()
-    namres<-ifelse(saemix.options$directory=="",saemix.options$directory, file.path(saemix.options$directory,"indiv_parameters.txt"))
+    namres<-ifelse(saemix.options$directory=="","indiv_parameters.txt", file.path(saemix.options$directory,"indiv_parameters.txt"))
     if(length(saemixObject["results"]["map.psi"])>0)
        write.table(saemixObject["results"]["map.psi"],namres,quote=FALSE, row.names=FALSE)
      } else {
@@ -647,37 +644,37 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
   }
 
 # ECO TODO finish, adding all
-  if(saemix.options$save.graphs & xsave) {
+  if(saemix.options$save.graphs) {
     saemixObject<-predict(saemixObject)
     if(saemix.options$directory=="") namgr<-"diagnostic_graphs.ps" else
       namgr<-file.path(saemix.options$directory,"diagnostic_graphs.ps")
     xtry<-try(postscript(namgr,horizontal=TRUE))
     if(class(xtry)!="try-error") {
     par(mfrow=c(1,1))
-    plot(saemixObject,plot.type="data")
+    try(plot(saemixObject,plot.type="data"))
 
-    plot(saemixObject,plot.type="convergence")
+    try(plot(saemixObject,plot.type="convergence"))
 
     if(length(saemixObject["results"]["ll.is"])>0) {
       par(mfrow=c(1,1))
-      plot(saemixObject, plot.type="likelihood")
+      try(plot(saemixObject, plot.type="likelihood"))
     }
 
-    plot(saemixObject,plot.type="observations.vs.predictions")
+    try(plot(saemixObject,plot.type="observations.vs.predictions"))
 
-    plot(saemixObject,plot.type="random.effects")
+    try(plot(saemixObject,plot.type="random.effects"))
 
-    plot(saemixObject,plot.type="correlations")
+    try(plot(saemixObject,plot.type="correlations"))
 
 # Note: can replace all this by:
 #    default.saemix.plots(saemixObject)
 
     dev.off()
-
+    
     if(saemix.options$directory=="") namgr<-"individual_fits.ps" else
       namgr<-file.path(saemix.options$directory,"individual_fits.ps")
     postscript(namgr,horizontal=FALSE)
-    plot(saemixObject,plot.type="individual.fit")
+    try(plot(saemixObject,plot.type="individual.fit"))
     dev.off()
     } else {
        cat("Unable to save results, check writing permissions and/or path to directory.\n")
@@ -696,6 +693,10 @@ llis.saemix<-function(saemixObject) {
   saemix.model<-saemixObject["model"]
   saemix.data<-saemixObject["data"]
   saemix.res<-saemixObject["results"]
+  ncov<-length(saemix.data)["name.covariates"]
+  npred<-length(saemix.data["name.predictors"])
+  yobs<-saemix.data["data"][,saemix.data["name.response"]]
+  xind<-saemix.data["data"][,saemix.data["name.predictors"],drop=FALSE]
 
   i1.omega2<-saemix.model["indx.omega"]
   Omega<-saemix.res["omega"]
@@ -706,15 +707,15 @@ llis.saemix<-function(saemixObject) {
   nphi1<-length(i1.omega2)
   IOmega.phi1<-solve(Omega[i1.omega2,i1.omega2])
   mean.phi1<-saemix.res["mean.phi"][,i1.omega2]
-
+  
   MM<-100
   KM<-round(saemixObject["options"]$nmc.is/MM)
   log.const<-0
   if(saemix.model["error.model"]=="exponential")
-    log.const<-(-sum(saemix.data["y"]))
-  IdM<-rep(c(0:(MM-1)),each=saemix.data["ntot.obs"])*saemix.data["N"]+ rep(saemix.data["index"],MM)
-  yM<-rep(saemix.data["y"],MM)
-  XM<-matrix(rep(t(saemix.data["xind"]),MM),ncol=dim(saemix.data["xind"])[2], byrow=TRUE)
+    log.const<-(-sum(yobs))
+  IdM<-rep(c(0:(MM-1)),each=saemix.data["ntot.obs"])*saemix.data["N"]+ rep(saemix.data["data"][,"index"],MM)
+  yM<-rep(yobs,MM)
+  XM<-matrix(rep(t(xind),MM),ncol=npred, byrow=TRUE)
 
   io<-matrix(0,nrow=saemix.data["N"],ncol=max(saemix.data["nind.obs"]))
   for(isuj in 1:saemix.data["N"])
@@ -725,35 +726,35 @@ llis.saemix<-function(saemixObject) {
   mean.phiM1<-matrix(rep(t(mean.phi1),MM),byrow=TRUE,ncol=nphi1)
   mtild.phiM1<-matrix(rep(t(cond.mean.phi[,i1.omega2]),MM),byrow=TRUE,ncol=nphi1)
 # ECO TODO: securiser cas i1.omega2 de longueur 1
-  cond.var.phi1<-cond.var.phi[,i1.omega2]
+  cond.var.phi1<-cond.var.phi[,i1.omega2,drop=FALSE]
   for(i in dim(cond.var.phi1)[2])
      cond.var.phi1[,i]<-cutoff(cond.var.phi1[,i])
   stild.phiM1<-matrix(rep(t(sqrt(cond.var.phi1)),MM),byrow=TRUE,ncol=nphi1)
   phiM<-matrix(rep(t(cond.mean.phi),MM),byrow=TRUE,ncol=dim(cond.mean.phi)[2])
   meana<-rep(0,saemix.data["N"])
   LL<-matrix(0,nrow=KM,ncol=1)
-
-  c2<- log(det(Omega[i1.omega2,i1.omega2])) + nphi1*log(2*pi)
+  
+  c2<- log(det(Omega[i1.omega2,i1.omega2,drop=FALSE])) + nphi1*log(2*pi)
   c1<-log(2*pi)
   if(saemixObject["options"]$print.is) par(mfrow=c(1,1))
-
+  
   tit<-"Estimation of the log-likelihood"
   kmin<-min(10,ceiling(KM/4))
   for(km in 1:KM) {
     if(saemixObject["options"]$print.is & km>kmin & (trunc(KM/5))%%km==0) {
     x1<-MM*c(kmin:km)
     y1<-(-2)*LL[kmin:km]
-      if(sum(!is.na(y1))) plot(x1,y1,type="l",xlab="Size of the Monte-Carlo sample", ylab="'-2xLog-Likelihood",main=tit)
+      if(sum(!is.na(y1))) try(plot(x1,y1,type="l",xlab="Size of the Monte-Carlo sample", ylab="'-2xLog-Likelihood",main=tit))
     }
     r<-trnd.mlx(saemixObject["options"]$nu.is,saemix.data["N"]*MM,nphi1)
     phiM1<-mtild.phiM1+stild.phiM1*r
     dphiM<-phiM1-mean.phiM1
-
+    
     d2<-(-0.5)*(rowSums(dphiM*(dphiM%*%IOmega.phi1)) + c2)
     e2<-matrix(d2,nrow=saemix.data["N"],ncol=MM)
     pitild.phi1<-rowSums(log(tpdf.mlx(r,saemixObject["options"]$nu.is)))
     e3<-matrix(pitild.phi1,nrow=saemix.data["N"],ncol=MM)- matrix(rep(0.5*rowSums(log(cond.var.phi1)),MM),ncol=MM)
-
+    
     phiM[,i1.omega2]<-phiM1
     psiM<-transphi(phiM,saemix.model["transform.par"])
     f<-saemix.model["model"](psiM,IdM,XM)
@@ -766,15 +767,15 @@ llis.saemix<-function(saemixObject) {
     newa<-rowMeans(exp(sume),na.rm=TRUE)
 # ECO 11/05/03: added this line to avoid LL becoming NA due to NaN predicted values
 #    newa[is.na(newa)]<-meana[is.na(newa)]
-#
+# 
     meana<-meana+1/km*(newa-meana)
     LL[km]<-sum(log(cutoff(meana)))+ log.const
   }
 
   x1<-MM*c(kmin:KM)
   y1<-(-2)*LL[kmin:KM]
-  if(sum(!is.na(y1))) plot(x1,y1,type="l",xlab="Size of the Monte-Carlo sample", ylab="'-2xLog-Likelihood",main=tit) else cat("Likelihood cannot be computed by Importance Sampling.\n")
-
+  if(sum(!is.na(y1))) try(plot(x1,y1,type="l",xlab="Size of the Monte-Carlo sample", ylab="'-2xLog-Likelihood",main=tit)) else cat("Likelihood cannot be computed by Importance Sampling.\n")
+  
   saemixObject["results"]["LL"]<-c(LL)
   saemixObject["results"]["ll.is"]<-LL[KM]
   saemixObject["results"]["aic.is"]<-(-2)*saemixObject["results"]["ll.is"]+ 2*saemixObject["results"]["npar.est"]
@@ -792,6 +793,8 @@ llgq.saemix<-function(saemixObject) {
 
   saemix.data<-saemixObject["data"]
   saemix.res<-saemixObject["results"]
+  xind<-saemix.data["data"][,saemix.data["name.predictors"],drop=FALSE]
+  yobs<-saemix.data["data"][,saemix.data["name.response"]]
 
   i1.omega2<-saemixObject["model"]["indx.omega"]
   Omega<-saemix.res["omega"]
@@ -808,7 +811,7 @@ llgq.saemix<-function(saemixObject) {
     io[isuj,1:saemix.data["nind.obs"][isuj]]<-1
   ind.io <- which(t(io)!=0)
   DYF<-matrix(0,nrow=dim(io)[2],ncol=dim(io)[1])
-
+  
   phi<-saemix.res["mean.phi"]
   y<-gqg.mlx(nphi1,nnodes.gq)
   x<-(y$nodes-0.5)*2
@@ -822,17 +825,17 @@ llgq.saemix<-function(saemixObject) {
   b<-(xmax-xmin)/2
     log.const<-0
   if(saemixObject["model"]["error.model"]=="exponential")
-    log.const<-(-sum(saemix.data["y"]))
-
+    log.const<-(-sum(yobs))
+ 
   Q<-0
   for (j in 1:nx) {
     phi[,i1.omega2] <- a+b*matrix(rep(x[j,],saemix.data["N"]),ncol=nphi1,byrow=TRUE)
     psi<-transphi(phi,saemixObject["model"]["transform.par"])
-    f<-saemixObject["model"]["model"](psi, saemix.data["index"], saemix.data["xind"])
+    f<-saemixObject["model"]["model"](psi, saemix.data["data"][,"index"], xind)
     if(saemixObject["model"]["error.model"]=="exponential")
       f<-log(cutoff(f))
     g<-cutoff(a.res+b.res*abs(f))
-    DYF[ind.io] <- -0.5*((saemix.data["y"]-f)/g)**2 - log(g)
+    DYF[ind.io] <- -0.5*((yobs-f)/g)**2 - log(g)
     ly<-colSums(DYF)
     dphi1<-phi[,i1.omega2]-saemix.res["mean.phi"][,i1.omega2]
     lphi1<-(-0.5)*rowSums((dphi1%*%IOmega.phi1)*dphi1)
@@ -944,13 +947,13 @@ gqg.mlx<-function(dim,nnodes.gq) {
     w<-c(rev(w),w)
   } else {
     x<-c(rev(n1[-1]),n)
-    w<-c(rev(w[-1]),w)
+    w<-c(rev(w[-1]),w)  
   }
   mw<-nodes<-matrix(0,nrow=nnodes.gq**dim,ncol=dim)
   for(j in 1:dim) {
     nodes[,j]<-rep(rep(x,each=nnodes.gq**(dim-j)),nnodes.gq**(j-1))
     mw[,j]<-rep(rep(w,each=nnodes.gq**(dim-j)),nnodes.gq**(j-1))
-  }
+  }  
   weights<-apply(mw,1,prod)
   return(list(nodes=nodes,weights=weights))
 }
@@ -962,16 +965,16 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
 # Estimate conditional means and estimates for the individual parameters PSI_i using the MCMC algorithm
 # nsamp= number of MCMC samples
 # kmax= max nb of iterations
-# returns an array
+# returns an array 
   N<-saemixObject["data"]["N"]
   nb.parameters<-saemixObject["model"]["nb.parameters"]
   if(is.null(max.iter)) kmax<-sum(saemixObject["options"]$nbiter.saemix)*2 else kmax<-max.iter
 # using several Markov chains
   chdat<-new(Class="SaemixRepData",data=saemixObject["data"], nb.chains=nsamp)
   NM<-chdat["NM"]
-  IdM<-chdat["IdM"]
-  yM<-chdat["yM"]
-  XM<-chdat["XM"]
+  IdM<-chdat["dataM"]$IdM
+  yM<-chdat["dataM"]$yM
+  XM<-chdat["dataM"][,saemixObject["data"]["name.predictors"],drop=FALSE]
   io<-matrix(data=0,nrow=N,ncol=max(saemixObject["data"]["nind.obs"]))
   for(i in 1:N)
     io[i,1:saemixObject["data"]["nind.obs"][i]]<-1
@@ -982,14 +985,14 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
   ind.eta<-saemixObject["model"]["indx.omega"]
   nb.etas<-length(ind.eta)
   omega.eta<-saemixObject["results"]["omega"][ind.eta,ind.eta]
-  diag.omega<-diag(saemixObject["results"]["omega"])
-  domega2<-do.call(cbind,rep(list((sqrt(diag(omega.eta)))* saemixObject["options"]$rw.ini), nb.etas))
+  diag.omega<-mydiag(saemixObject["results"]["omega"])
+  domega2<-do.call(cbind,rep(list((sqrt(mydiag(omega.eta)))* saemixObject["options"]$rw.ini), nb.etas))
   VK<-rep(c(1:nb.etas),2)
   phi<-array(data=0,dim=c(N,nb.parameters, nsamp))
 
-  domega<-cutoff(diag(saemixObject["results"]["omega"][ind.eta,ind.eta]), .Machine$double.eps)
+  domega<-cutoff(mydiag(saemixObject["results"]["omega"][ind.eta,ind.eta]), .Machine$double.eps)
   omega.eta<-saemixObject["results"]["omega"][ind.eta,ind.eta]
-  omega.eta<-omega.eta-diag(diag(saemixObject["results"]["omega"][ind.eta, ind.eta]))+diag(domega)
+  omega.eta<-omega.eta-mydiag(mydiag(saemixObject["results"]["omega"][ind.eta, ind.eta]))+mydiag(domega)
   chol.omega<-chol(omega.eta)
   ares<-saemixObject["results"]["respar"][1]
   bres<-saemixObject["results"]["respar"][2]
@@ -1019,7 +1022,7 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
 # initialisation a phiM=estimation des parametres individuels
   mean.phiM<-do.call(rbind,rep(list(saemixObject["results"]["mean.phi"]),nsamp))
   phiM<-do.call(rbind,rep(list(saemixObject["results"]["cond.mean.phi"]),nsamp))
-  etaM<-phiM[,ind.eta]-mean.phiM[,ind.eta]
+  etaM<-phiM[,ind.eta]-mean.phiM[,ind.eta]  
   psiM<-transphi(phiM,saemixObject["model"]["transform.par"])
   fpred<-saemixObject["model"]["model"](psiM, IdM, XM)
   if(saemixObject["model"]["error.model"]=="exponential")
@@ -1028,7 +1031,7 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
   DYF[ind.ioM]<-0.5*((yM-fpred)/gpred)^2+log(gpred)
   U.y<-colSums(DYF)
   phiMc<-phiM
-
+  
   econd<-sdcond<-array(0,dim=c(nb.parameters,N*kmax,nsamp)) # parametres individuels
   ebar<-sdbar<-array(0,dim=c(nb.parameters,kmax, nsamp)) # moyenne des parametres individuels
   cat("Estimating the conditional mean and variance of the distribution of individual parameters\n")
@@ -1061,7 +1064,7 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
     for (u in 1:saemixObject["options"]$nbiter.mcmc[2]) {
      for(vk2 in 1:nb.etas) {
        etaMc<-etaM
-       etaMc[,vk2]<-etaM[,vk2]+matrix(rnorm(NM*nrs2), ncol=nrs2)%*%diag(domega2[vk2,nrs2],nrow=1) # 2e noyau ? ou 1er noyau+permutation?
+       etaMc[,vk2]<-etaM[,vk2]+matrix(rnorm(NM*nrs2), ncol=nrs2)%*%mydiag(domega2[vk2,nrs2],nrow=1) # 2e noyau ? ou 1er noyau+permutation?
        phiMc[,ind.eta]<-mean.phiM[,ind.eta]+etaMc
        psiMc<-transphi(phiMc,saemixObject["model"]["transform.par"])
        fpred<-saemixObject["model"]["model"](psiMc, IdM, XM)
@@ -1098,7 +1101,7 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
       for(k2 in 1:nb.iter2) {
         vk2<-VK[k2+vk]
         etaMc<-etaM
-        etaMc[,vk2]<-etaM[,vk2]+matrix(rnorm(NM*nrs2), ncol=nrs2)%*%diag(domega2[vk2,nrs2])
+        etaMc[,vk2]<-etaM[,vk2]+matrix(rnorm(NM*nrs2), ncol=nrs2)%*%mydiag(domega2[vk2,nrs2])
         phiMc[,ind.eta]<-mean.phiM[,ind.eta]+etaMc
         psiMc<-transphi(phiMc,saemixObject["model"]["transform.par"])
         fpred<-saemixObject["model"]["model"](psiMc, IdM, XM)
@@ -1119,7 +1122,7 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
     }
     domega2[,nrs2]<-domega2[,nrs2]*(1+saemixObject["options"]$stepsize.rw* (nbc2/nt2-saemixObject["options"]$proba.mcmc))
   }
-
+  
   phiM[,ind.eta]<-mean.phiM[,ind.eta]+etaM
     if(k==1) {
       eik<-array(t(phiM),dim=c(nb.parameters,N,nsamp))
@@ -1171,7 +1174,7 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
         for(ipar in ind.eta) {
         laby<-saemixObject["model"]["name.modpar"][ipar]
 	plot(1:k,ebar[ipar,1:k,1],type="n",xlab=plot.opt$xlab, ylab=laby,ylim=limy[ipar,],main=plot.opt$main)
-        for(isamp in 1:nsamp)
+        for(isamp in 1:nsamp) 
 	  lines(1:k,ebar[ipar,1:k,isamp],col=plot.opt$col,lty=plot.opt$lty, lwd=plot.opt$lwd)
         abline(h=apply(ebar[,k,],1,mean), col=plot.opt$ablinecol, lty=plot.opt$ablinelty,lwd=plot.opt$ablinelwd)
         abline(h=apply(ekmax,1,mean)[ipar], col=plot.opt$ablinecol, lty=plot.opt$ablinelty,lwd=plot.opt$ablinelwd)
@@ -1188,7 +1191,7 @@ conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
   eta.cond[,ind.eta]<-etaM
   eta.cond<-array(t(eta.cond),dim=c(nb.parameters,N,nsamp))
   eta.cond<-t(apply(eta.cond,c(1,2),mean))
-  cond.shrinkage<-100*(1-apply(eta.cond,2, var)/diag(saemixObject["results"]["omega"]))
+  cond.shrinkage<-100*(1-apply(eta.cond,2, var)/mydiag(saemixObject["results"]["omega"]))
   names(cond.shrinkage)<-paste("Sh.",names(cond.shrinkage),".%",sep="")
   resh.eik<-resh.varik<-array(0,dim=c(nrow=N,ncol=nb.parameters,nsamp))
   for(isamp in 1:nsamp) {
@@ -1214,15 +1217,19 @@ map.saemix<-function(saemixObject) {
 # Compute the MAP estimates of the individual parameters PSI_i
   i1.omega2<-saemixObject["model"]["indx.omega"]
   iomega.phi1<-solve(saemixObject["results"]["omega"][i1.omega2,i1.omega2])
-  id.list<-unique(saemixObject["data"]["id"])
+  id<-saemixObject["data"]["data"][,saemixObject["data"]["name.group"]]
+  xind<-saemixObject["data"]["data"][,saemixObject["data"]["name.predictors"], drop=FALSE]
+  yobs<-saemixObject["data"]["data"][,saemixObject["data"]["name.response"]]
+  id.list<-unique(id)
   phi.map<-saemixObject["results"]["phi"]
+  
   cat("Estimating the individual parameters, please wait a few moments...\n")
   for(i in 1:saemixObject["data"]["N"]) {
     cat(".")
     isuj<-id.list[i]
-    xi<-saemixObject["data"]["xind"][saemixObject["data"]["id"]==isuj,,drop=FALSE]
+    xi<-xind[id==isuj,,drop=FALSE]
 #    if(is.null(dim(xi))) xi<-matrix(xi,ncol=1)
-    yi<-saemixObject["data"]["y"][saemixObject["data"]["id"]==isuj]
+    yi<-yobs[id==isuj]
     idi<-rep(1,length(yi))
     mean.phi1<-saemixObject["results"]["mean.phi"][i,i1.omega2]
     phii<-saemixObject["results"]["phi"][i,]
@@ -1249,38 +1256,41 @@ compute.eta.map<-function(saemixObject) {
   psi<-saemixObject["results"]["map.psi"][,-c(1)]
   phi<-transpsi(as.matrix(psi),saemixObject["model"]["transform.par"])
 
-# Computing COV again here (no need to include it in results)
+# Computing COV again here (no need to include it in results)  
 #  COV<-matrix(nrow=dim(saemix.model["Mcovariates"])[1],ncol=0)
   COV<-matrix(nrow=saemixObject["data"]["N"],ncol=0)
   for(j in 1:saemixObject["model"]["nb.parameters"]) {
     jcov<-which(saemixObject["model"]["betaest.model"][,j]==1)
-    aj<-saemixObject["model"]["Mcovariates"][,jcov]
+    aj<-as.matrix(saemixObject["model"]["Mcovariates"][,jcov])
     COV<-cbind(COV,aj)
   }
-  eta<-phi-COV%*%saemixObject["results"]["MCOV"]
-  shrinkage<-100*(1-apply(eta,2,var)/diag(saemixObject["results"]["omega"]))
+  eta<-phi-COV%*%saemixObject["results"]["MCOV"] 
+  shrinkage<-100*(1-apply(eta,2,var)/mydiag(saemixObject["results"]["omega"]))
   names(shrinkage)<-paste("Sh.",names(shrinkage),".%",sep="")
   colnames(eta)<-paste("ETA(",colnames(eta),")",sep="")
   eta<-cbind(id=saemixObject["results"]["map.psi"][,1],eta)
-
+  
   saemixObject["results"]["map.eta"]<-eta
   saemixObject["results"]["map.shrinkage"]<-shrinkage
-
+  
   return(saemixObject)
 }
 
 ###########################  Fisher Information Matrix 	#############################
 
 fim.saemix<-function(saemixObject) {
-# Estimate the Fisher Information Matrix and the s.e. of the estimated parameters
+# Estimate the Fisher Information Matrix and the s.e. of the estimated parameters  
 
-  saemix.model<-saemixObject["model"]
+	saemix.model<-saemixObject["model"]
   saemix.data<-saemixObject["data"]
   saemix.res<-saemixObject["results"]
+  xind<-saemix.data["data"][,saemix.data["name.predictors"],drop=FALSE]
+  yobs<-saemix.data["data"][,saemix.data["name.response"]]
+
   covariance.model<-0*saemix.model["covariance.model"]
-  diag(covariance.model)<-diag(saemix.model["covariance.model"])
+  diag(covariance.model)<-mydiag(saemix.model["covariance.model"])
   omega<-0*saemix.res["omega"]
-  diag(omega)<-diag(saemix.res["omega"])
+  diag(omega)<-mydiag(saemix.res["omega"])
   hat.phi<-saemix.res["cond.mean.phi"]
   nphi<-dim(hat.phi)[2]
   dphi<-cutoff(abs(colMeans(hat.phi))*1e-4,1e-10)
@@ -1294,9 +1304,9 @@ fim.saemix<-function(saemixObject) {
         phi<-hat.phi
         phi[,j]<-phi[,j]+coefphi[l]*dphi[j]
         psi<-transphi(phi,saemix.model["transform.par"])
-        f <- saemix.model["model"](psi, saemix.data["index"], saemix.data["xind"])
-      	if(saemix.model["error.model"]=='exponential')
-		f<-log(cutoff(f))
+        f <- saemix.model["model"](psi, saemix.data["data"][,"index"],xind)
+      	if(saemix.model["error.model"]=='exponential') 
+		f<-log(cutoff(f))        
         F[,j,l]<-f
     	}
   }
@@ -1304,14 +1314,14 @@ fim.saemix<-function(saemixObject) {
   ind.covariates<-which(saemix.model["betaest.model"]>0)
   f0<-F[,1,1]
   g0<-cutoff(saemix.res["respar"][1]+saemix.res["respar"][2]*abs(f0))
-  DF<-(F[,,3]-F[,,2])/matrix(rep(dphi,each=saemix.data["ntot.obs"]), ncol=length(dphi))/2 #gradient of f
+  DF<-(F[,,3]-F[,,2])/matrix(rep(dphi,each=saemix.data["ntot.obs"]), ncol=length(dphi))/2 #gradient of f 
   z<-matrix(0,saemix.data["ntot.obs"],1)
   j2<-0
 
-  for (i in 1:saemix.data["N"]) {
+	for (i in 1:saemix.data["N"]) {
     j1<-j2+1
     j2<-j2+saemix.data["nind.obs"][i]
-    z[j1:j2]<-saemix.data["y"][j1:j2] - f0[j1:j2] + DF[j1:j2,]%*%hat.phi[i,]
+    z[j1:j2]<-yobs[j1:j2] - f0[j1:j2] + DF[j1:j2,,drop=FALSE]%*%hat.phi[i,]
   }
 
 # ECO ici modifie car role de covariate.estim pas clair
@@ -1326,21 +1336,21 @@ fim.saemix<-function(saemixObject) {
   Fmu<-0
   FO<-0
   j2<-0
-  for (i in 1:saemix.data["N"]) {
+	for (i in 1:saemix.data["N"]) {
 #waitbar(i/N,hw)
     ni<-saemix.data["nind.obs"][i]
     j1<-j2+1
     j2<-j2+ni
-    yi<-saemix.data["y"][j1:j2]
-    DFi<-DF[j1:j2,]
+    yi<-yobs[j1:j2]
+    DFi<-DF[j1:j2,,drop=FALSE]
     f0i<-f0[j1:j2]
     g0i<-g0[j1:j2]
     zi<-z[j1:j2]
-    Ai<-t(kronecker(diag(nphi),saemix.model["Mcovariates"][i,]))
-    Ai<-Ai[,ind.covariates]
+    Ai<-kronecker(diag(nphi),as.matrix(saemix.model["Mcovariates"][i,]))
+    Ai<-Ai[,ind.covariates,drop=FALSE]
     DFAi<-DFi%*%Ai
-    Gi<-DFi%*%omega%*%t(DFi) + diag(g0i^2,nrow=ni)  #variance of zi
-
+    Gi<-DFi%*%omega%*%t(DFi) + mydiag(g0i^2,nrow=ni)  #variance of zi
+  
     Gi<-round(Gi*1e10)/1e10
     VD<-try(eigen(Gi))
     if(class(VD)=="try-error") {
@@ -1349,32 +1359,32 @@ fim.saemix<-function(saemixObject) {
     }
     D<-Re(VD$values)
     V<-Re(VD$vectors)
-    IGi<-V%*%diag(1/D,nrow=length(D))%*%t(V)
+    IGi<-V%*%mydiag(1/D,nrow=length(D))%*%t(V)
     Dzi<-zi-DFAi%*%saemix.res["betas"]
-
+    
     if (sum(ind.fixed.est)>0) {
-        DFAiest<-DFAi[,ind.fixed.est]
+        DFAiest<-DFAi[,ind.fixed.est,drop=FALSE]
         Fmu<-Fmu-t(DFAiest)%*%IGi%*%DFAiest
     }
-
+    
     ###########################################################
     OP<-NULL
     for (k in 1:nphi) {
         for (l in 1:nphi) {
             if (covariance.model[k,l]==1) {
-                OPkl<-DFi[,k]%*%t(DFi[,l])
+                OPkl<-DFi[,k,drop=FALSE]%*%t(DFi[,l,drop=FALSE])
                 OP<-cbind(OP,c(OPkl))
         	}
         }
     }
     if (sum(saemix.res["indx.res"]==1)>0) {
         SIi<-2*g0i
-        dSIi<-diag(SIi)
+        dSIi<-mydiag(SIi)
         OP<-cbind(OP,c(dSIi))
     	}
     if (sum(saemix.res["indx.res"]==2)>0) {
         SIi<-2*f0i%*%g0i
-        dSIi<-diag(SIi)
+        dSIi<-mydiag(SIi)
 	  OP<-cbind(OP,c(dSIi))
     	}
     kl<-0
@@ -1389,22 +1399,22 @@ fim.saemix<-function(saemixObject) {
         }
     }
     FO<-FO+FG%*%OP
-
+    
     ###############################################################
-    ll.lin <- ll.lin - 0.5*log(det(Gi)) - 0.5*t(Dzi)%*%IGi%*%Dzi
+    ll.lin <- ll.lin - 0.5*log(det(Gi)) - 0.5*t(Dzi)%*%IGi%*%Dzi 
   }
 #partie precedente verifiee pas a pas avec matlab
 
   if(saemix.model["error.model"]=='exponential')
-    ll.lin<-ll.lin-sum(saemix.data["y"])
+    ll.lin<-ll.lin-sum(yobs)
 
   if (sum(ind.fixed.est)>0) {
     Mparam<-matrix(0,dim(saemix.model["betaest.model"])[1], dim(saemix.model["betaest.model"])[2])
     Mparam[1,]<-saemix.model["transform.par"]
-    Mtp<-Mparam[saemix.model["betaest.model"]>0]
+    Mtp<-Mparam[saemix.model["betaest.model"]>0]    
     Mtp<-Mtp[ind.fixed.est]
     dbetas <- dtransphi(saemix.res["betas"][ind.fixed.est],Mtp)
-    Mupth<-diag(1/dbetas,nrow=length(dbetas))
+    Mupth<-mydiag(1/dbetas,nrow=length(dbetas))
     Fth<-t(Mupth)%*%Fmu%*%Mupth
     Cth<-try(solve(-Fth))
     if(class(Cth)=="try-error") {
@@ -1415,9 +1425,9 @@ fim.saemix<-function(saemixObject) {
     Cth<-NULL
   }
 
-  fim<-rbind(cbind(Fth,matrix(0,dim(Fth)[1],dim(FO)[2])), cbind(matrix(0,dim(FO)[1],dim(Fth)[2]),FO))
+  fim<-rbind(cbind(Fth,matrix(0,dim(Fth)[1],dim(FO)[2])), cbind(matrix(0,dim(FO)[1],dim(Fth)[2]),FO)) 
 
-  sTHest<-sqrt(diag(Cth))
+  sTHest<-sqrt(mydiag(Cth))
 #sTH<-matrix(0,1,length(saemix.res["betas"]))
   sTH<-rep(0,length(saemix.res["betas"]))
   sTH[ind.fixed.est]<-sTHest
@@ -1428,16 +1438,16 @@ fim.saemix<-function(saemixObject) {
       CO<-NA*FO
       cat("Error computing the Fisher Information Matrix: singular system.\n")
   }
-  sO<-sqrt(diag(CO))
+  sO<-sqrt(mydiag(CO))
   nb.omega2<-length(saemix.model["indx.omega"])
-  se.omega2<-matrix(0,nphi,1)
-  se.omega2[saemix.model["indx.omega"]]<-sO[1:nb.omega2]
+  se.omega<-matrix(0,nphi,1)
+  se.omega[saemix.model["indx.omega"]]<-sO[1:nb.omega2]
   se.res<-matrix(0,2,1)
-  se.res[saemix.res["indx.res"]]<-sO[(nb.omega2+1):length(sO)]
+  se.res[saemix.res["indx.res"]]<-sO[(nb.omega2+1):length(sO)]    
 
 # ECO TODO : pourquoi negatif ??? FIM = -fim calculee ici ?
   saemix.res["se.fixed"]<-se.fixed
-  saemix.res["se.omega2"]<-c(se.omega2)
+  saemix.res["se.omega"]<-c(se.omega)
   saemix.res["se.respar"]<-c(se.res)
   saemix.res["ll.lin"]<-c(ll.lin )
   saemix.res["fim"]<-fim
@@ -1460,26 +1470,26 @@ simul.saemix<-function(saemixObject,nsim=saemixObject["options"]$nb.sim, predict
   saemix.model<-saemixObject["model"]
   saemix.data<-saemixObject["data"]
   saemix.res<-saemixObject["results"]
+  xind<-saemix.data["data"][,saemix.data["name.predictors"],drop=FALSE]
 
   N<-saemix.data["N"]
   ind.eta<-saemix.model["indx.omega"]
   nb.etas<-length(ind.eta)
-  NM <- N*nsim
-  domega<-cutoff(diag(saemix.res["omega"][ind.eta, ind.eta]),.Machine$double.eps)
+  NM <- N*nsim  
+  domega<-cutoff(mydiag(saemix.res["omega"][ind.eta, ind.eta]),.Machine$double.eps)
   omega.eta<-saemix.res["omega"][ind.eta,ind.eta]
-  omega.eta<-omega.eta-diag(diag(saemix.res["omega"][ind.eta,ind.eta]))+diag(domega)
+  omega.eta<-omega.eta-mydiag(mydiag(saemix.res["omega"][ind.eta,ind.eta]))+mydiag(domega)
   chol.omega<-chol(omega.eta)
 
   phiM<-mean.phiM<-do.call(rbind,rep(list(saemix.res["mean.phi"]),nsim))
   etaM<-matrix(rnorm(NM*nb.etas),ncol=nb.etas)%*%chol.omega
-  phiM[,ind.eta]<-mean.phiM[,ind.eta]+etaM
   phiM[,ind.eta]<-mean.phiM[,ind.eta]+etaM
   psiM<-transphi(phiM,saemix.model["transform.par"])
 
   if(predictions) {
     index<-rep(1:N,times=saemix.data["nind.obs"])
     IdM<-kronecker(c(0:(nsim-1)),rep(N,saemix.data["ntot.obs"]))+rep(index,nsim)
-    XM<-do.call(rbind,rep(list(saemix.data["xind"]),nsim))
+    XM<-do.call(rbind,rep(list(xind),nsim))
     ares<-saemix.res["respar"][1]
     bres<-saemix.res["respar"][2]
     sim.pred<-sim.data<-NULL
@@ -1495,16 +1505,13 @@ simul.saemix<-function(saemixObject,nsim=saemixObject["options"]$nb.sim, predict
   } else {
     sim.pred<-sim.data<-IdM<-c()
   }
-  sim.psi<-data.frame(id=rep(unique(saemix.data["id"]),nsim),psiM)
+  sim.psi<-data.frame(id=rep(unique(saemix.data["data"][, saemix.data["name.group"]]),nsim),psiM)
   colnames(sim.psi)<-c(saemix.data["name.group"],saemix.model["name.modpar"])
-  ysim<-new(Class="SaemixSimData",saemix.data,nsim)
+  datasim<-data.frame(idsim=rep(index,nsim),irep=rep(1:nsim, each=saemix.data["ntot.obs"]),ypred=sim.pred,ysim=sim.data)
+  ysim<-new(Class="SaemixSimData",saemix.data,datasim)
   ysim["sim.psi"]<-sim.psi
-  ysim["sim.ypred"]<-sim.pred
-  ysim["sim.y"]<-sim.data
-  ysim["sim.id"]<-rep(index,nsim)
-  ysim["sim.rep"]<-rep(1:nsim,each=saemix.data["ntot.obs"])
   saemixObject["sim.data"]<-ysim
-
+  
   return(saemixObject)
 }
 
@@ -1513,12 +1520,15 @@ compute.sres<-function(saemixObject) {
 # saemix.options$nb.sim simulated datasets used to compute npd, npde, and VPC
 # saemix.options$nb.simpred simulated datasets used to compute ypred and WRES ? for the moment saemix.options$nb.sim used for both
   nsim<-saemixObject["options"]$nb.sim
-  cat("Simulating data using nsim =",nsim,"simulated datasets\n")
-  saemixObject<-simul.saemix(saemixObject,nsim)
-
-  ysim<-saemixObject["sim.data"]["sim.y"]
-  idsim<-saemixObject["sim.data"]["sim.id"]
-  idy<-saemixObject["data"]["index"]
+  if(length(saemixObject["sim.data"]["N"])==0 || saemixObject["sim.data"]["nsim"]!=nsim) {
+	  cat("Simulating data using nsim =",nsim,"simulated datasets\n")
+	  saemixObject<-simul.saemix(saemixObject,nsim)
+  }
+# ECO TODO: maybe here be more clever and use simulations if available (adding some if not enough, truncating if too much ?)  
+  ysim<-saemixObject["sim.data"]["datasim"]$ysim
+  idsim<-saemixObject["sim.data"]["datasim"]$idsim
+  idy<-saemixObject["data"]["data"][,"index"]
+  yobsall<-saemixObject["data"]["data"][,saemixObject["data"]["name.response"]]
   ypredall<-pd<-npde<-wres<-c()
 #  pde<-c()
   cat("Computing WRES and npde ")
@@ -1526,7 +1536,7 @@ compute.sres<-function(saemixObject) {
     if(isuj%%10==1) cat(".")
     ysimi<-matrix(ysim[idsim==isuj],ncol=nsim)
 #    ysimi.pred<-ysimi[,1:saemixObject["options"]$nb.simpred]
-    yobs<-saemixObject["data"]["y"][idy==isuj]
+    yobs<-yobsall[idy==isuj]
     tcomp<-apply(cbind(ysimi,yobs),2,"<",yobs)
     if(!is.matrix(tcomp)) tcomp<-t(as.matrix(tcomp))
     pdsuj<-rowMeans(tcomp)
@@ -1535,30 +1545,30 @@ compute.sres<-function(saemixObject) {
     pdsuj<-pdsuj+0.5/(nsim+1)
 # pdsuj=0 pour yobs<min(tabobs$yobs)
 # pdsuj=1 : jamais
-# dc dist va de 0 à 1-1/(nsim+1)
-# dc dist+0.5/(nsim+1) va de 0.5/(nsim+1) à 1-0.5/(nsim+1)
-# est-ce que ça recentre ma distribution ? ECO TODO CHECK
+# dc dist va de 0 ? 1-1/(nsim+1)
+# dc dist+0.5/(nsim+1) va de 0.5/(nsim+1) ? 1-0.5/(nsim+1)
+# est-ce que ?a recentre ma distribution ? ECO TODO CHECK
     pd<-c(pd,pdsuj)
     ypred<-rowMeans(ysimi)
     ypredall<-c(ypredall,ypred)
     xerr<-0
     if(length(yobs)==1) {
       npde<-c(npde,qnorm(pdsuj))
-      wres<-c(wres,(yobs-ypred)/sd(ysimi))
+      wres<-c(wres,(yobs-ypred)/sd(t(ysimi)))
     } else {
 # Decorrelation
     vi<-cov(t(ysimi))
     xmat<-try(chol(vi))
     if(is.numeric(xmat)) {
       sqvi<-try(solve(xmat))
-      if(!is.numeric(sqvi))
+      if(!is.numeric(sqvi)) 
         xerr<-2
       } else xerr<-1
     if(xerr==0) {
-      wres<-c(wres,t(sqvi)%*%(yobs-ypred))
     #decorrelation of the simulations
       decsim<-t(sqvi)%*%(ysimi-ypred)
       decobs<-t(sqvi)%*%(yobs-ypred)
+      wres<-c(wres,decobs)
 #    ydsim<-c(decsim)
 #    ydobs<-decobs
     #Computing the pde
@@ -1579,29 +1589,46 @@ compute.sres<-function(saemixObject) {
   saemixObject["results"]["wres"]<-wres
   saemixObject["results"]["ypred"]<-ypredall # = [ E_i(f(theta_i)) ]
   saemixObject["results"]["pd"]<-pd
+  if(length(saemixObject["results"]["predictions"])==0) saemixObject["results"]["predictions"]<-data.frame(ypred=ypredall,wres=wres,pd=pd,npde=npde) else {
+  	saemixObject["results"]["predictions"]$ypred<-ypred
+  	saemixObject["results"]["predictions"]$wres<-wres
+  	saemixObject["results"]["predictions"]$npde<-npde
+  	saemixObject["results"]["predictions"]$pd<-pd
+  }
 #  return(list(ypred=ypredall,pd=pd,npd=npd,wres=wres,sim.data=ysim, sim.pred=x$sim.pred))
   return(saemixObject)
 }
 
-###########################	Default options		#############################
-
-saemixControl<-function(algorithms=c(1,1,1),nbiter.saemix=c(300,100), nb.chains=1,fix.seed=TRUE,seed=23456,nmc.is=5000,nu.is=4, print.is=FALSE,nbdisplay=100,displayProgress=TRUE,nbiter.burn=5, nbiter.mcmc=c(2,2,2),proba.mcmc=0.4,stepsize.rw=0.4,rw.init=0.5,alpha.sa=0.97,  nnodes.gq=12,nsd.gq=4,maxim.maxiter=100,nb.sim=1000,nb.simpred=100, ipar.lmcmc=50,ipar.rmcmc=0.05,print=TRUE,save=TRUE, save.graphs=TRUE,directory="newdir",warnings=FALSE) {
-  if(fix.seed) seed<-23456 else {
-    rm(.Random.seed)
-    runif(1)
-    seed<-.Random.seed[5]
-  }
-  if(ipar.lmcmc<2) {
-    ipar.lmcmc<-2
-    cat("Value of L_MCMC too small, setting it to 2 (computation of the conditional means and variances of the individual parameters)\n")
-  }
-  while(length(algorithms)<3) algorithms<-c(algorithms,1)
-  names(algorithms)[1:3]<-c("MAP","FIM","LL.IS")
-  list(algorithms=algorithms,nbiter.saemix=nbiter.saemix, nbiter.burn=nbiter.burn,nb.chains=nb.chains,fix.seed=fix.seed,seed=seed, nmc.is=nmc.is,nu.is=nu.is,print.is=print.is, nbdisplay=nbdisplay,displayProgress=displayProgress,print=print,save=save, save.graphs=save.graphs,directory=directory,warnings=warnings, nbiter.mcmc=nbiter.mcmc,proba.mcmc=proba.mcmc,stepsize.rw=stepsize.rw, rw.init=rw.init,alpha.sa=alpha.sa,nnodes.gq=nnodes.gq,nsd.gq=nsd.gq, maxim.maxiter=maxim.maxiter,nb.sim=nb.sim,nb.simpred=nb.simpred,
-ipar.lmcmc=ipar.lmcmc,ipar.rmcmc=ipar.rmcmc)
-}
-
 ###########################	Computational fcts	#############################
+# Redefining diag function, too many problems with the R version
+mydiag <- function (x = 1, nrow, ncol) {
+	if (is.matrix(x)) {
+		if (nargs() > 1L) 
+			stop("'nrow' or 'ncol' cannot be specified when 'x' is a matrix")
+		if ((m <- min(dim(x))) == 0L) 
+			return(vector(typeof(x), 0L))
+		y <- c(x)[1L + 0L:(m - 1L) * (dim(x)[1L] + 1L)]
+		nms <- dimnames(x)
+		if (is.list(nms) && !any(sapply(nms, is.null)) && identical((nm <- nms[[1L]][seq_len(m)]), 
+																																nms[[2L]][seq_len(m)])) 
+			names(y) <- nm
+		return(y)
+	}
+	if (is.array(x) && length(dim(x)) != 1L) 
+		stop("'x' is an array, but not 1D.")
+	if (missing(x)) 
+		n <- nrow
+	else n <- length(x)
+	if (!missing(nrow)) 
+		n <- nrow
+	if (missing(ncol)) 
+		ncol <- n
+	p <- ncol
+	y <- array(0, c(n, p))
+	if ((m <- min(n, p)) > 0L) 
+		y[1L + 0L:(m - 1L) * (n + 1L)] <- x
+	y
+}
 
 cutoff<-function(x,seuil=.Machine$double.xmin) {x[x<seuil]<-seuil; return(x)}
 cutoff.max<-function(x) max(x,.Machine$double.xmin)
@@ -1616,7 +1643,7 @@ normcdf<-function(x,mu=0,sigma=1)
   cutoff(pnorm(-(x-mu)/sigma,lower.tail=FALSE),1e-30)
 
 error<-function(ab,y,f) {
-  g=ab[1]+ab[2]*f
+  g=abs(ab[1]+ab[2]*f)
   e=sum(((y-f)/g)**2+2*log(g))
   return(e)
 }
@@ -1643,7 +1670,7 @@ transphi<-function(phi,tr) {
   i2<-which(tr==2) # probit
   psi[,i2]<-normcdf(psi[,i2])
   i3<-which(tr==3) # logit
-  psi[,i3]<-1/(1+exp(psi[,i3]))
+  psi[,i3]<-1/(1+exp(-psi[,i3]))
   if(is.null(dim(phi))) psi<-c(psi)
   return(psi)
 }
@@ -1666,7 +1693,7 @@ dtransphi<-function(phi,tr) {
   if(is.null(dim(phi))) {
      dpsi<-as.matrix(t(rep(1,length(phi))))
      psi<-as.matrix(t(phi),nrow=1)
-  } else
+  } else 
     dpsi<-matrix(1,dim(phi)[1],dim(phi)[2])
   i1<-which(tr==1) # log-normal
   dpsi[,i1]<-exp(psi[,i1])
@@ -1722,7 +1749,7 @@ gammarnd.mlx<-function(a,n,m) {
   g <- c*(abs((y0-log(a))) - abs(y-log(a)))
   reject <- ((log(runif(b)) + g) > f)
   y<-y[!reject]
-  if(length(y)>=nm) x<-exp(y[1:nm]) else
+  if(length(y)>=nm) x<-exp(y[1:nm]) else 
     x<-c(exp(y),gammarnd.mlx(a,(nm-length(y)),1))
 #  x<-matrix(x,nrow=n,ncol=m) # not useful ?
   return(x)
@@ -1737,7 +1764,7 @@ tpdf.mlx<-function(x,v) {
 
 ###########################	Functions for npde	#############################
 
-kurtosis<-function (x)
+kurtosis<-function (x) 
 {
 #from Snedecor and Cochran, p 80
     x<-x[!is.na(x)]
@@ -1746,7 +1773,7 @@ kurtosis<-function (x)
     kurt<-m4*length(x)/(m2**2)-3
     return(kurtosis=kurt)
 }
-skewness<-function (x)
+skewness<-function (x) 
 {
 #from Snedecor and Cochran, p 79
     x<-x[!is.na(x)]
@@ -1755,8 +1782,8 @@ skewness<-function (x)
     skew<-m3/(m2*sqrt(m2/length(x)))
     return(skewness=skew)
 }
-
-testnpde<-function(npde)
+   
+testnpde<-function(npde) 
 {
     cat("---------------------------------------------\n")
     cat("Distribution of npde:\n")
@@ -1773,8 +1800,8 @@ testnpde<-function(npde)
     y<-shapiro.test(npde)
     myres[3]<-y$p.val
 
-    # test de variance pour 1 échantillon
-    # chi=s2*(n-1)/sigma0 et test de H0={s=sigma0} vs chi2 à n-1 df
+    # test de variance pour 1 ?chantillon
+    # chi=s2*(n-1)/sigma0 et test de H0={s=sigma0} vs chi2 ? n-1 df
     semp<-sd(npde)
     n1<-length(npde)
     chi<-(semp**2)*(n1-1)
@@ -1787,8 +1814,8 @@ testnpde<-function(npde)
     cat("Statistical tests\n")
     for(i in 1:4) {
       cat(names(myres)[i],": ")
-      #if (myres[i]<1)
-      cat(format(myres[i],digits=3))
+      #if (myres[i]<1) 
+      cat(format(myres[i],digits=3)) 
       #else cat(myres[i])
       if(as.numeric(myres[i])<0.1 & as.numeric(myres[i])>=0.05) cat(" .")
       if(as.numeric(myres[i])<0.05) cat(" *")
@@ -1813,10 +1840,11 @@ saemix.plot.setoptions<-function(saemixObject) {
     smooth=FALSE,
     line.smooth="s",
     indiv.par="map",			# type of individual parameters
-    which.par="all",			# which parameters to plot
-    which.cov="all",			# which covariates to plot
+    which.par="all",			# which parameters to plot 
+    which.cov="all",			# which covariates to plot 
     which.resplot=c("res.vs.x","res.vs.pred","dist.qqplot","dist.hist"), # which type of residual plots
     which.pres=c("wres","npde"),	# which population weighted residuals
+    which.poppred=c("ppred"),		# which population predictions to use (ypred=E(f(theta_i)), ppred=f(population parameters))
     indiv.histo=FALSE,			# whether to include an histogram of estimated individual parameters
     cov.value=rep(NA,length(saemixObject["model"]["name.cov"])),
 # General graphical options
@@ -1860,7 +1888,7 @@ saemix.plot.setoptions<-function(saemixObject) {
     ablinecol="DarkRed",
     ablinelty=2,
     ablinelwd=2,
-#
+# 
     range=3,
     col.fillmed="pink",
     col.fillpi="slategray1",
@@ -1883,9 +1911,10 @@ saemix.plot.setoptions<-function(saemixObject) {
     vpc.interval=0.95,
     vpc.pi=TRUE,
     vpc.obs=TRUE)
-
-     if(is.null(plot.opt$name.X))
-        plot.opt$name.X<-saemixObject["data"]["name.predictors"][1]
+    
+     if(is.null(plot.opt$name.X)) {
+        if(length(saemixObject["data"]["name.X"])>0) plot.opt$name.X<-saemixObject["data"]["name.X"] else plot.opt$name.X<-saemixObject["data"]["name.predictors"][1]
+    }
     plot.opt$xlab<-paste(plot.opt$name.X," (",saemixObject["data"]["units"]$x,")", sep="")
      if(length(saemixObject["data"]["name.response"])>0)
     plot.opt$ylab<-paste(saemixObject["data"]["name.response"]," (", saemixObject["data"]["units"]$y,")",sep="")
@@ -1916,7 +1945,7 @@ replace.plot.options<-function(plot.opt,...) {
     }
 # Other arguments
     for(i in 3:length(args1)) {
-      if(match(names(args1)[i],names(plot.opt),nomatch=0)>0)
+      if(match(names(args1)[i],names(plot.opt),nomatch=0)>0)    
 #    plot.opt[[names(args1)[i]]]<-args1[[i]] else {
     plot.opt[[names(args1)[i]]]<-eval(args1[[i]]) else {
       if(names(args1)[i]!="plot.type") cat("Argument",names(args1)[i],"not available, check spelling.\n")
@@ -1931,33 +1960,47 @@ replace.plot.options<-function(plot.opt,...) {
 #####################################################################################
 ###############################	   Wrapper functions  #############################
 
-saemix.plot.select<-function(saemixObject,data=FALSE,convergence=FALSE,likelihood=FALSE, individual.fit=FALSE,population.fit=FALSE,both.fit=FALSE, observations.vs.predictions=FALSE,residuals.scatter=FALSE, residuals.distribution=FALSE,random.effects=FALSE,correlations=FALSE, parameters.vs.covariates=FALSE,randeff.vs.covariates=FALSE, marginal.distribution=FALSE,vpc=FALSE,npde=FALSE,...) {
+saemix.plot.select<-function(saemixObject,data=FALSE,convergence=FALSE, likelihood=FALSE,individual.fit=FALSE,population.fit=FALSE,both.fit=FALSE, observations.vs.predictions=FALSE,residuals.scatter=FALSE, residuals.distribution=FALSE,random.effects=FALSE,correlations=FALSE, parameters.vs.covariates=FALSE,randeff.vs.covariates=FALSE, marginal.distribution=FALSE,vpc=FALSE,npde=FALSE,...) {
 # Function selecting which plots are to be drawn
   namObj<-deparse(substitute(saemixObject))
   interactive<-saemixObject["prefs"]$interactive
-  if(individual.fit | population.fit | both.fit | observations.vs.predictions) {
-    if(length(saemixObject["results"]["ipred"])==0) {
-        if(interactive) {
-          cok<-readline(prompt="Computations will be performed to obtain model predictions, proceed ? (y/Y) [default=yes] ")
-          if(cok=="y"|cok=="Y"|cok=="yes"|cok=="") boolpred<-TRUE else boolpred<-FALSE
-        } else boolpred<-TRUE
-        if(boolpred) {
-          saemixObject<-predict(saemixObject)
-          assign(namObj,saemixObject,envir=parent.frame())
-      }
-    }
+  boolsim<-boolpred<-boolres<-FALSE
+  if(vpc) {
+    if(length(saemixObject["sim.data"]["nsim"])==0) boolsim<-TRUE
   }
-  if(residuals.scatter | residuals.distribution | vpc | npde) {
-    if(length(saemixObject["results"]["npde"])==0) {
-        if(interactive) {
-          cok<-readline(prompt="Simulations will be performed to obtain residuals, VPC and npde. This might take a while, proceed ? (y/Y) [default=yes] ")
-          if(cok=="y"|cok=="Y"|cok=="yes"|cok=="") boolsim<-TRUE else boolsim<-FALSE
-        } else boolsim<-TRUE
-        if(boolsim) {
-          saemixObject<-compute.sres(saemixObject)
-          assign(namObj,saemixObject,envir=parent.frame())
-      }
-    }
+  if(individual.fit | both.fit | observations.vs.predictions) {
+    if(length(saemixObject["results"]["ipred"])==0) boolpred<-TRUE
+  }
+  if(population.fit | both.fit | observations.vs.predictions) {
+    if(saemixObject["prefs"]$which.poppred=="ppred" & length(saemixObject["results"]["ppred"])==0) boolpred<-TRUE
+    if(saemixObject["prefs"]$which.poppred=="ypred" & length(saemixObject["results"]["ypred"])==0) boolres<-TRUE
+  }
+  if(residuals.scatter | residuals.distribution) {
+      if(length(saemixObject["results"]["npde"])==0) boolres<-TRUE
+  }
+  if(boolsim & !boolres & interactive) {
+    cok<-readline(prompt="Simulations will be performed to obtain residuals, VPC and npde. This might take a while, proceed ? (y/Y) [default=yes] ")
+    if(!cok %in% c("y","Y","yes","")) boolsim<-FALSE 
+  }
+  if(boolres & interactive) {
+    cok<-readline(prompt="Simulations will be performed to obtain residuals, VPC and npde. This might take a while, proceed ? (y/Y) [default=yes] ")
+    if(!cok %in% c("y","Y","yes","")) boolres<-FALSE 
+  }
+  if(boolpred & interactive) {
+    cok<-readline(prompt="Computations will be performed to obtain model predictions, proceed ? (y/Y) [default=yes] ")
+    if(!cok %in% c("y","Y","yes","")) boolpred<-FALSE 
+  }
+  if(boolsim & !boolres) {
+    saemixObject<-simul.saemix(saemixObject)
+    assign(namObj,saemixObject,envir=parent.frame())
+  }
+  if(boolpred) {
+    saemixObject<-predict(saemixObject)
+    assign(namObj,saemixObject,envir=parent.frame())
+  }
+    if(boolres) {
+    saemixObject<-compute.sres(saemixObject)
+    assign(namObj,saemixObject,envir=parent.frame())
   }
   if(parameters.vs.covariates) {
     if(length(saemixObject["results"]["map.psi"])==0) {
@@ -1986,7 +2029,7 @@ saemix.plot.select<-function(saemixObject,data=FALSE,convergence=FALSE,likelihoo
 
 #### Meta-niveau
 default.saemix.plots<-function(saemixObject,...) {
-# When plot(saemixObject) is called without plot.type
+# When plot(saemixObject) is called without plot.type  
   namObj<-deparse(substitute(saemixObject))
   if(length(saemixObject["results"]["ipred"])==0) {
     saemixObject<-predict(saemixObject)
@@ -2079,7 +2122,7 @@ saemix.plot.convergence<-function(saemixObject,niter=0,...) {
   K<-dim(saemixObject["results"]["allpar"])[1]
   if(niter==0) niter<-K
   if(plot.opt$which.par[1]=="all")
-     np<-dim(saemixObject["results"]["allpar"])[2] else
+     np<-dim(saemixObject["results"]["allpar"])[2] else  
      np<-length(plot.opt$which.par)
   if(plot.opt$new) {
     if(length(plot.opt$mfrow)==0) {
@@ -2097,7 +2140,7 @@ saemix.plot.convergence<-function(saemixObject,niter=0,...) {
     for(j in 1:np) {
       laby<-"" #colnames(saemixObject["results"]["allpar"])[j]
       maintit<-colnames(saemixObject["results"]["allpar"])[j]
-      plot(1:niter,saemixObject["results"]["allpar"][1:niter,j],type="l", xlab=plot.opt$xlab,ylab=laby, main=maintit,col=plot.opt$col,lty=plot.opt$lty, lwd=plot.opt$lwd)
+      plot(1:niter,saemixObject["results"]["allpar"][1:niter,j],type="l", xlab=plot.opt$xlab,ylab=laby, main=maintit,col=plot.opt$col,lty=plot.opt$lty, lwd=plot.opt$lwd,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
       abline(v=saemixObject["options"]$nbiter.saemix[1],col=plot.opt$ablinecol, lwd=plot.opt$ablinelwd)
     }
   } else {
@@ -2109,7 +2152,7 @@ saemix.plot.convergence<-function(saemixObject,niter=0,...) {
         maintit<-colnames(saemixObject["results"]["allpar"])[j]
         if(change.ylab) laby<-plot.opt$ylab
         if(change.main) maintit<-plot.opt$main
-        plot(1:niter,saemixObject["results"]["allpar"][1:niter,j],type="l", xlab=plot.opt$xlab,ylab=laby,main=maintit,col=plot.opt$col,lty=plot.opt$lty, lwd=plot.opt$lwd)
+        plot(1:niter,saemixObject["results"]["allpar"][1:niter,j],type="l", xlab=plot.opt$xlab,ylab=laby,main=maintit,col=plot.opt$col,lty=plot.opt$lty, lwd=plot.opt$lwd,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
       abline(v=saemixObject["options"]$nbiter.saemix[1],col=plot.opt$ablinecol, lwd=plot.opt$ablinelwd)
     }}
   }
@@ -2131,7 +2174,7 @@ saemix.plot.llis<-function(saemixObject,...) {
       if(length(plot.opt$mfrow)==0) mfrow=c(1,1) else mfrow<-plot.opt$mfrow
       par(mfrow=mfrow,ask=plot.opt$ask)
     }
-    if(sum(!is.na(y1))) plot(x1,y1,type="l",xlab=plot.opt$xlab, ylab=plot.opt$ylab,main=plot.opt$main,col=plot.opt$col)
+    if(sum(!is.na(y1))) plot(x1,y1,type="l",xlab=plot.opt$xlab, ylab=plot.opt$ylab,main=plot.opt$main,col=plot.opt$col,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
 }
 
 #######################	   Basic GOF plots & residuals	 ########################
@@ -2151,12 +2194,12 @@ saemix.plot.obsvspred<-function(saemixObject,...) {
     par(mfrow=mfrow,ask=plot.opt$ask)
   }
   if(saemixObject["model"]["error.model"]=="exponential")
-    ydat<-saemixObject["data"]["yorig"] else ydat<-saemixObject["data"]["y"]
+    ydat<-saemixObject["data"]["yorig"] else ydat<-saemixObject["data"]["data"][,saemixObject["data"]["name.response"]]
   if(length(grep(0,plot.opt$level))>0) {
     if(!change.main) main<-"Population predictions" else main<-plot.opt$main
-    xpl<-saemixObject["results"]["ppred"]
+    if(plot.opt$which.poppred=="ppred") xpl<-saemixObject["results"]["ppred"] else xpl<-saemixObject["results"]["ypred"]
     if(length(xpl)==length(ydat)) {
-    plot(xpl,ydat,xlab=plot.opt$xlab, ylab=plot.opt$ylab,pch=plot.opt$pch, col=plot.opt$col,main=main)
+    plot(xpl,ydat,xlab=plot.opt$xlab, ylab=plot.opt$ylab,pch=plot.opt$pch, col=plot.opt$col,main=main,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     abline(0,1,col=plot.opt$ablinecol,lty=plot.opt$ablinelty, lwd=plot.opt$ablinelwd)
     }
      }
@@ -2164,7 +2207,7 @@ saemix.plot.obsvspred<-function(saemixObject,...) {
     if(!change.main) main<-paste("Individual predictions", ifelse(plot.opt$indiv.par=="map","MAP","Cond mean"),sep=", ") else main<-plot.opt$main
     if(plot.opt$indiv.par=="map") xpl<-saemixObject["results"]["ipred"] else xpl<-saemixObject["results"]["icpred"]
     if(length(xpl)==length(ydat)) {
-    plot(xpl,ydat,xlab=plot.opt$xlab, ylab=plot.opt$ylab,pch=plot.opt$pch, col=plot.opt$col,main=main)
+    plot(xpl,ydat,xlab=plot.opt$xlab, ylab=plot.opt$ylab,pch=plot.opt$pch, col=plot.opt$col,main=main,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     abline(0,1,col=plot.opt$ablinecol,lty=plot.opt$ablinelty,lwd=plot.opt$ablinelwd)
     }
    }
@@ -2332,13 +2375,13 @@ saemix.plot.scatterresiduals<-function(saemixObject,...) {
     plot.pop<-TRUE
     wres<-saemixObject["results"]["wres"]
     npde<-saemixObject["results"]["npde"]
-    ppred<-saemixObject["results"]["ppred"]
+    if(plot.opt$which.poppred=="ppred") ppred<-saemixObject["results"]["ppred"] else ppred<-saemixObject["results"]["ypred"]
   }
   if("res.vs.x"%in%plot.opt$which.resplot) {
   if(plot.pop & "wres"%in%plot.opt$which.pres) {
     laby<-"Population weighted residuals"
     if(change.ylab) laby<-plot.opt$ylab
-    plot(saemixObject["data"]["xind"][,saemixObject["data"]["name.X"]],wres, pch=plot.opt$pch, col=plot.opt$col,main=plot.opt$main,xlab=plot.opt$xlab,ylab=laby)
+    plot(saemixObject["data"]["data"][,saemixObject["data"]["name.X"]],wres, pch=plot.opt$pch, col=plot.opt$col,main=plot.opt$main,xlab=plot.opt$xlab,ylab=laby,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     abline(h=0,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=-1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
@@ -2346,7 +2389,7 @@ saemix.plot.scatterresiduals<-function(saemixObject,...) {
   if(plot.ind) {
     laby<-"Individual weighted residuals"
     if(change.ylab) laby<-plot.opt$ylab
-    plot(saemixObject["data"]["xind"][,saemixObject["data"]["name.X"]],iwres, pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main,xlab=plot.opt$xlab,ylab=laby)
+    plot(saemixObject["data"]["data"][,saemixObject["data"]["name.X"]],iwres, pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main,xlab=plot.opt$xlab,ylab=laby,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     abline(h=0,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=-1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
@@ -2354,7 +2397,7 @@ saemix.plot.scatterresiduals<-function(saemixObject,...) {
   if(plot.pop & "npde"%in%plot.opt$which.pres) {
     laby<-"NPDE"
     if(change.ylab) laby<-plot.opt$ylab
-    plot(saemixObject["data"]["xind"][,saemixObject["data"]["name.X"]],npde, pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main,xlab=plot.opt$xlab,ylab=laby)
+    plot(saemixObject["data"]["data"][,saemixObject["data"]["name.X"]],npde, pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main,xlab=plot.opt$xlab,ylab=laby,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     abline(h=0,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=-1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
@@ -2366,7 +2409,7 @@ saemix.plot.scatterresiduals<-function(saemixObject,...) {
     if(change.ylab) laby<-plot.opt$ylab
     labx<-"Population predictions"
     if(change.xlab) labx<-plot.opt$xlab
-    plot(ppred,wres,pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main, xlab=labx,ylab=laby)
+    plot(ppred,wres,pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main, xlab=labx,ylab=laby,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     abline(h=0,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=-1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
@@ -2376,7 +2419,7 @@ saemix.plot.scatterresiduals<-function(saemixObject,...) {
     if(change.ylab) laby<-plot.opt$ylab
     labx<-"Individual predictions"
     if(change.xlab) labx<-plot.opt$xlab
-    plot(ipred,iwres,pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main, xlab=labx,ylab=laby)
+    plot(ipred,iwres,pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main, xlab=labx,ylab=laby,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     abline(h=0,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=-1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
@@ -2386,7 +2429,7 @@ saemix.plot.scatterresiduals<-function(saemixObject,...) {
     if(change.ylab) laby<-plot.opt$ylab
     labx<-"Population predictions"
     if(change.xlab) labx<-plot.opt$xlab
-    plot(ppred,npde,pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main, xlab=labx,ylab=laby)
+    plot(ppred,npde,pch=plot.opt$pch,col=plot.opt$col,main=plot.opt$main, xlab=labx,ylab=laby,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     abline(h=0,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=-1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     abline(h=1.96,lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
@@ -2403,12 +2446,13 @@ saemix.plot.fits<-function(saemixObject,...) {
   plot.opt$xlab<-paste(saemixObject["data"]["name.X"]," (",saemixObject["data"]["units"]$x,")",sep="")
   plot.opt$ylab<-paste(saemixObject["data"]["name.response"]," (",saemixObject["data"]["units"]$y,")",sep="")
   plot.opt$new<-TRUE
-  plot.opt$ilist<-1:saemixObject["data"]["N"]
+  plot.opt$ilist<-1:saemixObject["data"]["N"]  
   plot.opt$type<-"p"
   plot.opt$level<-c(1)
   plot.opt$ipred.lty<-1
   plot.opt$ppred.lty<-2
   plot.opt<-replace.plot.options(plot.opt,...)
+  plot.opt$ilist<-plot.opt$ilist[plot.opt$ilist %in% 1:saemixObject["data"]["N"]]
   if(plot.opt$new) {
     if(length(plot.opt$mfrow)==0) {
     np<-length(plot.opt$ilist)
@@ -2426,27 +2470,29 @@ saemix.plot.fits<-function(saemixObject,...) {
     cat("Individual parameter estimates should be computed to produce individual plots, conditional means will be used.\n")
   }
   if(indplot & !(plot.opt$smooth) & length(saemixObject["results"]["ipred"])==0) {
-    cat("For graphs of predictions, please use predict first.\n")
+    cat("For graphs of predictions, please use predict first.\n") 
     return()
   }
   if(popplot & !(plot.opt$smooth) & length(saemixObject["results"]["ppred"])==0) {
-    cat("For graphs of predictions, please use predict first.\n")
+    cat("For graphs of predictions, please use predict first.\n") 
     return()
   }
   logtyp<-""
   if(plot.opt$xlog) logtyp<-paste(logtyp,"x",sep="")
   if(plot.opt$ylog) logtyp<-paste(logtyp,"y",sep="")
   pl.line<-(length(plot.opt$level)>0)
+  xind<-saemixObject["data"]["data"][,saemixObject["data"]["name.predictors"], drop=FALSE]
+  id<-saemixObject["data"]["data"][,saemixObject["data"]["name.group"]]
   if(saemixObject["model"]["error.model"]=="exponential")
-    yobs<-saemixObject["data"]["yorig"] else yobs<-saemixObject["data"]["y"]
+    yobs<-saemixObject["data"]["yorig"] else yobs<-saemixObject["data"]["data"][,saemixObject["data"]["name.response"]]
   for(i1 in plot.opt$ilist) {
-    isuj<-unique(saemixObject["data"]["id"])[i1]
+    isuj<-unique(id)[i1]
     if((indplot | popplot) & plot.opt$smooth) {
 # If smooth requested and either population and individual predictions
-      xvec<-saemixObject["data"]["xind"][saemixObject["data"]["id"]==isuj, saemixObject["data"]["name.X"]]
+      xvec<-xind[id==isuj, saemixObject["data"]["name.X"]]
       xpred<-seq(min(xvec),max(xvec),length.out=100)
-      if(dim(saemixObject["data"]["xind"])[2]==1) xdep<-matrix(xpred,ncol=1) else {
-        x1<-saemixObject["data"]["xind"][saemixObject["data"]["id"]==isuj,]
+      if(dim(xind)[2]==1) xdep<-matrix(xpred,ncol=1) else {
+        x1<-xind[id==isuj,]
 # creating an expanded dataframe (warning: will not work with different occasions)
 # ECO TODO change this when several occasions
         id1<-unlist(lapply(xpred,function(x,vec) max(which(vec<=x)),vec=xvec))
@@ -2468,11 +2514,11 @@ saemix.plot.fits<-function(saemixObject,...) {
       }
     } else {
 # else, use predictions at each observation time (no smooth)
-      xpred<-saemixObject["data"]["xind"][saemixObject["data"]["id"]==isuj, saemixObject["data"]["name.X"]]
-      ypred<-saemixObject["results"]["ipred"][saemixObject["data"]["id"]==isuj]
-      yppred<-saemixObject["results"]["ppred"][saemixObject["data"]["id"]==isuj]
+      xpred<-xind[id==isuj,saemixObject["data"]["name.X"]]
+      ypred<-saemixObject["results"]["ipred"][id==isuj]
+      yppred<-saemixObject["results"]["ppred"][id==isuj]
     }
-    vec<-yobs[saemixObject["data"]["id"]==isuj]
+    vec<-yobs[id==isuj]
     if(indplot) vec<-c(vec,ypred)
     if(popplot) vec<-c(vec,yppred)
     if(length(plot.opt$ylim)>0) limy<-plot.opt$ylim else {
@@ -2480,7 +2526,7 @@ saemix.plot.fits<-function(saemixObject,...) {
     }
     main<-paste("Subject",isuj)
     if(change.main) main<-plot.opt$main
-    plot(saemixObject["data"]["xind"][saemixObject["data"]["id"]==isuj, saemixObject["data"]["name.X"]],yobs[saemixObject["data"]["id"]==isuj], xlab=plot.opt$xlab,ylab=plot.opt$ylab,log=logtyp,ylim=limy,type=plot.opt$type, main=main,pch=plot.opt$obs.pch,col=plot.opt$obs.col)
+    plot(xind[id==isuj,saemixObject["data"]["name.X"]], yobs[id==isuj], xlab=plot.opt$xlab,ylab=plot.opt$ylab,log=logtyp,ylim=limy,type=plot.opt$type, main=main,pch=plot.opt$obs.pch,col=plot.opt$obs.col,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     if(pl.line) {
       if(indplot) lines(xpred,ypred,col=plot.opt$ipred.col, lty=plot.opt$ipred.lty,lwd=plot.opt$ipred.lwd)
       if(popplot) lines(xpred,yppred,col=plot.opt$ppred.col, lty=plot.opt$ppred.lty,lwd=plot.opt$ppred.lwd)
@@ -2489,7 +2535,7 @@ saemix.plot.fits<-function(saemixObject,...) {
 }
 
 #######################	   Advanced GOF plots (VPC, npde) ########################
-
+    
 plotnpde<-function(xobs,npde,ypred) {
     nclass<-10
     par(mfrow=c(2,2))
@@ -2501,13 +2547,13 @@ plotnpde<-function(xobs,npde,ypred) {
     ypl<-dnorm(xpl)
     ypl<-ypl/max(ypl)*max(xh$counts)
     lines(xpl,ypl,lwd=2)
-
+    
     #residuals
     plot(xobs,npde,xlab="X",ylab="npde",cex.lab=1.5)
     abline(h=0,lty=2)
     x1<-qnorm(0.05)
     abline(h=x1,lty=3);abline(h=(-x1),lty=3)
-
+    
     plot(ypred,npde,xlab="Predicted Y",ylab="npde",cex.lab=1.5)
     abline(h=0,lty=2)
     abline(h=x1,lty=3);abline(h=(-x1),lty=3)
@@ -2518,14 +2564,14 @@ saemix.plot.npde<-function(saemixObject,...) {
     cat("Please estimate the npde first\n")
     return()
   }
-  plotnpde(saemixObject["data"]["xind"][,saemixObject["data"]["name.X"]], saemixObject["results"]["npde"],saemixObject["results"]["ypred"])
+  plotnpde(saemixObject["data"]["data"][,saemixObject["data"]["name.X"]], saemixObject["results"]["npde"],saemixObject["results"]["ypred"])
   y<-testnpde(saemixObject["results"]["npde"])
   return(y)
 }
 
 saemix.plot.vpc<-function(saemixObject,npc=FALSE,...) {
-  if(saemixObject["sim.data"]["nsim"]==0) {
-    cat("Please simulate data first, using the simul.saemix function.\n")
+  if(length(saemixObject["sim.data"]["nsim"])==0) {
+    cat("Please simulate data first, using the simul.saemix function.\n") 
     return()
   }
 # Internal function
@@ -2557,7 +2603,7 @@ compute.vpc.pi<-function(ysim,xgrp,idrep,nbin,vpc.pi=0.95) {
   logtyp<-""
   if(plot.opt$xlog) logtyp<-paste(logtyp,"x",sep="")
   if(plot.opt$ylog) logtyp<-paste(logtyp,"y",sep="")
-
+  
   if(!is.na(pmatch(plot.opt$vpc.method,"optimal"))) {
     cat("Optimal binning not yet implemented, reverting to equal binning\n")
     plot.opt$vpc.method<-"equal"
@@ -2571,9 +2617,9 @@ compute.vpc.pi<-function(ysim,xgrp,idrep,nbin,vpc.pi=0.95) {
   }
 
 # Binning
-  xvec<-saemixObject["data"]["xind"][,saemixObject["data"]["name.X"]]
-  ydat<-saemixObject["data"]["y"]
-  ysim<-saemixObject["sim.data"]["sim.y"]
+  xvec<-saemixObject["data"]["data"][,saemixObject["data"]["name.X"]]
+  ydat<-saemixObject["data"]["data"][,saemixObject["data"]["name.response"]]
+  ysim<-saemixObject["sim.data"]["datasim"]$ysim
   nbin<-plot.opt$vpc.bin
   alpha<-(1-plot.opt$vpc.interval)/2
 # ECO TODO: implement the optimal binning algorithm of Marc
@@ -2601,7 +2647,7 @@ compute.vpc.pi<-function(ysim,xgrp,idrep,nbin,vpc.pi=0.95) {
       if(!is.na(pmatch(plot.opt$vpc.method,"equal")) & length(unique(xvec))<=nbin)
         xgrp<-match(xvec,sort(unique(xvec)))
     } else {
-
+      
     }
     nbin<-length(unique(xgrp))
     xpl<-tapply(xvec,xgrp,mean)
@@ -2617,8 +2663,8 @@ compute.vpc.pi<-function(ysim,xgrp,idrep,nbin,vpc.pi=0.95) {
     obs.bnd<-cbind(tapply(ydat,xgrp,quantile,alpha),tapply(ydat,xgrp,mean), tapply(ydat,xgrp,quantile,1-alpha))
 #  }
   if(plot.opt$vpc.pi) {
-    idsim<-saemixObject["sim.data"]["sim.id"]
-    idrep<-saemixObject["sim.data"]["sim.rep"]
+    idsim<-saemixObject["sim.data"]["datasim"]$idsim
+    idrep<-saemixObject["sim.data"]["datasim"]$irep
     isamp<-sample(1:saemixObject["options"]$nb.sim, saemixObject["options"]$nb.simpred)
     idx<-match(idrep,isamp,nomatch=0)>0
     sbnd<-compute.vpc.pi(ysim[idx],xgrp,idrep[idx],nbin,0.95)
@@ -2636,7 +2682,7 @@ compute.vpc.pi<-function(ysim,xgrp,idrep,nbin,vpc.pi=0.95) {
     if(length(grep("x",logtyp))>0) xvec1<-xvec1[xvec1>0]
     limx<-c(min(xvec1),max(xvec1))
 
-    plot(xpl,ypl,type="n",xlim=limx,ylim=limy,xlab=plot.opt$xlab, ylab=plot.opt$ylab,main=plot.opt$main,log=logtyp)
+    plot(xpl,ypl,type="n",xlim=limx,ylim=limy,xlab=plot.opt$xlab, ylab=plot.opt$ylab,main=plot.opt$main,log=logtyp,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     polygon(c(xpl,rev(xpl)),c(pi.low[1,],rev(pi.low[3,])), col=plot.opt$col.fillpi,lty=plot.opt$lty.lpi, border=plot.opt$col.lpi)
     polygon(c(xpl,rev(xpl)),c(pi.up[1,],rev(pi.up[3,])), col=plot.opt$col.fillpi,lty=plot.opt$lty.lpi, border=plot.opt$col.lpi)
     polygon(c(xpl,rev(xpl)),c(pi.med[1,],rev(pi.med[3,])), col=plot.opt$col.fillmed,lty=plot.opt$lty.lmed, border=plot.opt$col.lmed)
@@ -2662,17 +2708,17 @@ compute.vpc.pi<-function(ysim,xgrp,idrep,nbin,vpc.pi=0.95) {
     xvec1<-xvec
     if(length(grep("x",logtyp))>0) xvec1<-xvec1[xvec1>0]
     limx<-c(min(xvec1),max(xvec1))
-    plot(xpl,ypl,type="n",xlim=limx,ylim=limy,xlab=plot.opt$xlab, ylab=plot.opt$ylab,main=plot.opt$main,log=logtyp)
+    plot(xpl,ypl,type="n",xlim=limx,ylim=limy,xlab=plot.opt$xlab, ylab=plot.opt$ylab,main=plot.opt$main,log=logtyp,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
     polygon(c(xpl,rev(xpl)),c(sim.bnd[,3],rev(sim.bnd[,1])), col=plot.opt$fillcol,lty=plot.opt$ablinelty, border=plot.opt$ablinecol)
     lines(xpl,sim.bnd[,2],lty=plot.opt$ablinelty, col=plot.opt$ablinecol,lwd=plot.opt$ablinelwd)
     lines(xpl,obs.bnd[,2],lty=plot.opt$lty, col=plot.opt$lcol,lwd=plot.opt$lwd)
     for (icol in c(1,3)) lines(xpl,obs.bnd[,icol],lty=plot.opt$lty, col=plot.opt$lcol,lwd=plot.opt$lwd)
     if(plot.opt$vpc.obs)
-      points(xvec,ydat,pch=plot.opt$pch,col=plot.opt$pcol)
+      points(xvec,ydat,pch=plot.opt$pch,col=plot.opt$pcol)  
   }
   npc.stat<-c()
   if(npc==TRUE) {
-    # ECO TODO: compute NPC - interpolation ?
+    # ECO TODO: compute NPC - interpolation ? 
   }
   return(npc=npc.stat)
 }
@@ -2725,10 +2771,10 @@ saemix.plot.randeff<-function(saemixObject,...) {
   plist<-match(plot.opt$which.par,saemixObject["model"]["name.modpar"])
   for(ipar in plist) {
     tit<-saemixObject["model"]["name.modpar"][ipar]
-    if(change.main) tit<-plot.opt$main
+    if(change.main) tit<-plot.opt$main    
     labx<-""
     if(change.xlab) labx<-plot.opt$xlab
-    boxplot(saemixObject["results"]["cond.mean.phi"][,ipar],xlab=labx,main=tit)
+    boxplot(saemixObject["results"]["cond.mean.phi"][,ipar],xlab=labx,main=tit,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
 #    if(length(grep("l",plot.opt$line.smooth))>0)
     if(plot.opt$smooth)
       abline(h=pl.psi[1,ipar],lty=plot.opt$lty,lwd=plot.opt$ablinelwd, col=plot.opt$ablinecol)
@@ -2736,7 +2782,7 @@ saemix.plot.randeff<-function(saemixObject,...) {
 }
 
 saemix.plot.distpsi<-function(saemixObject,...) {
-# Plots the distribution of the model parameters conditional on covariates
+# Plots the distribution of the model parameters conditional on covariates 
 # plot.opt$cov.value: value of the covariates used
 # Adds an histogram of individual parameter estimates if plot.opt$indiv.histo==TRUE
   plot.opt<-saemixObject["prefs"]
@@ -2787,8 +2833,8 @@ saemix.plot.distpsi<-function(saemixObject,...) {
         nlev<-length(unique(saemixObject["model"]["Mcovariates"][,(icov+1)]))
 # covariable binaire
         if(is.na(xcov)) {
-        if(nlev==2)
-          xcov<-min(saemixObject["model"]["Mcovariates"][,(icov+1)]) else
+        if(nlev==2) 
+          xcov<-min(saemixObject["model"]["Mcovariates"][,(icov+1)]) else 
 # covariable continue
           xcov<-median(saemixObject["model"]["Mcovariates"][,(icov+1)])
         }
@@ -2827,7 +2873,7 @@ saemix.plot.distpsi<-function(saemixObject,...) {
     } else {
       laby<-"Density"
       if(change.ylab) laby<-plot.opt$ylab
-      plot(xpl2,ypl,type="l",xlab=labx,ylab=laby,xlim=limx, main=tit,lty=plot.opt$lty,col=plot.opt$lcol,lwd=plot.opt$lwd)
+      plot(xpl2,ypl,type="l",xlab=labx,ylab=laby,xlim=limx, main=tit,lty=plot.opt$lty,col=plot.opt$lcol,lwd=plot.opt$lwd,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
       }
   }
 }
@@ -2837,13 +2883,13 @@ saemix.plot.distpsi<-function(saemixObject,...) {
 saemix.plot.parcov<-function(saemixObject,...) {
 # non-user level function
 # parameters versus covariates
-  saemix.plot.parcov.aux(saemixObject,partype="p",...)
+  saemix.plot.parcov.aux(saemixObject,partype="p",...)  
 }
 
 saemix.plot.randeffcov<-function(saemixObject,...) {
 # non-user level function
 # random effects versus covariates
-  saemix.plot.parcov.aux(saemixObject,partype="r",...)
+  saemix.plot.parcov.aux(saemixObject,partype="r",...)  
 }
 
 saemix.plot.parcov.aux<-function(saemixObject,partype="p",...) {
@@ -2878,7 +2924,7 @@ saemix.plot.parcov.aux<-function(saemixObject,partype="p",...) {
   if(plot.opt$new) {
     if(length(plot.opt$mfrow)==0) {
       if(length(plist)>1 & length(clist)>1) replot<-TRUE
-      if(length(clist)>1) np<-length(clist) else np<-length(plist)
+      if(length(clist)>1) np<-length(clist) else np<-length(plist)   
       n1<-round(sqrt(np))
       n2<-ceiling(np/n1)
       mfrow<-c(n1,n2)
@@ -2886,29 +2932,30 @@ saemix.plot.parcov.aux<-function(saemixObject,partype="p",...) {
     if(!replot) par(mfrow=mfrow,ask=plot.opt$ask)
   }
 # ECO TODO: check that map.eta has a first column=Id
-  if(partype=="r") {
+  if(partype=="r") { # random effects versus covariates
   if(tolower(plot.opt$indiv.par)=="map") {
     if(length(saemixObject["results"]["map.eta"])==0) {
       cat("Computing ETA estimates and adding them to fitted object.\n")
       saemixObject<-compute.eta.map(saemixObject)
     }
     param<-saemixObject["results"]["map.eta"]
-  } else
+  } else 
     param<-saemixObject["results"]["cond.mean.phi"]
-  } else {
+  } else { # parameters versus covariates
 # ECO TODO: check that map.psi has a first column=Id; maybe add one to cond.mean.phi for consistency
-    if(tolower(plot.opt$indiv.par)=="map")
-      param<-saemixObject["results"]["map.psi"][, 2:dim(saemixObject["results"]["map.psi"])[2]] else
+    if(tolower(plot.opt$indiv.par)=="map") 
+      param<-saemixObject["results"]["map.psi"][, 2:dim(saemixObject["results"]["map.psi"])[2]] else 
       param<-transphi(saemixObject["results"]["cond.mean.phi"], saemixObject["model"]["transform.par"])
   }
 
-# ECO: will not work with IOV
-  idlist<-unique(saemixObject["data"]["id"])
-  matcov<-saemixObject["data"]["cov"][match(idlist,saemixObject["data"]["id"]),, drop=FALSE]
+# ECO: will not work with IOV  
+  id<-saemixObject["data"]["data"][,saemixObject["data"]["name.group"]]
+  idlist<-unique(id)
+  matcov<-saemixObject["data"]["data"][match(idlist,id), saemixObject["data"]["name.covariates"],drop=FALSE]
   for(ipar in plist) {
     if(replot) par(mfrow=mfrow,ask=plot.opt$ask) # new page for each parameter (only if several covariates & several parameters, & plot.new==TRUE)
     xpar<-param[,ipar]
-    laby<-nampar[ipar]
+    laby<-nampar[ipar] 
     if(partype=="r") laby<-paste("ETA(",laby,")",sep="")
     if(change.ylab) laby<-plot.opt$ylab
     for(icov in clist) {
@@ -2916,19 +2963,19 @@ saemix.plot.parcov.aux<-function(saemixObject,partype="p",...) {
       labx<-saemixObject["data"]["name.covariates"][icov]
       if(change.xlab) labx<-plot.opt$xlab
       if(length(unique(covar))<=2) {
-        boxplot(xpar~covar,xlab=labx,ylab=laby,main=plot.opt$main)
+        boxplot(xpar~covar,xlab=labx,ylab=laby,main=plot.opt$main,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
         if (length(grep("m",plot.opt$line.smooth))>0) {
         y1<-saemixObject["results"]["fixed.psi"][ipar]
         abline(h=y1,lty=plot.opt$ablinelty,col=plot.opt$ablinecol, lwd=plot.opt$ablinelwd)
         }
        } else {
-         plot(covar,xpar,xlab=labx,ylab=laby,main=plot.opt$main,pch=plot.opt$pch, col=plot.opt$col)
+         plot(covar,xpar,xlab=labx,ylab=laby,main=plot.opt$main,pch=plot.opt$pch, col=plot.opt$col,cex.lab=plot.opt$cex.lab,cex.axis=plot.opt$cex.axis,cex.main=plot.opt$cex.main)
          if (length(grep("l",plot.opt$line.smooth))>0) {
           y1<-lm(xpar~covar)
           abline(y1,lty=plot.opt$ablinelty,col=plot.opt$ablinecol, lwd=plot.opt$ablinelwd)
          }
          if (length(grep("s",plot.opt$line.smooth))>0) {
-          lines(lowess(covar,xpar),lty=plot.opt$ablinelty,col=plot.opt$ablinecol, lwd=plot.opt$ablinelwd)
+          lines(lowess(covar[!is.na(covar)],xpar[!is.na(covar)]), lty=plot.opt$ablinelty,col=plot.opt$ablinecol, lwd=plot.opt$ablinelwd)
          }
          if (length(grep("m",plot.opt$line.smooth))>0) {
           y1<-saemixObject["results"]["fixed.psi"][ipar]

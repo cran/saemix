@@ -21,13 +21,13 @@ saemixData(name.data, header, sep, na, name.group, name.predictors,
     \item{name.X}{ name of the column containing the regression variable to be used on the X axis in the plots (defaults to the first predictor)}
     \item{units}{ list with up to three elements, x, y and optionally covariates, containing the units for the X and Y variables respectively, as well as the units for the different covariates (defaults to empty)}
 }
-\details{ This function is the user-friendly constructor for the SaemixData object class.
+\details{ This function is the user-friendly constructor for the SaemixData object class. The read.saemixData is a helper function, used to read the dataset, and is not intended to be called directly.
 }
 \value{ A SaemixData object (see \code{\link{saemixData}}).
 }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }

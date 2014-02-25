@@ -29,9 +29,9 @@ individual.fits(saemixObject, ...)
   \item{covariate.fits}{ plots of all estimated parameters versus all covariates in the dataset}
   \item{individual.fits}{ plots of individual predictions (line) overlayed on individual observations (dots) for all subjects in the dataset}
 }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -63,15 +63,18 @@ saemix.model<-saemixModel(model=model1cpt,
   covariance.model=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),
   omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="constant")
 
-saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
+# Reducing the number of iterations due to time constraints for CRAN
+saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE,nbiter.saemix=c(100,100))
 
 saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 default.saemix.plots(saemix.fit)
 
-basic.gof(saemix.fit)
+# Not run (time constraints for CRAN)
+# basic.gof(saemix.fit)
 
-advanced.gof(saemix.fit)
+# Not run (time constraints for CRAN)
+# advanced.gof(saemix.fit)
 
 individual.fits(saemix.fit)
 

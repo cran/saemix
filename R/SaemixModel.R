@@ -29,7 +29,7 @@ setClass(
     indx.cov="numeric",		# index of cov param estimated (was indx.betaC)
     indx.omega="numeric",	# index of random param estimated (was i1.omega2)
     indx.res="numeric",		# index of param of residual errors estimated (was indx.res)
-    Mcovariates="matrix"	# matrix of individual covariates in the model
+    Mcovariates="data.frame"	# matrix of individual covariates in the model
   ),
   validity=function(object){
 #    cat ("--- Checking SaemixModel object ---\n")
@@ -44,6 +44,7 @@ setClass(
     if (npar!=dim(object@covariate.model)[2]) isize<-1
     if (npar!=dim(object@covariance.model)[1]) isize<-1
     if (npar!=dim(object@omega.init)[1]) isize<-1
+#    cat("npar=",npar,length(object@transform.par),length(object@fixed.estim), dim(object@covariate.model)[2],dim(object@covariance.model)[1],dim(object@omega.init)[1],"\n")
     if(isize==1) {
       cat("[ SaemixModel : Error ] The number of parameters should be the same in the following elements: psi0 (initial conditions), transform.par, fixed.estim, covariate.model, and the matrices covariance.model and omega.init should be square matrices of size equal to the number of parameters. Please check the input.\n")
       return("Size mismatch")
@@ -52,6 +53,11 @@ setClass(
       cat("[ SaemixModel : Error ] SAEM needs at least two parameters to work on.\n")
       return("Psi0 has size 1")
     }
+		if(sum(object@fixed.estim*mydiag(object@covariance.model))==0) {
+			cat("[ SaemixModel : Error ] ")
+			if(sum(mydiag(object@covariance.model))==0) cat("At least one parameter with IIV must be included in the model.\n") else cat("At least one parameter with IIV must be estimated and not fixed in the model.\n")
+			return("Invalid IIV structure")
+		}
     if(is.na(match(object@error.model,c('constant','proportional','combined', 'exponential')))) {
       cat("[ SaemixModel : Error ] Invalid residual error model")
       return("Invalid residual error model")
@@ -90,6 +96,9 @@ setMethod(
         cat("Warning:\n   Problem with names of psi0\n")
         colnames(psi0)<-name.modpar<-paste("theta",1:npar)
       }
+    }
+    if(dim(psi0)[1]<2 & sum(covariate.model)>0){
+    	psi0<-rbind(psi0,rep(0,dim(psi0)[2]))
     }
     if(is.null(rownames(psi0))) {
       rownames(psi0)<-rep("",dim(psi0)[1])
@@ -134,18 +143,22 @@ setMethod(
     }
     if(missing(omega.init) || length(omega.init)==0) {
       omega.init<-diag(fixed.estim)
-      d<-rep(1,npar)
+      diag.omegi<-rep(1,npar)
       j1<-which(transform.par==0)
       if(length(j1)>0) {
-        d[j1]<-sapply(psi0[1,j1]**2,function(x) { x[x<1]<-1; return(x)})
+      	diag.omegi[j1]<-sapply(psi0[1,j1]**2,function(x) { x[x<1]<-1; return(x)})
 #      for(i in j1) d[i]<-max(psi0[i]^2,1)
       }
-      diag.omegi<-rep(0,npar)
-      diag.omegi[indx.omega]<-d[indx.omega]
       omega.init<-diag(diag.omegi,nrow=npar)
     }
     if(is.null(colnames(omega.init))) colnames(omega.init)<-rownames(omega.init)<-colnames(psi0)
     .Object@omega.init<-omega.init
+		if(sum(.Object@fixed.estim*mydiag(.Object@covariance.model))==0) {
+			cat("Error initialising SaemixModel object:\n")
+#			if(sum(mydiag(.Object@covariance.model))==0) cat("At least one parameter with IIV must be included in the model.\n") else cat("At least one parameter with IIV must be estimated and not fixed in the model.\n")
+			return(.Object)
+		}
+
 ## Residual Error model.
 # error models are a + bf described by [a b]
 # error models :
@@ -286,7 +299,7 @@ setMethod("print","SaemixModel",
     cat("  Nb of parameters:",x@nb.parameters,"\n")
     cat("      parameter names: ",x@name.modpar,"\n")
     cat("      distribution:\n")
-    tab<-cbind(Parameter=x@name.modpar, Distribution=distrib[x@transform.par+1])
+    tab<-cbind(Parameter=x@name.modpar,Distribution=distrib[x@transform.par+1], Estimated=ifelse(x@fixed.estim==1,"Estimated","Fixed"))
     print(tab,quote=FALSE)
     cat("  Variance-covariance matrix:\n")
     tab<-x@covariance.model
@@ -343,7 +356,7 @@ setMethod("showall","SaemixModel",
     if(length(object@name.X)>0) cat("      X predictor: ",object@name.X,"\n")
     if(length(object@name.cov)>0) cat("      covariates: ",object@name.cov,"\n")
     cat("      distribution:\n")
-    tab<-cbind(Parameter=object@name.modpar, Distribution=distrib[object@transform.par+1],Estimated=object@fixed.estim)
+    tab<-cbind(Parameter=object@name.modpar, Distribution=distrib[object@transform.par+1], Estimated=ifelse(object@fixed.estim==1, "Estimated","Fixed"))
     print(tab,quote=FALSE)
     cat("  Variance-covariance matrix:\n")
     tab<-object@covariance.model
@@ -375,8 +388,9 @@ setMethod("showall","SaemixModel",
 ####################################################################################
 
 setMethod("summary","SaemixModel",
-  function(object) {
-    cat("Nonlinear mixed-effects model\n")
+  function(object, print=TRUE, ...) {
+    if(print) {
+    	cat("Nonlinear mixed-effects model\n")
     cat("  Model function")
     if(length(object@description)>0 && nchar(object@description)>0) {
       cat(": ",object@description,"\n")}
@@ -391,11 +405,11 @@ setMethod("summary","SaemixModel",
       cat("     covariate model:\n")
       print(object@covariate.model) 
     } else cat("No covariate\n")
+    }
     distrib<-c("normal","log-normal","probit","logit")
     tab.par<-data.frame(Parameter=object@name.modpar, Distribution=distrib[object@transform.par+1], Estimated=ifelse(as.numeric(object@betaest.model[1,])==1,"estimated","fixed"), Initial.value=object@psi0[1,])
-     tab.res<-data.frame(parameters=object@name.res,Initial.value=object@error.init)
-   
-    res<-list(model=list(model.function=object@model,error.model=object@error.model), parameters=list(fixed=tab.par,residual.error=tab.res), covariance.model=object@covariance.model,covariate.model=object@covariate.model)
+    tab.res<-data.frame(parameters=object@name.res,Initial.value=object@error.init)   
+    res<-list(model=list(model.function=object@model, error.model=object@error.model),parameters=list(fixed=tab.par, residual.error=tab.res),covariance.model=object@covariance.model, covariate.model=object@covariate.model)
     invisible(res)
  }
 )

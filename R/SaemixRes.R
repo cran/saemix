@@ -19,7 +19,7 @@ setClass(
     respar="numeric",		# estimated residual variability
     fim="matrix",		# Fisher information matrix
     se.fixed="numeric",		# estimated SE for fixed effects
-    se.omega2="numeric",	# estimated SE for Omega
+    se.omega="numeric",	# estimated SE for Omega
     se.respar="numeric",	# estimated SE for residual variability
     parpop="matrix",	# population parameters at each iteration
     allpar="matrix",	# all parameters (including covariate effects) at each iteration
@@ -27,7 +27,7 @@ setClass(
     indx.cov="numeric",	# index of cov param estimated (was indx.betaC)
     indx.omega="numeric",	# index of random param estimated (was i1.omega2)
     indx.res="numeric",	# index of param of residual errors estimated (was indx.res)
-    MCOV="matrix",		#
+    MCOV="matrix",		# 
 # Individual parameters
     cond.mean.phi="matrix",	# Cond mean estimates of Phi
     cond.mean.psi="matrix",	# Cond mean estimates of Psi
@@ -54,6 +54,7 @@ setClass(
     aic.gq="numeric",
     bic.gq="numeric",
 # Model predictions and residuals
+		predictions="data.frame", # data frame containing all the predictions and residuals below
     ypred="numeric",		# vector of mean population predictions
     ppred="numeric",		# vector of population predictions with MAP
     ipred="numeric",		# vector of individual predictions with MAP
@@ -143,7 +144,7 @@ setMethod(
     "respar"={return(x@respar)},
     "fim"={return(x@fim)},
     "se.fixed"={return(x@se.fixed)},
-    "se.omega2"={return(x@se.omega2)},
+    "se.omega"={return(x@se.omega)},
     "se.respar"={return(x@se.respar)},
     "parpop"={return(x@parpop)},
     "allpar"={return(x@allpar)},
@@ -175,6 +176,7 @@ setMethod(
     "ll.gq"={return(x@ll.gq)},
     "aic.gq"={return(x@aic.gq)},
     "bic.gq"={return(x@bic.gq)},
+    "predictions"={return(x@predictions)},
     "ypred"={return(x@ypred)},
     "ppred"={return(x@ppred)},
     "ipred"={return(x@ipred)},
@@ -208,7 +210,7 @@ setReplaceMethod(
     "respar"={x@respar<-value},
     "fim"={x@fim<-value},
     "se.fixed"={x@se.fixed<-value},
-    "se.omega2"={x@se.omega2<-value},
+    "se.omega"={x@se.omega<-value},
     "se.respar"={x@se.respar<-value},
     "parpop"={x@parpop<-value},
     "allpar"={x@allpar<-value},
@@ -240,6 +242,7 @@ setReplaceMethod(
     "ll.gq"={x@ll.gq<-value},
     "aic.gq"={x@aic.gq<-value},
     "bic.gq"={x@bic.gq<-value},
+    "predictions"={x@predictions<-value},
     "ypred"={x@ypred<-value},
     "ppred"={x@ppred<-value},
     "ipred"={x@ipred<-value},
@@ -284,6 +287,9 @@ setMethod("print","SaemixRes",
       pval[x@indx.cov]<-1-normcdf(abs(wstat[x@indx.cov]))
       tab<-cbind(tab,"p-value"=pval)
       }
+      is.not.est<-which(as.double(tab[,3])<=.Machine$double.xmin)
+      ncol<-dim(tab)[2]-2
+      tab[is.not.est,3:dim(tab)[2]]<-rep("-",ncol)
     }
     if(digits>0) {
       for(i in 2:dim(tab)[2]) {
@@ -296,24 +302,24 @@ setMethod("print","SaemixRes",
     cat("----------------------------------------------------\n")
     cat("-----------  Variance of random effects  -----------\n")
     cat("----------------------------------------------------\n")
-#  cat("   ECO TODO: check if Omega or Omega2 (SD or variances) and can we choose ?\n") returns omega2, and we can't choose
-    if(length(x@se.omega2)==0) {
+#  cat("   ECO TODO: check if Omega or Omega2 (SD or variances) and can we choose ?\n") => returns omega2, and we can't choose
+    if(length(x@se.omega)==0) {
       tab<-cbind(x@name.random,diag(x@omega)[x@indx.omega])
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-cbind(x@name.random,diag(x@omega)[x@indx.omega],x@se.omega2[x@indx.omega])
+      tab<-cbind(x@name.random,diag(x@omega)[x@indx.omega],x@se.omega[x@indx.omega])
       tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
     }
     if(digits>0) {
-      for(i in 2:dim(tab)[2])
+      for(i in 2:dim(tab)[2]) 
          tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits)
     }
     print(tab,quote=FALSE)
     cat("----------------------------------------------------\n")
     cat("------  Correlation matrix of random effects  ------\n")
     cat("----------------------------------------------------\n")
-    tab<-cov2cor(x@omega[x@indx.omega,x@indx.omega])
+    tab<-cov2cor(x@omega[x@indx.omega,x@indx.omega,drop=FALSE])
     if(digits>0) {
       for(i in 1:dim(tab)[2]) tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits)
     }
@@ -335,7 +341,7 @@ setMethod("print","SaemixRes",
     cat("      -2LL=",(-2*x@ll.is),"\n")
     cat("      AIC =",x@aic.is,"\n")
     cat("      BIC =",x@bic.is,"\n")
-    }
+    }  
     if(length(x@ll.gq)>0) {
     cat("\nLikelihood computed by Gaussian quadrature\n")
     cat("      -2LL=",(-2*x@ll.gq),"\n")
@@ -374,6 +380,9 @@ setMethod("show","SaemixRes",
       pval[object@indx.cov]<-1-normcdf(abs(wstat[object@indx.cov]))
       tab<-cbind(tab,"p-value"=pval)
       }
+      is.not.est<-which(as.double(tab[,3])<=.Machine$double.xmin)
+      ncol<-dim(tab)[2]-2
+      tab[is.not.est,3:dim(tab)[2]]<-rep("-",ncol)
     }
       for(i in 2:dim(tab)[2]) {
        xcol<-as.double(as.character(tab[,i]))
@@ -385,15 +394,15 @@ setMethod("show","SaemixRes",
 
     cat("\nVariance of random effects\n")
 #  cat("   ECO TODO: check if Omega or Omega2 (SD or variances) and can we choose ?\n")
-    if(length(object@se.omega2)==0) {
-      tab<-cbind(object@name.random,diag(object@omega))
+    if(length(object@se.omega)==0) {
+      tab<-cbind(object@name.random,diag(object@omega)[object@indx.omega])
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-cbind(object@name.random,diag(object@omega),object@se.omega2)
+      tab<-cbind(object@name.random,diag(object@omega)[object@indx.omega],object@se.omega[object@indx.omega])
       tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
       colnames(tab)<-c("Parameter","Estimate","  SE"," CV(%)")
     }
-      for(i in 2:dim(tab)[2])
+      for(i in 2:dim(tab)[2]) 
          tab[,i]<-format(as.double(as.character(tab[,i])),digits=3)
     rownames(tab)<-rep("",dim(tab)[1])
     print(tab,quote=FALSE)
@@ -403,8 +412,8 @@ setMethod("show","SaemixRes",
     mat1<-object@omega
     if(sum(abs(mat1-diag(diag(mat1))))>0) {
     cat("\nCorrelation matrix of random effects\n")
-    tab<-cov2cor(object@omega[object@indx.omega,object@indx.omega])
-    for(i in 1:dim(tab)[2])
+    tab<-cov2cor(object@omega[object@indx.omega,object@indx.omega,drop=FALSE])
+    for(i in 1:dim(tab)[2]) 
       tab[,i]<-format(as.double(as.character(tab[,i])),digits=3)
     try(colnames(tab)<-rownames(tab)<-object@name.random)
     print(tab,quote=FALSE)
@@ -421,7 +430,7 @@ setMethod("show","SaemixRes",
     cat("      -2LL=",(-2*object@ll.is),"\n")
     cat("       AIC=",object@aic.is,"\n")
     cat("       BIC=",object@bic.is,"\n")
-    }
+    }  
     if(length(object@ll.gq)>0) {
     cat("Likelihood computed by Gaussian quadrature\n")
     cat("      -2LL=",(-2*object@ll.gq),"\n")
@@ -451,8 +460,11 @@ setMethod("showall","SaemixRes",
       pval[object@indx.cov]<-1-normcdf(abs(wstat[object@indx.cov]))
       tab<-cbind(tab,"p-value"=pval)
       }
+      is.not.est<-which(as.double(tab[,3])<=.Machine$double.xmin)
+      ncol<-dim(tab)[2]-2
+      tab[is.not.est,3:dim(tab)[2]]<-rep("-",ncol)
     }
-      for(i in 2:dim(tab)[2]) {
+    for(i in 2:dim(tab)[2]) {
        xcol<-as.double(as.character(tab[,i]))
        idx<-which(!is.na(xcol))
        tab[idx,i]<-format(xcol[idx],digits=3)
@@ -462,15 +474,15 @@ setMethod("showall","SaemixRes",
     cat("-----------  Variance of random effects  -----------\n")
     cat("----------------------------------------------------\n")
 #  cat("   ECO TODO: check if Omega or Omega2 (SD or variances) and can we choose ?\n")
-    if(length(object@se.omega2)==0) {
-      tab<-cbind(object@name.random,diag(object@omega))
+    if(length(object@se.omega)==0) {
+      tab<-cbind(object@name.random,diag(object@omega)[object@indx.omega])
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-cbind(object@name.random,diag(object@omega),object@se.omega2)
+      tab<-cbind(object@name.random,diag(object@omega)[object@indx.omega],object@se.omega[object@indx.omega])
       tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
     }
-      for(i in 2:dim(tab)[2])
+      for(i in 2:dim(tab)[2]) 
          tab[,i]<-format(as.double(as.character(tab[,i])),digits=3)
     print(tab,quote=FALSE)
     cat("----------------------------------------------------\n")
@@ -488,7 +500,7 @@ setMethod("showall","SaemixRes",
     cat("      -2LL=",(-2*object@ll.is),"\n")
     cat("      AIC =",object@aic.is,"\n")
     cat("      BIC =",object@bic.is,"\n")
-    }
+    }  
     if(length(object@ll.gq)>0) {
     cat("\nLikelihood computed by Gaussian quadrature\n")
     cat("      -2LL=",(-2*object@ll.gq),"\n")

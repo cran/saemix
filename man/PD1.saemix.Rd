@@ -61,20 +61,11 @@ modelemax<-function(psi,id,xidep) {
   f<-e0+emax*dose/(e50+dose)
   return(f)
 }
-saemix.model<-saemixModel(model=modelemax,description="Emax growth model",
-  psi0=matrix(c(20,300,20,0,0,0),ncol=3,byrow=TRUE,
-  dimnames=list(NULL, c("E0","Emax","EC50"))),transform.par=c(1,1,1),
-  covariate.model=matrix(c(0,0,1),ncol=3,byrow=TRUE),
-  fixed.estim=c(1,1,1),covariance.model=matrix(c(1,0,0,0,1,0,0,0,1),
-  ncol=3,byrow=TRUE),error.model="constant")
-
-saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,seed=42,
-  save=FALSE,save.graphs=FALSE)
 
 # Plotting the data
 plot(saemix.data,main="Simulated data PD1")
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
 
 # Compare models with and without covariates with LL by Importance Sampling
 # SE not computed
@@ -91,10 +82,11 @@ model2<-saemixModel(model=modelemax,description="Emax growth model",
 saemix.options<-list(algorithms=c(0,1,1),nb.chains=3,seed=765754, 
   nbiter.saemix=c(500,300),save=FALSE,save.graphs=FALSE)
 
-fit1<-saemix(model1,saemix.data,saemix.options)
-fit2<-saemix(model2,saemix.data,saemix.options)
-wstat<-(-2)*(fit1["results"]["ll.is"]-fit2["results"]["ll.is"])
+# Not run (strict time constraints for CRAN)
+# fit1<-saemix(model1,saemix.data,saemix.options)
+# fit2<-saemix(model2,saemix.data,saemix.options)
+# wstat<-(-2)*(fit1["results"]["ll.is"]-fit2["results"]["ll.is"])
 
-cat("LRT test for covariate effect on EC50: p-value=",1-pchisq(wstat,1),"\n")
+# cat("LRT test for covariate effect on EC50: p-value=",1-pchisq(wstat,1),"\n")
 }
 \keyword{datasets}

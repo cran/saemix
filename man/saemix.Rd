@@ -13,9 +13,9 @@ saemix(model, data, control = list())
 \details{ The SAEM algorithm is a stochastic approximation version of the standard EM algorithm proposed by Kuhn and Lavielle (see reference). Details of the algorithm can be found in the pdf file accompanying the package.}
 \value{ An object of class SaemixObject containing the results of the fit of the data by the non-linear mixed effect model. A summary of the results is printed out to the terminal, and, provided the appropriate options have not been changed, numerical and graphical outputs are saved in a directory.
 }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -47,17 +47,19 @@ saemix.model<-saemixModel(model=model1cpt,
   covariance.model=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),
   omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="constant")
 
-saemix.fit<-saemix(saemix.model,saemix.data,list(seed=632545,directory="newtheo",
-  save=FALSE,save.graphs=FALSE))
+
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,list(seed=632545,directory="newtheo",
+# save=FALSE,save.graphs=FALSE))
 
 # Prints a summary of the results
-print(saemix.fit)
+# print(saemix.fit)
 
 # Outputs the estimates of individual parameters
-psi(saemix.fit)
+# psi(saemix.fit)
 
 # Shows some diagnostic plots to evaluate the fit
-plot(saemix.fit)
+# plot(saemix.fit)
 
 }
 \keyword{models}

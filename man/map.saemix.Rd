@@ -13,9 +13,9 @@ map.saemix(saemixObject)
  }
 \value{ \item{saemixObject:}{returns the object with the estimates of the MAP parameters (see example for usage)}
 }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -50,11 +50,12 @@ saemix.model<-saemixModel(model=model1cpt,
 saemix.options<-list(algorithm=c(1,0,0),seed=632545,
   save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 # Estimating the individual parameters using the result of saemix 
 # & returning the result in the same object
+# saemix.fit<-map.saemix(saemix.fit)
 
-saemix.fit<-map.saemix(saemix.fit)
 }
 \keyword{models}

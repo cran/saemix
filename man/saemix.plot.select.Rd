@@ -53,9 +53,9 @@ saemix.plot.select(saemixObject, data = FALSE, convergence = FALSE,
 }
 }
 \value{None}
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -91,13 +91,13 @@ saemix.model<-saemixModel(model=model1cpt,
 
 saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
-saemix.plot.select(saemix.fit,data=TRUE,main="Spaghetti plot of data")
+# saemix.plot.select(saemix.fit,data=TRUE,main="Spaghetti plot of data")
 
 # Putting several graphs on the same plot
-par(mfrow=c(2,2))
-saemix.plot.select(saemix.fit,data=TRUE,vpc=TRUE,
-  observations.vs.predictions=TRUE, new=FALSE)
+# par(mfrow=c(2,2))
+# saemix.plot.select(saemix.fit,data=TRUE,vpc=TRUE,observations.vs.predictions=TRUE, new=FALSE)
 }
 \keyword{plot}

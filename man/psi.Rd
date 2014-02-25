@@ -19,9 +19,9 @@ phi_i = C_i mu + eta_i
 
 More details can be found in the PDF documentation.}
 \value{ These functions are used to access and output the estimates of parameters and random effects. When the object passed to the function does not contain these estimates, they are automatically computed. The object is then returned (invisibly) with these estimates added to the results. }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -55,10 +55,11 @@ saemix.model<-saemixModel(model=model1cpt,
 
 saemix.options<-list(algorithm=c(1,0,0),seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
-psi(saemix.fit)
-phi(saemix.fit)
-eta(saemix.fit,indiv.par="eap")
+# psi(saemix.fit)
+# phi(saemix.fit)
+# eta(saemix.fit,indiv.par="eap")
 }
 \keyword{models}

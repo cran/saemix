@@ -12,15 +12,15 @@
 \value{ The function returns an updated version of the object saemix.fit in which the following elements have been added:
 \describe{
 \item{se.fixed:}{standard error of fixed effects, obtained as part of the diagonal of the inverse of the Fisher Information Matrix (only when fim.saemix has been run, or when the saemix.options$algorithms[2] is 1)}
-\item{se.omega2:}{standard error of the variance of random effects, obtained as part of the diagonal of the inverse of the Fisher Information Matrix (only when fim.saemix has been run, or when the saemix.options$algorithms[2] is 1)}
+\item{se.omega:}{standard error of the variance of random effects, obtained as part of the diagonal of the inverse of the Fisher Information Matrix (only when fim.saemix has been run, or when the saemix.options$algorithms[2] is 1)}
 \item{se.res:}{standard error of the parameters of the residual error model, obtained as part of the diagonal of the inverse of the Fisher Information Matrix (only when fim.saemix has been run, or when the saemix.options$algorithms[2] is 1)}
 \item{fim:}{Fisher Information Matrix}
 \item{ll.lin:}{ likelihood calculated by linearisation}
 }
 }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -56,12 +56,12 @@ saemix.model<-saemixModel(model=model1cpt,
 
 saemix.options<-list(algorithm=c(1,0,0),seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 # Estimating the Fisher Information Matrix using the result of saemix 
 # & returning the result in the same object
-
-fim.saemix(saemix.fit)
+# fim.saemix(saemix.fit)
 
 }
 \keyword{models}

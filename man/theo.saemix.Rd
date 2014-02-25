@@ -76,7 +76,8 @@ saemix.model<-saemixModel(model=model1cpt,
 # to save the results and graphs
 saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 # Model with covariates
 saemix.model<-saemixModel(model=model1cpt,
@@ -87,8 +88,9 @@ saemix.model<-saemixModel(model=model1cpt,
   covariance.model=matrix(c(1,0,0,0,1,1,0,1,1),ncol=3,byrow=TRUE),
   omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="combined")
 
-saemix.options<-list(seed=39546,save=FALSE,save.graphs=FALSE)
+# saemix.options<-list(seed=39546,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 }
 \keyword{datasets}

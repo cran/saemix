@@ -1,15 +1,25 @@
 \name{saemix.plot.setoptions}
 \alias{saemix.plot.setoptions}
+\alias{saemix.data.setoptions}
+\alias{replace.plot.options}
+\alias{replace.data.options}
+
 \title{ Function setting the default options for the plots in SAEM}
 \description{This function can be used to create a list containing the default options and arguments used by the plot functions.
 }
 \usage{ 
 saemix.plot.setoptions(saemixObject)
+saemix.data.setoptions(saemix.data)
+replace.plot.options(plot.opt, ...)
+replace.data.options(plot.opt, ...)
 }
 \arguments{   
   \item{saemixObject}{ an object returned by the \code{\link{saemix}} function}
+  \item{saemix.data}{ an SaemixData object returned by the \code{\link{read.saemixData}} function}
+  \item{plot.opt}{ current graphic options}
+  \item{\dots}{ optional arguments passed to the plots, which will be used to override the current options defined in plot.opt}
 }
-\details{A description of the options set via this list is provided in the PDF documentation.
+\details{A more detailed description of the options set via these lists is provided in the PDF documentation. The "replace" functions are helper functions used within the plot functions. saemix.plot.setoptions has more available options than saemix.data.setoptions since it applies to all possible plots while the latter only applies to data.
 \describe{
   \item{ablinecol}{Color of the lines added to the plots (default: "DarkRed")}
   \item{ablinelty}{Type of the lines added to the plots. Defaults to 2 (dashed line)}
@@ -61,12 +71,20 @@ saemix.plot.setoptions(saemixObject)
   \item{ylab}{Label for the Y-axis. Defaults to the name of the response followed by the unit in bracket (eg "Concentration (mg/L)" (Default: none)}
   \item{ylim}{Range for the Y-axis. Defaults to NA, indicating that the range is to be set by the plot function}
   \item{ylog}{A logical value. If TRUE, a logarithmic scale is in use. Defaults to FALSE}
- }}}
 }
+Plotting a SaemixData object also allows the following options:
+\describe{
+  \item{individual}{ if TRUE, plots separate plots for each individual, otherwise plots a spaghetti plot of all the data. Defaults to FALSE}
+  \item{limit}{ for individual plots, plots only a limited number of subjets (nmax). Defaults to TRUE}
+  \item{nmax}{ for individual plots, when limit is TRUE, the maximum number of plots to produce. Defaults to 12}
+  \item{sample}{ for individual plots, if TRUE, randomly samples nmax different subjects to plot. Defaults to FALSE (the first nmax subjects are used in the plots)}
+}
+}
+}}
 \value{A list containing the options set at their default value. This list can be stored in an object and its elements modified to provide suitable graphs.}
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }

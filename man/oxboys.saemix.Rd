@@ -32,6 +32,9 @@ saemix.data<-saemixData(name.data=oxboys.saemix,header=TRUE,
   name.group=c("Subject"),name.predictors=c("age"),name.response=c("height"),
   units=list(x="yr",y="cm"))
 
+# plot the data
+plot(saemix.data)
+
 growth.linear<-function(psi,id,xidep) {
 # input:
 #   psi : matrix of parameters (2 columns, base and slope)
@@ -53,10 +56,8 @@ saemix.model<-saemixModel(model=growth.linear,description="Linear model",
 saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,seed=201004,
   save=FALSE,save.graphs=FALSE)
 
-# plot the data
-plot(saemix.data)
-
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 }
 \keyword{datasets}

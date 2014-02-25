@@ -29,30 +29,26 @@ setMethod(
   signature="SaemixObject",
   definition= function (.Object,data,model,options=list()){
 #    cat ("--- initialising SaemixObject --- \n")
+    if(model["error.model"]=='exponential') {
+      yobs<-data["data"][,data["name.response"]]
+      y<-log(cutoff(yobs))
+      data["yorig"]<-yobs
+      data["data"][,data["name.response"]]<-y
+    }
     .Object@data<-data
-    .Object@model<-model
-# ECO TODO: tidy up (check omega.init defined in call to Model)
-if(FALSE){
-    omega.init<-model@omega.init
-    indest.omega<-which(model@covariance.model>0)
-    i1.omega2<-which(diag(model@covariance.model)>0)
-    i0.omega2<-which((1-diag(model@covariance.model))>0)
-    omega.init[i0.omega2,i0.omega2]<-diag(length(i0.omega2))
-    .Object@model@omega.init<-omega.init
-    .Object@model@i0.omega2<-i0.omega2
-    .Object@model@i1.omega2<-i1.omega2
-    .Object@model@indest.omega<-indest.omega
+# Adjusting number of covariates
     if(dim(model@covariate.model)[1]>length(data@name.covariates)) {
-      cat("Number of covariates in model (",dim(model@covariate.model)[1],") is larger than number of covariates in the dataset (",length(data@name.covariates),"), keeping only the first.",length(data@name.covariates),"\n")
+      cat("The number of covariates in model (",dim(model@covariate.model)[1],") is larger than the number of covariates in the dataset (",length(data@name.covariates),"), keeping only the first",length(data@name.covariates),":",data@name.covariates,".\n")
       model@covariate.model<-model@covariate.model[1:length(data@name.covariates),]
     }
-    if(dim(model@covariate.model)[1]<length(data@name.covariates)) {
-      stop("The number of lines in the covariate model needs to be equal to the number of covariates\n")
+    if(dim(model@covariate.model)[1]<length(data@name.covariates) & dim(model@covariate.model)[1]>0) {
+    	cat("The number of covariates in model (",dim(model@covariate.model)[1],") is smaller than the number of covariates in the dataset (",length(data@name.covariates),"), assuming no covariate-parameter relationship for the remaining covariates; please check covariates:",data@name.covariates,".\n")
+    	l1<-rep(0,dim(model@covariate.model)[2])
+    	n1<-length(data@name.covariates)-dim(model@covariate.model)[1]
+    	model@covariate.model<-rbind(model@covariate.model, matrix(rep(l1,n1),nrow=n1))
     }
-    covariate.model<-matrix(c(rep(1,model@nb.parameters), c(t(model@covariate.model))),ncol=model@nb.parameters,byrow=TRUE)
 # setting the names of the fixed effects
     if(dim(model@covariate.model)[1]>0) {
-      rownames(covariate.model)<-c("Fixed",data@name.covariates)
       nam.with.cov<-rep("",length(model@covariate.model))
       row1<-matrix(rep(model@name.modpar,length(data@name.covariates)), ncol=length(model@name.modpar),byrow=TRUE)
       col1<-matrix(rep(data@name.covariates,length(model@name.modpar)), ncol=length(model@name.modpar))
@@ -60,19 +56,31 @@ if(FALSE){
       nam.with.cov[idcov]<-paste("beta_",col1[idcov],"(",row1[idcov],")",sep="")
       nam1<-rbind(model@name.modpar,matrix(nam.with.cov, ncol=length(model@name.modpar)))
       nam1<-c(nam1)
-      .Object@model@name.fixed<-nam1[nam1!=""]
-    } else {
-      rownames(covariate.model)<-c("Fixed")
-      .Object@model@name.fixed<-model@name.modpar
-    }
-#covariate.model<-rbind(rep(1,nb.parameters),model@covariate.model)
-    .Object@model@covariate.model<-covariate.model
-}
+      model@name.fixed<-nam1[nam1!=""]
+    } else model@name.fixed<-model@name.modpar
+    i1.omega2<-model@indx.omega
+    model@name.random<-paste("omega2",model@name.modpar[model@indx.omega], sep=".")
+    .Object@model<-model
+    .Object@model@betaest.model<-matrix(c(rep(1,.Object@model@nb.parameters), c(t(.Object@model@covariate.model))),ncol=.Object@model@nb.parameters,byrow=TRUE)
+    
+# Covariates
     .Object@model@name.cov<-.Object@data@name.covariates
     if(length(.Object@model@name.cov)>0 & sum(.Object@model@covariate.model)>0) {
       try(rownames(.Object@model@covariate.model)<-.Object@model@name.cov)
       try(rownames(.Object@model@betaest.model)[2:(1+ length(.Object@model@name.cov))]<-.Object@model@name.cov)
     }
+    ucov <- rownames(.Object@model@covariate.model)[ rowSums(.Object@model@covariate.model)>0]
+    if(length(ucov)>0) {
+      for(icov in ucov) {
+      	xdat<-subset(.Object@data@data,is.na(get(icov)))
+      	if(dim(xdat)[1]>0) {
+      		imis<-unique(xdat[,.Object@data@name.group])
+      		cat("Missing values for covariate",as.character(icov),"for which a parameter-covariate relationship is estimated: removing subject(s)",imis,"from the dataset.\n")
+      	}
+      	.Object@data<-subset(.Object@data,!is.na(get(icov)))
+      }
+    }
+# Initialising options
     opt<-saemixControl()
     if(length(options)>0) {
     for(i in names(options)) opt[i]<-options[i]
@@ -94,12 +102,31 @@ if(FALSE){
     opt$nbiter.sa<-round(opt$nbiter.saemix[1]/2)
     opt$nbiter.tot<-sum(opt$nbiter.saemix)
     .Object@options<-opt
+# Options for plots
     .Object@prefs<-saemix.plot.setoptions(.Object)
 # Object validation
     validObject(.Object)
     return (.Object )
   }
 )
+
+###########################	Default options		#############################
+
+saemixControl<-function(algorithms=c(1,1,1),nbiter.saemix=c(300,100), nb.chains=1,fix.seed=TRUE,seed=23456,nmc.is=5000,nu.is=4, print.is=FALSE,nbdisplay=100,displayProgress=TRUE,nbiter.burn=5, nbiter.mcmc=c(2,2,2),proba.mcmc=0.4,stepsize.rw=0.4,rw.init=0.5,alpha.sa=0.97,  nnodes.gq=12,nsd.gq=4,maxim.maxiter=100,nb.sim=1000,nb.simpred=100, ipar.lmcmc=50,ipar.rmcmc=0.05,print=TRUE,save=TRUE, save.graphs=TRUE,directory="newdir",warnings=FALSE) {
+  if(fix.seed) seed<-seed else {
+    rm(.Random.seed)
+    runif(1)
+    seed<-.Random.seed[5]
+  }
+  if(ipar.lmcmc<2) {
+    ipar.lmcmc<-2
+    cat("Value of L_MCMC too small, setting it to 2 (computation of the conditional means and variances of the individual parameters)\n")
+  }
+  while(length(algorithms)<3) algorithms<-c(algorithms,1)
+  names(algorithms)[1:3]<-c("MAP","FIM","LL.IS")
+  list(algorithms=algorithms,nbiter.saemix=nbiter.saemix, nbiter.burn=nbiter.burn,nb.chains=nb.chains,fix.seed=fix.seed,seed=seed, nmc.is=nmc.is,nu.is=nu.is,print.is=print.is, nbdisplay=nbdisplay,displayProgress=displayProgress,print=print,save=save, save.graphs=save.graphs,directory=directory,warnings=warnings, nbiter.mcmc=nbiter.mcmc,proba.mcmc=proba.mcmc,stepsize.rw=stepsize.rw, rw.init=rw.init,alpha.sa=alpha.sa,nnodes.gq=nnodes.gq,nsd.gq=nsd.gq, maxim.maxiter=maxim.maxiter,nb.sim=nb.sim,nb.simpred=nb.simpred,
+ipar.lmcmc=ipar.lmcmc,ipar.rmcmc=ipar.rmcmc)
+}
 
 ####################################################################################
 ####			saemixObject class - accesseur				####
@@ -148,15 +175,17 @@ setReplaceMethod(
 ####				Summary method for SaemixObject			####
 ####################################################################################
 setMethod("summary","SaemixObject",
-  function(object) {
+  function(object, print=TRUE, ...) {
     if(length(object@results@fixed.effects)==0) {
       cat("Object of class SaemixObject, no fit performed yet.\n")
       return()
     }
     digits<-2;nsmall<-2
+    if(print) {
     cat("----------------------------------------------------\n")
     cat("-----------------  Fixed effects  ------------------\n")
     cat("----------------------------------------------------\n")
+    }
     if(length(object@results@se.fixed)==0) {
       tab<-data.frame(c(object@results@name.fixed, object@results@name.res[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]))
       colnames(tab)<-c("Parameter","Estimate")
@@ -177,62 +206,74 @@ setMethod("summary","SaemixObject",
      idx<-which(!is.na(xcol) & xcol!="-")
      tab[idx,i]<-format(xcol[idx],digits=digits,nsmall=nsmall)
     }
+    if(print) {
     print(tab,quote=FALSE)
     cat("----------------------------------------------------\n")
     cat("-----------  Variance of random effects  -----------\n")
     cat("----------------------------------------------------\n")
 #  cat("   ECO TODO: check if Omega or Omega2 (SD or variances) and can we choose ?\n")
-    if(length(object@results@se.omega2)==0) {
+    }
+    if(length(object@results@se.omega)==0) {
       tab<-data.frame(object@results@name.random, diag(object@results@omega)[object@results@indx.omega])
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-data.frame(object@results@name.random, diag(object@results@omega)[object@results@indx.omega], object@results@se.omega2[object@results@indx.omega])
+      tab<-data.frame(object@results@name.random, diag(object@results@omega)[object@results@indx.omega], object@results@se.omega[object@results@indx.omega])
       tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
     }
     tab.random<-tab
-    for(i in 2:dim(tab)[2])
+    for(i in 2:dim(tab)[2]) 
       tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits,nsmall=nsmall)
+    if(print) {
     print(tab,quote=FALSE)
     cat("----------------------------------------------------\n")
     cat("------  Correlation matrix of random effects  ------\n")
     cat("----------------------------------------------------\n")
-    tab<-cov2cor(object@results@omega[object@results@indx.omega, object@results@indx.omega])
+    }
+    tab<-cov2cor(object@results@omega[object@results@indx.omega, object@results@indx.omega,drop=FALSE])
     tab.corr<-tab
     for(i in 1:dim(tab)[2])
       tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits,nsmall=nsmall)
     try(colnames(tab)<-rownames(tab)<-object@results@name.random)
-    print(tab,quote=FALSE)
+    if(print) print(tab,quote=FALSE)
     l1<-rep(NA,3)
     tab.ll<-data.frame(Method=c("Linearisation","Importance Sampling","Gaussian Quadrature"),"-2xLL"=l1,AIC=l1,BIC=l1)
     if(length(object@results@ll.lin)>0 | length(object@results@ll.is)>0 | length(object@results@ll.gq)>0) {
+    	if(print) {
     cat("----------------------------------------------------\n")
     cat("---------------  Statistical criteria  -------------\n")
     cat("----------------------------------------------------\n")
+    	}
     if(length(object@results@ll.lin)>0) {
+    	if(print) {
     cat("Likelihood computed by linearisation\n")
     cat("      -2LL=",(-2*object@results@ll.lin),"\n")
     cat("      AIC =",object@results@aic.lin,"\n")
     cat("      BIC =",object@results@bic.lin,"\n")
+    	}
     tab.ll[1,2:4]<-c((-2*object@results@ll.lin),object@results@aic.lin, object@results@bic.lin)
     }
     if(length(object@results@ll.is)>0) {
+    	if(print) {
     cat("\nLikelihood computed by importance sampling\n")
     cat("      -2LL=",(-2*object@results@ll.is),"\n")
     cat("      AIC =",object@results@aic.is,"\n")
     cat("      BIC =",object@results@bic.is,"\n")
+    	}
     tab.ll[2,2:4]<-c((-2*object@results@ll.is),object@results@aic.is, object@results@bic.is)
-    }
+    }  
     if(length(object@results@ll.gq)>0) {
+    	if(print) {
     cat("\nLikelihood computed by Gaussian quadrature\n")
     cat("      -2LL=",(-2*object@results@ll.gq),"\n")
     cat("      AIC =",object@results@aic.gq,"\n")
     cat("      BIC =",object@results@bic.gq,"\n")
+    	}
     tab.ll[3,2:4]<-c((-2*object@results@ll.gq),object@results@aic.gq, object@results@bic.gq)
     }
-    cat("----------------------------------------------------\n")
+    if(print) cat("----------------------------------------------------\n")
     }
-    tab<-data.frame(Id=unique(object@data@id),object@results@cond.mean.psi)
+    tab<-data.frame(Id=unique(object@data@data[,object@data@name.group]), object@results@cond.mean.psi)
     try(colnames(tab)[-c(1)]<-object@model@name.modpar,silent=TRUE)
     npar<-length(object@results@name.fixed)
     coef<-list(fixed=tab.fix[1:npar,2],random=list(map.psi=object@results@map.psi, cond.mean.psi=tab))
@@ -240,14 +281,14 @@ setMethod("summary","SaemixObject",
 
     res<-list(fixed.effects=tab.fix,sigma=sigma,random.effects=tab.random, correlation.matrix=tab.corr,logLik=tab.ll,coefficients=coef)
     if(length(object@results@fim)>0) res$FIM<-object@results@fim
-    res$data<-list(N=object@data@N,nobs=list(ntot=saemix.fit@data@ntot.obs, nind=saemix.fit@data@nind.obs),id=object@data@id,xind=object@data@xind, y=object@data@y)
+    res$data<-list(N=object@data@N,nobs=list(ntot=object@data@ntot.obs, nind=object@data@nind.obs),data=object@data@data)
     if(length(object@results@ypred)>0 | length(object@results@ipred)>0  | length(object@results@ppred)>0 | length(object@results@icpred)>0) {
       res$fitted<-list(population=list(pop.param=object@results@ppred, pop.mean=object@results@ypred),individual=list(map.ipred=object@results@ipred, cond.ipred=object@results@icpred))
     }
      if(length(object@results@wres)>0 | length(object@results@iwres)>0  | length(object@results@icwres)>0 | length(object@results@pd)>0) {
       res$residuals<-list(population=list(wres=object@results@wres), individual=list(map.iwres=object@results@iwres,cond.iwres=object@results@icwres, pd=object@results@pd, npde=object@results@npde))
     }
-
+   
     invisible(res)
  }
 )
@@ -271,7 +312,7 @@ setMethod("print","SaemixObject",
     cat("----    Key algorithm options  ----\n")
     cat("-----------------------------------\n")
     algs<-c("MAP","FIM","LL by IS")
-    if(sum(x@options$algorithms)>0)
+    if(sum(x@options$algorithms)>0) 
       cat("    Algorithms:",paste(algs[x@options$algorithms==1],collapse=", "),"\n") else cat("    Algorithms: estimation only\n")
     st1<-paste(c("K1=","K2="),x@options$nbiter.saemix,sep="",collapse=", ")
     cat("    Number of iterations: ",st1,"\n")
@@ -284,7 +325,7 @@ setMethod("print","SaemixObject",
     cat("    Input/output\n")
     cat("        save the results to a file: ",x@options$save,"\n")
     cat("        save the graphs to files: ",x@options$save.graphs,"\n")
-    cat("        directory where results should be saved: ",x@options$directory,"\n")
+    if(x@options$save | x@options$save.graphs) cat("        directory where results should be saved: ",x@options$directory,"\n")
     cat("-----------------------------------\n")
     cat("----          Results          ----\n")
     cat("-----------------------------------\n")
@@ -313,12 +354,12 @@ setMethod("show","SaemixObject",
     cat("     error model:",object@model@error.model,"\n")
     if(dim(object@model@covariate.model)[1]>0) {
       cat("     covariate model:\n")
-      print(object@model@covariate.model)
+      print(object@model@covariate.model) 
     } else cat("     No covariate\n")
     cat("\n")
     cat("Key options\n")
     algs<-c("MAP","FIM","LL by IS")
-    if(sum(object@options$algorithms)>0)
+    if(sum(object@options$algorithms)>0) 
       cat("    Algorithms:",paste(algs[object@options$algorithms==1],collapse=", "),"\n") else cat("    Algorithms: estimation only\n")
     st1<-paste(c("K1=","K2="),object@options$nbiter.saemix,sep="",collapse=", ")
     cat("    Number of iterations: ",st1,"\n")
@@ -327,13 +368,12 @@ setMethod("show","SaemixObject",
     cat("    Number of MCMC iterations for IS: ",object@options$nmc.is,"\n")
     cat("    Input/output\n")
     if(object@options$save)
-      cat("        save the results to a file: ",object@options$save,"\n") else
-      cat("        no graphs\n")
+      cat("        save the results to a file: ",object@options$save,"\n") else 
+      cat("        results not saved\n")
     if(object@options$save.graphs)
-      cat("        save the graphs to files: ",object@options$save.graphs,"\n") else
+      cat("        save the graphs to files: ",object@options$save.graphs,"\n") else 
       cat("        no graphs\n")
-    if(object@options$save | object@options$save.graphs)
-      cat("        directory where results are saved: ",object@options$directory,"\n")
+    if(object@options$save | object@options$save.graphs) cat("        directory where results are saved: ",object@options$directory,"\n")
     if(FALSE) {
     if(length(object@rep.data)>0) irep<-1 else irep<-0
     if(length(object@sim.data)>0) isim<-1 else isim<-0
@@ -371,7 +411,7 @@ setMethod("showall","SaemixObject",
     cat("----      Algorithm options    ----\n")
     cat("-----------------------------------\n")
     algs<-c("MAP","FIM","LL by IS")
-    if(sum(object@options$algorithms)>0)
+    if(sum(object@options$algorithms)>0) 
       cat("    Algorithms:",paste(algs[object@options$algorithms==1],collapse=", "),"\n") else cat("    Algorithms: estimation only\n")
     st1<-paste(c("K1=","K2="),object@options$nbiter.saemix,sep="",collapse=", ")
     cat("    Number of chains: ",object@options$nb.chains,"\n")
@@ -391,7 +431,7 @@ setMethod("showall","SaemixObject",
     cat("        print out the results after the fit: ",object@options$print,"\n")
     cat("        save the results to a file: ",object@options$save,"\n")
     cat("        save the graphs to files: ",object@options$save.graphs,"\n")
-    cat("        directory where results should be saved: ",object@options$directory,"\n")
+    if(object@options$save | object@options$save.graphs) cat("        directory where results should be saved: ",object@options$directory,"\n")
     cat("        whether warnings should be output during the fit: ",object@options$warnings,"\n")
     cat("    SAEM algorithm\n")
     cat("        number of MCMC iterations for each kernel: ",object@options$nbiter.mcmc,"\n")
@@ -433,25 +473,36 @@ setMethod(f="predict",
     if(length(object["results"]["cond.mean.phi"])==0)
       object<-conddist.saemix(object)
     saemix.res<-object["results"]
+    xind<-object["data"]["data"][,object["data"]["name.predictors"],drop=FALSE]
+    if(object["model"]["error.model"]=="exponential") yobs<-object["data"]["yorig"] else yobs<-object["data"]["data"][,object["data"]["name.response"]]
+    index<-object["data"]["data"][,"index"]
 # Individual predictions
-    ipred<-object["model"]["model"](saemix.res["map.psi"][, 2:dim(saemix.res["map.psi"])[2]],object["data"]["index"], object["data"]["xind"])
+    ipred<-object["model"]["model"](saemix.res["map.psi"][, 2:dim(saemix.res["map.psi"])[2]],index,xind)
     psiM<-transphi(saemix.res["cond.mean.phi"],object["model"]["transform.par"])
-    icond.pred<-object["model"]["model"](psiM,object["data"]["index"], object["data"]["xind"])
+    icond.pred<-object["model"]["model"](psiM,index,xind)
     saemix.res["ipred"]<-ipred
     saemix.res["icpred"]<-icond.pred
 # Individual weighted residuals
     ares<-saemix.res["respar"][1]
     bres<-saemix.res["respar"][2]
     gpred<-cutoff(ares+bres*abs(ipred))
-    iwres<-(ipred-object["data"]["y"])/gpred
+    iwres<-(ipred-yobs)/gpred
     gpred<-cutoff(ares+bres*abs(icond.pred))
-    icwres<-(icond.pred-object["data"]["y"])/gpred
+    icwres<-(icond.pred-yobs)/gpred
     saemix.res["iwres"]<-iwres
     saemix.res["icwres"]<-icwres
 # Population predictions using the population parameters [ f(mu) ]
     psiM<-transphi(saemix.res["mean.phi"],object["model"]["transform.par"])
-    ppred<-object["model"]["model"](psiM,object["data"]["index"], object["data"]["xind"])
+    ppred<-object["model"]["model"](psiM,index,xind)
     saemix.res["ppred"]<-ppred
+		if(length(saemix.res["predictions"])==0) 
+			saemix.res["predictions"]<-data.frame(ppred=ppred,ipred=ipred,icpred=icond.pred,iwres=iwres,icwres=icwres) else {
+			saemix.res["predictions"]$ppred<-ppred
+			saemix.res["predictions"]$ipred<-ipred
+			saemix.res["predictions"]$icpred<-icond.pred
+			saemix.res["predictions"]$iwres<-iwres
+			saemix.res["predictions"]$icwres<-icwres
+		}
 # Population weighted residuals: needs the individual variance-covariance matrix => use compute.sres to estimate these by simulations
     object["results"]<-saemix.res
     return(object)
@@ -474,7 +525,7 @@ setMethod(f="plot",
 #    cat("plot.type=",plot.type,"\n")
     if(plot.type[1]=="reduced") plot.type<-c("data","convergence","likelihood", "observations.vs.predictions")
     if(plot.type[1]=="full") plot.type<-c("data","convergence","likelihood", "observations.vs.predictions","residuals.scatter","residuals.distribution","vpc")
-
+    
     pltyp<-c("data","convergence","likelihood","individual.fit", "population.fit", "both.fit","observations.vs.predictions","residuals.scatter", "residuals.distribution","vpc","npde","random.effects","marginal.distribution", "correlations","parameters.vs.covariates","randeff.vs.covariates")
     ifnd<-pmatch(plot.type,pltyp)
     if(sum(is.na(ifnd))>0) {
@@ -484,12 +535,16 @@ setMethod(f="plot",
     if(length(ifnd)==0) return()
     plot.type<-pltyp[ifnd]
     interactive<-x["prefs"]$interactive
-    id.pred<-match(plot.type,c("observations.vs.predictions","individual.fit", "both.fit","residuals.scatter","residuals.distribution"))
-    id.map<-match(plot.type,c("randeff.vs.covariates"))
-    id.sim<-match(plot.type, c("vpc","npde","residuals.scatter","residuals.distribution"))
+    id.pred<-match(plot.type,c("observations.vs.predictions","individual.fit", "residuals.scatter","residuals.distribution"))
+    if(x@prefs$which.poppred=="ppred") id.pred<-c(id.pred,match(plot.type, c("population.fit", "both.fit")))
+    id.map<-match(plot.type,c("randeff.vs.covariates","parameters.vs.covariates"))
+    id.sim<-match(plot.type, c("vpc"))
+    id.res<-match(plot.type, c("npde","residuals.scatter", "residuals.distribution"))
+    if(x@prefs$which.poppred=="ypred") id.sim<-c(id.sim,match(plot.type, c("population.fit", "both.fit")))
     id.pred<-id.pred[!is.na(id.pred)]
     id.sim<-id.sim[!is.na(id.sim)]
     id.map<-id.map[!is.na(id.map)]
+    id.res<-id.res[!is.na(id.res)]
     namObj<-deparse(substitute(x))
 #    cat(namObj,"\n")
     if(length(id.pred)>0) {
@@ -497,7 +552,8 @@ setMethod(f="plot",
         boolpred<-TRUE
         if(interactive) {
       cok<-readline(prompt="Computations will be performed to obtain model predictions, proceed ? (y/Y) [default=yes] ")
-        if(cok!="y"&cok!="Y"&cok!="yes"&cok!="") boolpred<-FALSE}
+        if(!cok %in% c("y","Y","yes","")) return()
+        }
         if(boolpred) {
           x<-predict(x)
           assign(namObj,x,envir=parent.frame())
@@ -505,11 +561,27 @@ setMethod(f="plot",
       }
     }
     if(length(id.sim)>0) {
+      if(length(x["sim.data"]["N"])==0 || x["sim.data"]["nsim"]==0) {
+        boolpred<-TRUE
+        if(interactive) {
+        cok<-readline(prompt="Simulations will be performed. This might take a while, proceed ? (y/Y) [default=yes] ")
+        if(!cok %in% c("y","Y","yes","")) return()
+        } else {
+        	cat("Performing simulations under the model.\n")
+        }
+        if(boolpred) {
+          x<-simul.saemix(x)
+          assign(namObj,x,envir=parent.frame())
+        }
+      }
+    }
+    if(length(id.res)>0) {
       if(length(x["results"]["npde"])==0) {
         boolpred<-TRUE
         if(interactive) {
         cok<-readline(prompt="Simulations will be performed to obtain residuals, VPC and npde. This might take a while, proceed ? (y/Y) [default=yes] ")
-        if(cok!="y"&cok!="Y"&cok!="yes"&cok!="") boolpred<-FALSE}
+        if(!cok %in% c("y","Y","yes","")) return()
+        }
         if(boolpred) {
           x<-compute.sres(x)
           assign(namObj,x,envir=parent.frame())
@@ -533,52 +605,39 @@ setMethod(f="plot",
        cat("Plotting convergence plots\n")
        saemix.plot.convergence(x,...)
     },
-    "likelihood"={
+    "likelihood"={  
        cat("Plotting the likelihood\n")
        saemix.plot.llis(x,...)
     },
     "observations.vs.predictions"={
-      if(length(x["results"]["ipred"])>0) {
-        cat("Plotting observations versus predictions\n")
-        saemix.plot.obsvspred(x,...)
-      }
+       cat("Plotting observations versus predictions\n")      
+       saemix.plot.obsvspred(x,...)
     },
     "individual.fit"={
-      x@prefs$level<-c(1)
-      if(length(x["results"]["ipred"])>0) {
-        cat("Plotting individual fits\n")
-        saemix.plot.fits(x,...)
-      }
-    },
-    "population.fit"={
-      x@prefs$level<-c(0)
-      cat("Plotting fits obtained with population predictions\n")
+      cat("Plotting individual fits\n")
       saemix.plot.fits(x,...)
     },
+    "population.fit"={
+      cat("Plotting fits obtained with population predictions\n")
+      saemix.plot.fits(x,level=0,...)
+    },
     "both.fit"={
-      x@prefs$level<-c(0:1)
-      if(length(x["results"]["ipred"])>0) {
-        cat("Plotting the fits overlaying individual and population predictions\n")
-        saemix.plot.fits(x,...)
-      }
+      cat("Plotting the fits overlaying individual and population predictions\n")
+      saemix.plot.fits(x,level=c(0,1),...)
     },
     "residuals.scatter"={
-      if(length(x["results"]["wres"])>0) {
-        cat("Plotting scatterplots of residuals\n")
-        saemix.plot.scatterresiduals(x,...)
-      }
+      cat("Plotting scatterplots of residuals\n")
+      saemix.plot.scatterresiduals(x,...)
     },
     "residuals.distribution"={
-      if(length(x["results"]["wres"])>0) {
-        cat("Plotting the distribution of residuals\n")
-        saemix.plot.distribresiduals(x,...)
-      }
+      cat("Plotting the distribution of residuals\n")
+      saemix.plot.distribresiduals(x,...)
     },
     "random.effects"={
       saemix.plot.randeff(x,...)
     },
     "correlations"={
-      saemix.plot.correlations(x,...)
+      if(length(x@model@indx.omega>1)) saemix.plot.correlations(x,...)
     },
     "parameters.vs.covariates"={
       if(length(x@data@name.covariates)==0) {
@@ -596,22 +655,71 @@ setMethod(f="plot",
       saemix.plot.distpsi(x,...)
     },
     "vpc"={
-      if(length(x["results"]["npde"])>0) {
-        cat("Plotting VPC\n")
-        saemix.plot.vpc(x,...)
-      }
+      cat("Plotting VPC\n")
+      saemix.plot.vpc(x,...)
     },
     "npde"={
-      if(length(x["results"]["npde"])>0) {
-        cat("Plotting npde\n")
-        saemix.plot.npde(x,...)
-      }
+      cat("Plotting npde\n")
+      saemix.plot.npde(x,...)
     },
     cat("Plot ",ipl," not implemented yet\n")
      )
    }
   }
 )
+
+####################################################################################
+####			Likelihood and tests		####
+####################################################################################
+
+# Extract likelihood and number of parameters
+setMethod("logLik","SaemixObject",
+  function(object,...) {
+    args1<-match.call(expand.dots=TRUE)
+    i1<-match("method",names(args1))
+    method<-"is"
+    if(!is.na(i1)) {
+    	str1<-as.character(args1[[i1]])
+    	if(str1 %in% c("is","lin","gq")) method<-str1
+    }
+# Compute the requested LL
+#    namObj<-deparse(substitute(object))
+#     if(method=="is" & length(object@results@ll.is)==0) {
+#         object<-llis.saemix(object)
+#         assign(namObj,object,envir=parent.frame())
+#     }
+#     if(method=="gq" & length(object@results@ll.gq)==0) {
+#         object<-llgq.saemix(object)
+#         assign(namObj,object,envir=parent.frame())
+#     }
+#     if(method=="lin" & length(object@results@ll.lin)==0) {
+#         object<-fim.saemix(object)
+#         assign(namObj,object,envir=parent.frame())
+#     }
+# OR: return if desired LL has not been computed
+    if(method=="gq" & length(object@results@ll.gq)==0) {
+    	cat("The log-likelihood by Gaussian Quadrature has not yet been computed.\n")
+    	invisible(NULL)
+    }
+    if(method=="is" & length(object@results@ll.is)==0) {
+    	cat("The log-likelihood by Importance Sampling has not yet been computed.\n")
+    	invisible(NULL)
+    }
+    if(method=="lin" & length(object@results@ll.lin)==0) {
+    	cat("The log-likelihood by linearisation has not yet been computed.\n")
+    	invisible(NULL)
+    }
+    ll<-switch(method,is=object@results@ll.is,lin=object@results@ll.lin, gq=object@results@ll.gq)
+    res<-paste(format(ll,digits=2,nsmall=2)," (df=",object@results@npar.est,")", sep="")
+    res<-matrix(res,dimnames=list(paste("LL by",method)," "))
+    print(res)
+    res<-list(ll=ll,nobs=object@data@ntot.obs,df=object@results@npar.est)    
+    invisible(res)
+  }
+)
+
+# Log-likelihood ratio test, given 2 models
+# ECO TODO
 
 ####################################################################################
 ####			saemixObject class - accesseurs parametres		####
@@ -692,7 +800,7 @@ setMethod("coef","SaemixObject",
     pfix<-object@results@fixed.effects[object@results@indx.fix]
     names(pfix)<-object@results@name.fixed[object@results@indx.fix]
 #c(object@results@fixed.effects,object@name.res[object@indx.res])
-#    names(pfix)<-c(object@results@name.fixed,object@name.res[object@indx.res])
+#    names(pfix)<-c(object@results@name.fixed,object@name.res[object@indx.res])    
     pop.phi<-object@results@mean.phi
     pop.psi<-transphi(pop.phi,object@model@transform.par)
     ind.psi<-list(map=object@results@map.psi[,-c(1)], cond=object@results@cond.mean.psi)

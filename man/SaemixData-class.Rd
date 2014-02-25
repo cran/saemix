@@ -8,7 +8,6 @@
 \alias{initialize,SaemixData-method}
 \alias{plot,SaemixData-method}
 \alias{print,SaemixData-method}
-\alias{read.saemixData,SaemixData-method}
 \alias{showall,SaemixData-method}
 \alias{show,SaemixData-method}
 \alias{plot,SaemixData}
@@ -17,6 +16,8 @@
 \alias{show,SaemixData}
 \alias{summary,SaemixData}
 \alias{summary,SaemixData-method}
+\alias{read.saemixData}
+\alias{read.saemixData,SaemixData-method}
 
 \alias{SaemixRepData-class}
 \alias{SaemixRepData}
@@ -50,14 +51,9 @@
     \item{\code{name.covariates}:}{Object of class \code{"character"}: name of the column(s) containing the covariates, if present (otherwise empty)}
     \item{\code{name.X}:}{Object of class \code{"character"}: name of the column containing the regression variable to be used on the X axis in the plots}
     \item{\code{units}:}{Object of class \code{"list"}: list with up to three elements, x, y and optionally covariates, containing the units for the X and Y variables respectively, as well as the units for the different covariates}
-    \item{\code{tab}:}{Object of class \code{"data.frame"}: dataframe containing the data}
+    \item{\code{data}:}{Object of class \code{"data.frame"}: dataframe containing the data, with columns for id (name.group), predictors (name.predictors), response (name.response), and covariates if present in the dataset (name.covariates). A column "index" contains the subject index (used to map the subject id). The column names, except for the additional column index, correspond to the names in the original dataset.}
     \item{\code{N}:}{Object of class \code{"numeric"}: number of subjects}
-    \item{\code{index}:}{Object of class \code{"numeric"}: subject index}
-    \item{\code{id}:}{Object of class \code{"character"}: subject id data}
-    \item{\code{xind}:}{Object of class \code{"data.frame"}: predictors data (eg dose, time)}
-    \item{\code{y}:}{Object of class \code{"numeric"}: response data}
-    \item{\code{yorig}:}{Object of class \code{"numeric"}: response data, on the original scale}
-    \item{\code{cov}:}{Object of class \code{"data.frame"}: covariates, if present in the model (otherwise empty)}
+    \item{\code{yorig}:}{Object of class \code{"numeric"}: response data, on the original scale. Used when the error model is exponential}
     \item{\code{ntot.obs}:}{Object of class \code{"numeric"}: total number of observations}
     \item{\code{nind.obs}:}{Object of class \code{"numeric"}: vector containing the number of observations for each subject}
   }
@@ -68,16 +64,17 @@
     \item{[}{\code{signature(x = "SaemixData")}: access elements of object}
     \item{initialize}{\code{signature(.Object = "SaemixData")}: internal function to initialise object, not to be used}
     \item{plot}{\code{signature(x = "SaemixData")}: plot the data}
-    \item{print}{\code{signature(x = "SaemixData")}: details about the object}
+    \item{print}{\code{signature(x = "SaemixData")}: prints details about the object (more extensive than show)}
     \item{read.saemixData}{\code{signature(object = "SaemixData")}: internal function, not to be used }
-    \item{showall}{\code{signature(object = "SaemixData")}: all the elements in the object}
-    \item{show}{\code{signature(object = "SaemixData")}: details about the object}
-    \item{summary}{\code{signature(object = "SaemixData")}: summary of the data}
+    \item{showall}{\code{signature(object = "SaemixData")}: shows all the elements in the object}
+    \item{show}{\code{signature(object = "SaemixData")}: prints details about the object}
+    \item{summary}{\code{signature(object = "SaemixData")}: summary of the data. Returns a list with a number of elements extracted from the dataset (N: the number of subjects; nobs: the total number of observations; nind.obs: a vector giving the number of observations for each subject; id: subject ID; x: predictors; y: response, and, if present in the data, covariates: the covariates (as many lines as observations) and ind.covariates: the individual covariates (one line per individual).}
+    \item{subset}{\code{signature(object = "SaemixData")}: extract part of the data; this function will operate on the rows of the dataset (it can be used for instance to extract the data corresponding to the first ten subjects)}
 	 }
 }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }

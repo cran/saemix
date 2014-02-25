@@ -44,9 +44,9 @@ Each plot can be customised by modifying options, either through a list of optio
 }
 }
 \value{None}
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -81,47 +81,49 @@ saemix.model<-saemixModel(model=model1cpt,
 
 saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 # Set of default plots
-plot(saemix.fit)
+# plot(saemix.fit)
 
 # Data
-plot(saemix.fit,plot.type="data")
+# plot(saemix.fit,plot.type="data")
 
 # Convergence
-plot(saemix.fit,plot.type="convergence")
+# plot(saemix.fit,plot.type="convergence")
 
 # Individual plot for subject 1, smoothed
-plot(saemix.fit,plot.type="individual.fit",ilist=1,smooth=TRUE)
+# plot(saemix.fit,plot.type="individual.fit",ilist=1,smooth=TRUE)
 
 # Individual plot for subject 1 to 12, with ask set to TRUE 
 # (the system will pause before a new graph is produced)
-plot(saemix.fit,plot.type="individual.fit",ilist=c(1:12),ask=TRUE)
+# plot(saemix.fit,plot.type="individual.fit",ilist=c(1:12),ask=TRUE)
 
 # Diagnostic plot: observations versus population predictions
-par(mfrow=c(1,1))
-plot(saemix.fit,plot.type="observations.vs.predictions",level=0,new=FALSE)
+# par(mfrow=c(1,1))
+# plot(saemix.fit,plot.type="observations.vs.predictions",level=0,new=FALSE)
 
 # LL by Importance Sampling
-plot(saemix.fit,plot.type="likelihood")
+# plot(saemix.fit,plot.type="likelihood")
 
 # Scatter plot of residuals
 # Data will be simulated to compute weighted residuals and npde
 # the results shall be silently added to the object saemix.fit
-plot(saemix.fit,plot.type="residuals.scatter")
+# plot(saemix.fit,plot.type="residuals.scatter")
 
 # Boxplot of random effects
-plot(saemix.fit,plot.type="random.effects")
+# plot(saemix.fit,plot.type="random.effects")
 
 # Relationships between parameters and covariates
-plot(saemix.fit,plot.type="parameters.vs.covariates")
+# plot(saemix.fit,plot.type="parameters.vs.covariates")
 
 # Relationships between parameters and covariates, on the same page
-par(mfrow=c(3,2))
-plot(saemix.fit,plot.type="parameters.vs.covariates",new=FALSE)
+# par(mfrow=c(3,2))
+# plot(saemix.fit,plot.type="parameters.vs.covariates",new=FALSE)
 
 # VPC
-plot(saemix.fit,plot.type="vpc")
+# Not run (time constraints for CRAN)
+# plot(saemix.fit,plot.type="vpc")
 }
 \keyword{plot}

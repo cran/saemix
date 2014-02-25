@@ -9,7 +9,7 @@
 
 \item{\code{signature(x = "ANY")}}{ default plot function ?}
 
-\item{\code{signature(x = "SaemixData")}}{ Plots the data. Defaults to a spaghetti plot of response versus predictor, with lines joining the data for one individual}
+\item{\code{signature(x = "SaemixData")}}{ Plots the data. Defaults to a spaghetti plot of response versus predictor, with lines joining the data for one individual.}
 
 \item{\code{signature(x = "SaemixModel")}}{ Plots prediction of the model }
 
@@ -18,3 +18,4 @@
 \item{\code{signature(x = "SaemixSimData")}}{ Plots simulated datasets}
 }}
 \keyword{methods}
+

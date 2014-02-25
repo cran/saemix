@@ -11,9 +11,9 @@ llgq.saemix(saemixObject)
 }
 \details{The likelihood of the observations is estimated using Gaussian Quadrature (see documentation).}
 \value{ the log-likelihood estimated by Gaussian Quadrature}
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -47,11 +47,12 @@ saemix.model<-saemixModel(model=model1cpt,
 
 saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 # Estimating the likelihood by Gaussian Quadrature using the result of saemix 
 # & returning the result in the same object
-saemix.fit<-llgq.saemix(saemix.fit)
+# saemix.fit<-llgq.saemix(saemix.fit)
 
 }
 \keyword{models}

@@ -13,7 +13,7 @@ saemixControl(algorithms = c(1, 1, 1), nbiter.saemix = c(300, 100),
   warnings = FALSE)
 }
 \arguments{A number of variables relative to the optimisation algorithm can be set before running the SAEM algorithm; all options not set by the user are given default values as indicated below:
-   \item{algorithms}{ a vector of 1s specifying which algorithms are to be run.  Defaults to c(1,1,1) (respectively estimation of the Fisher Information Matrix (by linearisation), estimation of the individual parameters, and estimation of the log-likelihood by importance sampling)}
+   \item{algorithms}{ a vector of 1s specifying which algorithms are to be run.  Defaults to c(1,1,1) (respectively estimation of the individual parameters (MAP estimates), estimation of the Fisher Information Matrix and log-likelihood by linearisation, and estimation of the log-likelihood by importance sampling)}
    \item{nbiter.saemix}{ nb of iterations in each step (a vector containing 2 elements)}
    \item{nb.chains}{ nb of chains to be run in parallel in the MCMC algorithm. Defaults to 1.}
    \item{nbiter.burn}{ nb of iterations for burning}
@@ -48,9 +48,9 @@ saemixControl(algorithms = c(1, 1, 1), nbiter.saemix = c(300, 100),
   
   These elements are used in subsequent functions and are not meant to be used directly.
 }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }

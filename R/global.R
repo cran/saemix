@@ -25,7 +25,7 @@ setGeneric(name="eta",
 # setGeneric(name="predict",def=function(object){standardGeneric("predict")})
 
 ####################################################################################
-####				Generic functions				####
+####				Library functions				####
 ####################################################################################
 
 #source("func_main.R")

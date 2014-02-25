@@ -33,9 +33,9 @@ where var(eta_i) is the empirical variance of the estimates of the individual ra
 }
 A warning is output if the maximum number of iterations is reached without convergence (the maximum number of iterations is saemix.options$nbiter.saemix[2]).
 }
-\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+\references{ Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
-Monolix32_UsersGuide.pdf (\url{http://software.monolix.org/sdoms/software/})
+Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
@@ -70,15 +70,16 @@ saemix.model<-saemixModel(model=model1cpt,
 
 saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# saemix.fit<-conddist.saemix(saemix.fit,nsamp=3)
 
-saemix.fit<-conddist.saemix(saemix.fit,nsamp=3)
 # First sample from the conditional distribution 
 # (a N (nb of subject) by nb.etas (nb of parameters) matrix)
-saemix.fit["results"]["phi.samp"][,,1]
+# saemix.fit["results"]["phi.samp"][,,1]
 
 # Second sample
-saemix.fit["results"]["phi.samp"][,,2]
+# saemix.fit["results"]["phi.samp"][,,2]
 
 }
 \keyword{model}

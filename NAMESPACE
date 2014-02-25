@@ -1,3 +1,5 @@
+exportPattern("^[[:alpha:]]+")
+
 exportClasses(
    "SaemixData",
    "SaemixModel",
@@ -9,13 +11,16 @@ exportClasses(
 exportMethods(
    "[",
    "[<-",
+   "read.saemixData",
+   "initialize",
    "plot",
    "show",
+   "showall",
    "print",
-   "coef",
    "summary",
    "predict",
-   "showall",
+   "logLik",
+   "coef",
    "psi",
    "phi",
    "eta"
@@ -58,11 +63,15 @@ export(
    "saemix.plot.randeffcov"
 )
 
+S3method(subset, SaemixData)
+
+import(methods)
 import(graphics)
 # honteusement pompe de lme4
 importFrom("stats",
    predict,
-   coef
+   coef,
+   logLik
 )
 
 # not exported

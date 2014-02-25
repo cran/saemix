@@ -5,6 +5,7 @@
 \alias{cutoff.eps}
 \alias{cutoff.res}
 \alias{error}
+\alias{mydiag}
 \alias{transpsi}
 \alias{transphi}
 \alias{dtransphi}
@@ -84,9 +85,9 @@ saemix.model<-saemixModel(model=model1cpt,
 
 saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
-saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+# Not run (strict time constraints for CRAN)
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
-print(saemix.fit)
-
-plot(saemix.fit)
+# print(saemix.fit)
+# plot(saemix.fit)
 }
