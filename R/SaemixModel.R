@@ -1,6 +1,55 @@
 ####################################################################################
 ####			SaemixModel class - definition				####
 ####################################################################################
+#' Class "SaemixModel"
+#' 
+#' An object of the SaemixModel class, representing a nonlinear mixed-effect
+#' model structure, used by the SAEM algorithm.
+#' 
+#' @name SaemixModel-class
+#' @docType class
+#' @aliases SaemixModel-class SaemixModel [<-,SaemixModel-method
+#' @aliases plot,SaemixModel print,SaemixModel showall,SaemixModel show,SaemixModel summary,SaemixModel 
+#' @section Objects from the Class: 
+#' An object of the SaemixModel class can be created by using the function \code{\link{saemixModel}} and contain the following slots:
+#'   \describe{
+#'     \item{\code{model}:}{Object of class \code{"function"}: name of the function used to get predictions from the model (see the User Guide and the online examples for the format and what this function should return).}
+#'     \item{\code{description}:}{Object of class \code{"character"}: an optional text description of the model}
+#'     \item{\code{psi0}:}{Object of class \code{"matrix"}: a matrix with named columns containing the initial estimates for the parameters in the model (first line) and for the covariate effects (second and subsequent lines, optional). The number of columns should be equal to the number of parameters in the model.}
+#'     \item{\code{transform.par}:}{Object of class \code{"numeric"}: vector giving the distribution for each model parameter (0: normal, 1: log-normal, 2: logit, 3: probit). Its length should be equal to the number of parameters in the model.}
+#'     \item{\code{fixed.estim}:}{Object of class \code{"numeric"}: for each parameter, 0 if the parameter is fixed and 1 if it should be estimated. Defaults to a vector of 1 (all parameters are estimated). Its length should be equal to the number of parameters in the model.}
+#'     \item{\code{error.model}:}{Object of class \code{"character"}: name of the error model. Valid choices are "constant" (default), "proportional" and "combined" (see equations in User Guide)}
+#'     \item{\code{covariate.model}:}{Object of class \code{"matrix"}: a matrix of 0's and 1's, with a 1 indicating that a parameter-covariate relationship is included in the model (and an associated fixed effect will be estimated). The nmuber of columns should be equal to the number of parameters in the model and the number of rows to the number of covariates.}
+#'     \item{\code{covariance.model}:}{Object of class \code{"matrix"}: a matrix f 0's and 1's giving the structure of the variance-covariance matrix. Defaults to the Identity matrix (diagonal IIV, no correlations between parameters)}
+#'     \item{\code{omega.init}:}{Object of class \code{"matrix"}: a matrix giving the initial estimate for the variance-covariance matrix}
+#'     \item{\code{error.init}:}{Object of class \code{"numeric"}: a vector giving the initial estimate for the parameters of the residual error}
+#'   }
+#'   Additional elements are added to the model object after a call to \code{saemix} and are used in the algorithm.
+#' @section Methods:
+#'   \describe{
+#'     \item{[<-}{\code{signature(x = "SaemixModel")}: replace elements of object}
+#'     \item{[}{\code{signature(x = "SaemixModel")}: access elements of object}
+#'     \item{initialize}{\code{signature(.Object = "SaemixModel")}: internal function to initialise object, not to be used}
+#'     \item{plot}{\code{signature(x = "SaemixModel")}: plot predictions from the model}
+#'     \item{print}{\code{signature(x = "SaemixModel")}: prints details about the object (more extensive than show)}
+#'     \item{showall}{\code{signature(object = "SaemixModel")}: shows all the elements in the object}
+#'     \item{show}{\code{signature(object = "SaemixModel")}: prints details about the object}
+#' 	 }
+#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear  mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' 
+#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
+#' @author Emmanuelle Comets \email{emmanuelle.comets@@inserm.fr}
+#' @author Audrey Lavenu
+#' @author Marc Lavielle.
+#' @seealso \code{\link{SaemixData}} \code{\link{SaemixObject}} \code{\link{saemixControl}} \code{\link{saemix}}
+#' \code{\link{plot.saemix}}
+#' @keywords classes
+#' @exportClass SaemixModel
+#' @examples
+#' 
+#' showClass("SaemixModel")
+#' 
 
 setClass(
   Class="SaemixModel",
@@ -66,10 +115,13 @@ setClass(
   }
 )
 
+#' @rdname initialize-methods
+#' @exportMethod initialize
+
 setMethod(
   f="initialize",
   signature="SaemixModel",
-  definition=function(.Object,model,description,psi0,transform.par,fixed.estim, error.model,covariate.model,covariance.model,omega.init,error.init,nb.parameters, name.modpar){
+  definition=function(.Object,model,description,psi0,transform.par,fixed.estim, error.model,covariate.model,covariance.model,omega.init,error.init,nb.parameters, name.modpar, verbose=TRUE){
 #    cat ("--- initialising SaemixModel Object --- \n")
     if(missing(model)) {
 #      cat("Error initialising SaemixModel object:\n   The model must be a function, accepting 3 arguments: psi (a vector of parameters), id (a vector of indices) and xidep (a matrix of predictors). Please see the documentation for examples.\n")
@@ -86,19 +138,21 @@ setMethod(
     if(missing(name.modpar) || length(name.modpar)==0) {
       y1<-try(name.modpar<-colnames(psi0))
       if(class(y1)=="try-error") {
-        cat("     Can't find parameter names.\n")
+        if(verbose) cat("     Can't find parameter names.\n")
         name.modpar<-paste("theta",1:npar)
       }
     }
     if(is.null(colnames(psi0))) {
       y1<-try(colnames(psi0)<-name.modpar)
       if(class(y1)=="try-error") {
-        cat("Warning:\n   Problem with names of psi0\n")
+        if(verbose) cat("Warning:\n   Problem with names of psi0\n")
         colnames(psi0)<-name.modpar<-paste("theta",1:npar)
       }
     }
-    if(dim(psi0)[1]<2 & sum(covariate.model)>0){
-    	psi0<-rbind(psi0,rep(0,dim(psi0)[2]))
+    if(!missing(covariate.model)) {
+    	if(dim(psi0)[1]<2 & sum(covariate.model)>0){
+    		psi0<-rbind(psi0,rep(0,dim(psi0)[2]))
+    	}
     }
     if(is.null(rownames(psi0))) {
       rownames(psi0)<-rep("",dim(psi0)[1])
@@ -137,7 +191,7 @@ setMethod(
     .Object@indx.omega<-indx.omega
     if(!missing(omega.init) && length(omega.init)>0) {
       if(dim(omega.init)[1]!=dim(omega.init)[2]) {
-        cat("Warning:   the matrix giving the initial conditions for the covariance model (omega.init) needs to be a square matrix. Changing it to the diagonal matrix\n")
+        if(verbose) cat("Warning:   the matrix giving the initial conditions for the covariance model (omega.init) needs to be a square matrix. Changing it to the diagonal matrix\n")
         omega.init<-NULL
       }
     }
@@ -207,8 +261,21 @@ setMethod(
 )
 
 ####################################################################################
-####			saemixData class - accesseur				####
+####			saemixModel class - accesseur				####
 ####################################################################################
+
+#' Get/set methods for SaemixModel object
+#' 
+#' Access slots of a SaemixModel object using the object["slot"] format
+#' 
+#' @param x object
+#' @param i element to be replaced
+#' @param j element to replace with
+#' @param drop whether to drop unused dimensions
+#' @keywords methods
+#' @exportMethod [
+#' @exportMethod [<-
+
 
 # Getteur
 setMethod(
@@ -288,6 +355,9 @@ setReplaceMethod(
 ####			SaemixModel class - method to print/show data		####
 ####################################################################################
 
+#' @rdname print-methods
+#' @exportMethod print
+
 setMethod("print","SaemixModel",
   function(x,...) {
     cat("Nonlinear mixed-effects model\n")
@@ -319,6 +389,9 @@ setMethod("print","SaemixModel",
   }
 )
 
+#' @rdname show-methods
+#' @exportMethod show
+
 setMethod("show","SaemixModel",
   function(object) {
     cat("Nonlinear mixed-effects model\n")
@@ -338,6 +411,9 @@ setMethod("show","SaemixModel",
     } else cat("No covariate\n")
   }
 )
+
+#' @rdname showall-methods
+#' @exportMethod showall
 
 setMethod("showall","SaemixModel",
   function(object) {
@@ -387,6 +463,9 @@ setMethod("showall","SaemixModel",
 ####				Summary method for SaemixModel			####
 ####################################################################################
 
+#' @rdname summary-methods
+#' @exportMethod summary
+
 setMethod("summary","SaemixModel",
   function(object, print=TRUE, ...) {
     if(print) {
@@ -418,9 +497,12 @@ setMethod("summary","SaemixModel",
 ####			SaemixModel class - method to plot			####
 ####################################################################################
 
-# Plot simulations from the model
+#' @rdname plotmodel-methods
+#' @exportMethod plotmodel
 
-setMethod("plot","SaemixModel",
+# Plot predictions from the model, using a set of parameters (defaulting to the population parameters stored in the object)
+
+setMethod("plotmodel","SaemixModel",
   function(x,y,range=c(0,1),psi,predictors,...) {
     if(missing(psi)) psi<-x@psi0[1,]
     psi<-matrix(psi,nrow=1)
@@ -479,7 +561,90 @@ setMethod("plot","SaemixModel",
 ####			SaemixModel class - User-level function			####
 ####################################################################################
 
-saemixModel<-function(model,psi0,description="",error.model=character(), transform.par=numeric(),fixed.estim=numeric(),covariate.model=matrix(nrow=0,ncol=0), covariance.model=matrix(nrow=0,ncol=0),omega.init=matrix(nrow=0,ncol=0),error.init=numeric(), name.modpar=character()) {
+#' Function to create a SaemixModel object
+#' 
+#' This function creates a SaemixModel object. The two mandatory arguments are
+#' the name of a R function computing the model in the SAEMIX format (see
+#' details and examples) and a matrix psi0 giving the initial estimates of the
+#' fixed parameters in the model, with one row for the population mean
+#' parameters and one row for the covariate effects (see documentation).
+#' 
+#' This function is the user-friendly constructor for the SaemixModel object
+#' class.
+#' 
+#' @param model name of the function used to compute the structural model. The
+#' function should return a vector of predicted values given a matrix of
+#' individual parameters, a vector of indices specifying which records belong
+#' to a given individual, and a matrix of dependent variables (see example
+#' below).
+#' @param psi0 a matrix with a number of columns equal to the number of
+#' parameters in the model, and one (when no covariates are available) or two
+#' (when covariates enter the model) giving the initial estimates for the fixed
+#' effects. The column names of the matrix should be the names of the
+#' parameters in the model, and will be used in the plots and the summaries.
+#' When only the estimates of the mean parameters are given, psi0 may be a
+#' named vector.
+#' @param description a character string, giving a brief description of the
+#' model or the analysis
+#' @param error.model type of residual error model (valid types are constant,
+#' proportional, combined and exponential). Defaults to constant
+#' @param transform.par the distribution for each parameter (0=normal,
+#' 1=log-normal, 2=probit, 3=logit). Defaults to a vector of 1s (all parameters
+#' have a log-normal distribution)
+#' @param fixed.estim whether parameters should be estimated (1) or fixed to
+#' their initial estimate (0). Defaults to a vector of 1s
+#' @param covariate.model a matrix giving the covariate model. Defaults to no
+#' covariate in the model
+#' @param covariance.model a square matrix of size equal to the number of
+#' parameters in the model, giving the variance-covariance matrix of the model:
+#' 1s correspond to estimated variances (in the diagonal) or covariances
+#' (off-diagonal elements). Defaults to the identity matrix
+#' @param omega.init a square matrix of size equal to the number of parameters
+#' in the model, giving the initial estimate for the variance-covariance matrix
+#' of the model. Defaults to the identity matrix
+#' @param error.init a vector of size 2 giving the initial value of a and b in
+#' the error model. Defaults to 1 for each estimated parameter in the error
+#' model
+#' @param name.modpar names of the model parameters, if they are not given as
+#' the column names (or names) of psi0
+#' @param verbose a boolean, controlling whether information about the created should be printed out. Defaults to TRUE
+#' @return A SaemixModel object (see \code{\link{saemixModel}}).
+#' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
+#' Marc Lavielle.
+#' @seealso \code{\link{SaemixData}},\code{\link{SaemixModel}},
+#' \code{\link{saemixControl}},\code{\link{saemix}}
+#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
+#' mixed effects models. Computational Statistics and Data Analysis 49, 4
+#' (2005), 1020-1038.
+#' 
+#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
+#' 20th meeting of the Population Approach Group in Europe, Athens, Greece
+#' (2011), Abstr 2173.
+#' @keywords models
+#' @examples
+#' 
+#' model1cpt<-function(psi,id,xidep) { 
+#' 	  dose<-xidep[,1]
+#' 	  tim<-xidep[,2]  
+#' 	  ka<-psi[id,1]
+#' 	  V<-psi[id,2]
+#' 	  CL<-psi[id,3]
+#' 	  k<-CL/V
+#' 	  ypred<-dose*ka/(V*(ka-k))*(exp(-k*tim)-exp(-ka*tim))
+#' 	  return(ypred)
+#' }
+#' 
+#' saemix.model<-saemixModel(model=model1cpt,
+#'   description="One-compartment model with first-order absorption", 
+#'   psi0=matrix(c(1.,20,0.5,0.1,0,-0.01),ncol=3, byrow=TRUE,
+#'   dimnames=list(NULL, c("ka","V","CL"))),transform.par=c(1,1,1),
+#'   covariate.model=matrix(c(0,1,0,0,0,0),ncol=3,byrow=TRUE),fixed.estim=c(1,1,1),
+#'   covariance.model=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),
+#'   omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="constant")
+#' 
+#' @export saemixModel
+
+saemixModel<-function(model,psi0,description="",error.model=character(), transform.par=numeric(),fixed.estim=numeric(),covariate.model=matrix(nrow=0,ncol=0), covariance.model=matrix(nrow=0,ncol=0),omega.init=matrix(nrow=0,ncol=0),error.init=numeric(), name.modpar=character(), verbose=TRUE) {
 # Creating model from class
   if(missing(model)) {
     cat("Error in saemixModel:\n   The model must be a function, accepting 3 arguments: psi (a vector of parameters), id (a vector of indices) and xidep (a matrix of predictors). Please see the documentation for examples.\n")
@@ -512,15 +677,17 @@ saemixModel<-function(model,psi0,description="",error.model=character(), transfo
     psi1<-matrix(psi0,nrow=1)
     if(!is.null(names(psi0))) colnames(psi1)<-names(psi0)
     psi0<-psi1
-    cat("Warning: psi0 given as a vector, reshaping it to a matrix.\n")
+    if(verbose) cat("Warning: psi0 given as a vector, reshaping it to a matrix.\n")
   }
   if(is.null(colnames(psi0))) {
-    cat("Warning: no names given for the parameters in the model, please consider including parameter names.\n")
+    if(verbose) cat("Warning: no names given for the parameters in the model, please consider including parameter names.\n")
   }
   xmod<-try(new(Class="SaemixModel",model=model,description=description,psi0=psi0, error.model=error.model, transform.par=transform.par,fixed.estim=fixed.estim, covariate.model=covariate.model,covariance.model=covariance.model, omega.init=omega.init,error.init=error.init,name.modpar=name.modpar))
   if(class(xmod)=="SaemixModel") x1<-try(validObject(xmod),silent=FALSE) else x1<-xmod
-  if(class(x1)!="try-error") cat("\n\nThe following SaemixModel object was successfully created:\n\n") else xmod<-"Creation of SaemixModel failed"
-  print(xmod)
+  if(class(x1)!="try-error") {
+    if(verbose) cat("\n\nThe following SaemixModel object was successfully created:\n\n")
+    } else xmod<-"Creation of SaemixModel failed"
+  if(verbose) print(xmod)
   return(xmod)
 }
 

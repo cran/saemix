@@ -1,21 +1,36 @@
-\name{plot-methods}
 \docType{methods}
-\alias{plot-methods}
+\name{plot-method}
 \alias{plot,ANY-method}
-\title{ Methods for Function plot }
-\description{ Methods for function \code{plot}}
+\alias{plot.saemix}
+\alias{plot,SaemixData}
+\alias{plot,SaemixData-method}
+\alias{plot,SaemixSimData}
+\alias{plot,SaemixSimData-method}
+\title{Methods for Function plot}
+\description{
+Methods for function \code{plot}
+}
+\usage{
+\S4method{plot}{SaemixData}(x, y, ...)
+}
+\arguments{
+\item{x}{an object of class SaemixData, SaemixSimData or SaemixObject}
+
+\item{y}{empty}
+
+\item{\dots}{optional arguments passed to the plots}
+}
 \section{Methods}{
+
 \describe{
+\item{list("signature(x = \"ANY\")")}{ default plot function ?}
+\item{list("signature(x = \"SaemixData\")")}{ Plots the data. Defaults to a
+spaghetti plot of response versus predictor, with lines joining the data for
+one individual.}
+\item{list("signature(x = \"SaemixObject\")")}{ This method gives access to
+a number of plots that can be performed on a SaemixObject}
+\item{list("signature(x = \"SaemixSimData\")")}{ Plots simulated datasets} }
 
-\item{\code{signature(x = "ANY")}}{ default plot function ?}
-
-\item{\code{signature(x = "SaemixData")}}{ Plots the data. Defaults to a spaghetti plot of response versus predictor, with lines joining the data for one individual.}
-
-\item{\code{signature(x = "SaemixModel")}}{ Plots prediction of the model }
-
-\item{\code{signature(x = "SaemixObject")}}{ This method gives access to a number of plots that can be performed on a SaemixObject}
-
-\item{\code{signature(x = "SaemixSimData")}}{ Plots simulated datasets}
-}}
+}
 \keyword{methods}
 

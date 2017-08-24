@@ -2,10 +2,94 @@
 ####			SaemixData class - definition				####
 ####################################################################################
 
-# ECO TODO: check on name validity
+#' @include aaa_generics.R
+NULL
 
 ###############################
-# Definition with initialise
+# ECO TODO: check on name validity
+
+#' Class "SaemixData"
+#' 
+#' An object of the SaemixData class, representing a longitudinal data structure, used by the SAEM algorithm.
+#' 
+#' @name SaemixData-class 
+#' @docType class
+#' @aliases SaemixData SaemixData-class 
+#' @aliases [<-,SaemixData-method 
+#' @aliases plot,SaemixData print,SaemixData showall,SaemixData show,SaemixData read read,SaemixData-method
+#' @aliases SaemixRepData-class SaemixRepData 
+#' @aliases SaemixSimData-class SaemixSimData 
+#' @aliases [<-,SaemixSimData-method [,SaemixSimData-method
+#' @aliases [<-,SaemixRepData-method [,SaemixRepData-method
+#' 
+#' @section Objects from the Class: 
+#' An object of the SaemixData class can be created by using the function \code{\link{saemixData}} and contain the following slots:
+#' @slot name.data Object of class \code{"character"}: name of the dataset
+#'     @slot header Object of class \code{"logical"}: whether the dataset/file contains a header. Defaults to TRUE 
+#'     @slot sep Object of class \code{"character"}: the field separator character
+#'     @slot na Object of class \code{"character"}: a character vector of the strings which are to be interpreted as NA values
+#'     @slot name.group Object of class \code{"character"}: name of the column containing the subject id
+#'     @slot name.predictors Object of class \code{"character"}: name of the column(s) containing the predictors
+#'     @slot name.response Object of class \code{"character"}: name of the column containing the response variable y modelled by predictor(s) x
+#'     @slot name.covariates Object of class \code{"character"}: name of the column(s) containing the covariates, if present (otherwise empty)
+#'     @slot name.X Object of class \code{"character"}: name of the column containing the regression variable to be used on the X axis in the plots
+#'     @slot name.mdv Object of class \code{"character"}: name of the column containing the indicator variable denoting missing data
+#'     @slot name.cens Object of class \code{"character"}: name of the column containing the indicator variable denoting censored data (the value in the name.response column will be taken as the censoring value)
+#'     @slot name.occ Object of class \code{"character"}: name of the column containing the value of the occasion
+#'     @slot name.ytype Object of class \code{"character"}: name of the column containing the response number
+#'     @slot trans.cov Object of class \code{"list"}: the list of transformation applied to the covariates (currently unused, TODO)
+#'     @slot units Object of class \code{"list"}: list with up to three elements, x, y and optionally covariates, containing the units for the X and Y variables respectively, as well as the units for the different covariates
+#'     @slot data Object of class \code{"data.frame"}: dataframe containing the data, with columns for id (name.group), predictors (name.predictors), response (name.response), and covariates if present in the dataset (name.covariates). A column "index" contains the subject index (used to map the subject id). The column names, except for the additional column index, correspond to the names in the original dataset.
+#'     @slot N Object of class \code{"numeric"}: number of subjects
+#'     @slot yorig Object of class \code{"numeric"}: response data, on the original scale. Used when the error model is exponential
+#'     @slot ocov Object of class \code{"data.frame"}: original covariate data (before transformation in the algorithm)
+#'     @slot ind.gen Object of class \code{"logical"}: indicator for genetic covariates (internal)
+#'     @slot ntot.obs Object of class \code{"numeric"}: total number of observations
+#'     @slot nind.obs Object of class \code{"numeric"}: vector containing the number of observations for each subject
+#' @section Methods:
+#'   \describe{
+#'     \item{[<-}{\code{signature(x = "SaemixData")}: replace elements of object}
+#'     \item{[}{\code{signature(x = "SaemixData")}: access elements of object}
+#'     \item{initialize}{\code{signature(.Object = "SaemixData")}: internal function to initialise object, not to be used}
+#'     \item{plot}{\code{signature(x = "SaemixData")}: plot the data}
+#'     \item{print}{\code{signature(x = "SaemixData")}: prints details about the object (more extensive than show)}
+#'     \item{read}{\code{signature(object = "SaemixData")}: internal function, not to be used }
+#'     \item{showall}{\code{signature(object = "SaemixData")}: shows all the elements in the object}
+#'     \item{show}{\code{signature(object = "SaemixData")}: prints details about the object}
+#'     \item{summary}{\code{signature(object = "SaemixData")}: summary of the data. Returns a list with a number of elements extracted from the dataset (N: the number of subjects; nobs: the total number of observations; nind.obs: a vector giving the number of observations for each subject; id: subject ID; x: predictors; y: response, and, if present in the data, covariates: the covariates (as many lines as observations) and ind.covariates: the individual covariates (one line per individual).}
+#'     \item{subset}{\code{signature(object = "SaemixData")}: extract part of the data; this function will operate on the rows of the dataset (it can be used for instance to extract the data corresponding to the first ten subjects)}
+#' 	 }
+#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' 
+#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
+#' @author Emmanuelle Comets \email{emmanuelle.comets@@inserm.fr}
+#' @author Audrey Lavenu
+#' @author Marc Lavielle.
+#' @seealso \code{\link{saemixData}} \code{\link{SaemixModel}} \code{\link{saemixControl}} \code{\link{saemix}}
+#' @examples
+#' showClass("SaemixData")
+#' 
+#' # Specifying column names
+#' data(theo.saemix)
+#' saemix.data<-saemixData(name.data=theo.saemix,header=TRUE,sep=" ",na=NA, 
+#'   name.group=c("Id"),name.predictors=c("Dose","Time"),
+#'   name.response=c("Concentration"),name.covariates=c("Weight","Sex"),
+#'   units=list(x="hr",y="mg/L",covariates=c("kg","-")), name.X="Time")
+#' 
+#' # Specifying column numbers
+#' data(theo.saemix)
+#' saemix.data<-saemixData(name.data=theo.saemix,header=TRUE,sep=" ",na=NA,
+#'   name.group=1,name.predictors=c(2,3),name.response=c(4), name.covariates=5:6, 
+#'   units=list(x="hr",y="mg/L",covariates=c("kg","-")), name.X="Time")
+#' 
+#' # No column names specified, using automatic recognition of column names
+#' data(PD1.saemix)
+#' saemix.data<-saemixData(name.data=PD1.saemix,header=TRUE, 
+#'   name.covariates=c("gender"),units=list(x="mg",y="-",covariates=c("-")))
+#' 
+#' @keywords classes
+#' @exportClass SaemixData
+
 setClass(
   Class="SaemixData",
   representation=representation(
@@ -18,16 +102,17 @@ setClass(
     name.response="character",	# name of column with response
     name.covariates="character",# name of column(s) with covariates
     name.X="character",		# name of predictor used on X axis for graphs
+    name.mdv="character", # name of column indicating a missing response
+    name.cens="character", # name of column indicating a censored response
+    name.occ="character", # name of column with the occasion
+    name.ytype="character", # name of column with type of response (1,2,...)
+    trans.cov="list",	# a list of transformations applied to the covariates
     units="list",		# units (list with components for x, y, and cov)
-    data="data.frame",		# the data (data frame with columns name.group (subject id), index (id renamed to 1:N), name.predictors (predictors), name.response (possibly transformed during fit), name.covariates); binary covariates are modified to 0/1
+    data="data.frame",		# the data (data frame with columns name.group (subject id), index (id renamed to 1:N), name.predictors (predictors), name.response (possibly transformed during fit), name.covariates), mdv (missing data), cens (censored data, 1=censored & value in column response is the LOQ, ytype (type of the response), occ (occasion)); binary covariates are modified to 0/1
     ocov="data.frame",		# original scale for the covariates
     N="numeric",		# number of subjects
-#    index="numeric",		# subject index (id renamed to 1:N)
-#    id="character",		# subject id
-#    xind="data.frame",		# matrix of predictors
-#    y="numeric",		# vector of responses (possibly transformed during fit)
     yorig="numeric",		# vector of responses in original dataset
-#    cov="data.frame",		# matrix of covariates
+    ind.gen="logical",	# vector of booleans (same size as name.covariates); TRUE=genetic covariate, FALSE=non-genetic covariates
     ntot.obs="numeric",		# total number of observations (=dim(tab)[1])
     nind.obs="numeric"		# number of observations for each subject
   ),
@@ -43,7 +128,7 @@ setClass(
     N<-object@N
     if(length(object@data)>0) {
      if(N<2) {
-       cat("Warning: There is only",N,"subjects in the dataset, the SAEM algorithm is a population algorithm designed to analyse longitudinal data from non-linear mixed effect models and may not work with too few subjects.\n")
+       cat("Warning: There is only",N,"subject in the dataset, the SAEM algorithm is a population algorithm designed to analyse longitudinal data from non-linear mixed effect models and may not work with too few subjects.\n")
      }
      if(length(unique(object@data[,object@name.response]))<3) {
        cat("Warning: The SAEM algorithm currently handles only continuous responses. It seems that the response --",object@name.response,"-- has too few modalities and the statistical model may not be appropriate.\n")
@@ -52,6 +137,9 @@ setClass(
     return(TRUE)
   }
 )
+
+#' @rdname SaemixData-class
+#' @exportClass SaemixSimData
 
 setClass(
   Class="SaemixRepData", # Saemix data, replicated for different chains
@@ -70,10 +158,14 @@ setClass(
   }
 )
 
+#' @rdname SaemixData-class
+#' @exportClass SaemixRepData
+
 setClass(
   Class="SaemixSimData", # Saemix predicted and simulated data
   representation=representation(
     N="numeric",		# number of subjects
+    name.group="character", # name of column with ID element
     name.response="character",	# name of column with response
     name.X="character",		# name of predictor used on X axis for graphs
     units="list",		# units (list with components for x, y, and cov)
@@ -91,10 +183,13 @@ setClass(
 ###############################
 # ECO validity ne semble pas etre appele automatiquement quand on cree un objet => il faut l'appeler dans initialize
 
+#' @rdname initialize-methods
+#' @exportMethod initialize
+
 setMethod(
   f="initialize",
   signature="SaemixData",
-  definition= function (.Object,name.data,header,sep,na,name.group, name.predictors,name.response,name.covariates,name.X,units){
+  definition= function (.Object,name.data,header,sep,na,name.group, name.predictors, name.response, name.covariates, name.X, units, name.mdv, name.cens, name.occ, name.ytype, verbose){
 #    cat ("--- initialising SaemixData Object --- \n")
     if(missing(name.data)) stop ("Please provide a name for the data (dataset or datafile on disk).")
     .Object@name.data<-name.data
@@ -105,24 +200,33 @@ setMethod(
     if(missing(na)) na<-"NA"
     .Object@na<-na
     if(missing(name.group)) {
-      cat("   Missing ID identifier, assuming the ID is in column 1 of the dataset.\n")
+      if(verbose) cat("   Missing ID identifier, assuming the ID is in column 1 of the dataset.\n")
       name.group<-"1"
     }
 # ECO TODO: reconnaissance automatique (avant affectation a la valeur 2) ?
     if(missing(name.predictors)) {
       name.predictors<-"2"      
-      cat("   Missing predictors identifier, assuming there is one predictor in column 2 of the dataset.\n")
+      if(verbose) cat("   Missing predictors identifier, assuming there is one predictor in column 2 of the dataset.\n")
     }
     if(missing(name.response)) {
-      cat("   Missing response identifier, assuming the response is in column 3 of the dataset.\n")
+    	if(verbose) cat("   Missing response identifier, assuming the response is in column 3 of the dataset.\n")
       name.response<-"3"
     }
     if(missing(name.covariates)) name.covariates<-character()
-    .Object@name.group<-name.group
+		if(missing(name.mdv)) name.mdv<-character()
+		if(missing(name.cens)) name.cens<-character()
+		if(missing(name.occ)) name.occ<-character()
+		if(missing(name.ytype)) name.ytype<-character()
+		.Object@name.group<-name.group
     .Object@name.predictors<-name.predictors
     .Object@name.response<-name.response
     .Object@name.covariates<-name.covariates
-    if(missing(units)) units<-list(x="-",y="-")
+		.Object@name.mdv<-name.mdv
+		.Object@name.cens<-name.cens
+		.Object@name.occ<-name.occ
+		.Object@name.ytype<-name.ytype
+		.Object@trans.cov<-list()
+		if(missing(units)) units<-list(x="-",y="-")
     if(is.null(units$x)) units$x<-"-"
     if(is.null(units$y)) units$y<-"-"
     ncov<-length(name.covariates)
@@ -144,6 +248,9 @@ setMethod(
 )
 
 # Initialize method for saemixRepData and saemixSimData
+#' @rdname initialize-methods
+#' @exportMethod initialize
+
 setMethod(
   f="initialize",
   signature="SaemixRepData",
@@ -168,6 +275,9 @@ setMethod(
   }
 )
 
+#' @rdname initialize-methods
+#' @exportMethod initialize
+
 setMethod(
   f="initialize",
   signature="SaemixSimData",
@@ -175,6 +285,7 @@ setMethod(
 #    cat ("--- initialising SaemixData Object --- \n")
     if(!is.null(data)) {
       .Object@N<-data@N
+      .Object@name.group<-data@name.group
       .Object@name.response<-data@name.response
       .Object@name.X<-data@name.X
       .Object@units<-data@units
@@ -197,6 +308,20 @@ setMethod(
 ####			SaemixData class - accesseur				####
 ####################################################################################
 
+#' Get/set methods for SaemixData object
+#' 
+#' Access slots of a SaemixData object using the object["slot"] format
+#' 
+#' @param x object
+#' @param i element to be replaced
+#' @param j element to replace with
+#' @param drop whether to drop unused dimensions
+#' @keywords methods
+#' @exportMethod [
+#' @exportMethod [<-
+#' @exportPattern "^[[:alpha:]]+"
+
+
 # Getteur
 setMethod(
   f ="[",
@@ -212,11 +337,17 @@ setMethod(
     "name.response"={return(x@name.response)},
     "name.covariates"={return(x@name.covariates)},
     "name.X"={return(x@name.X)},
+    "name.mdv"={return(x@name.mdv)},
+    "name.cens"={return(x@name.cens)},
+    "name.occ"={return(x@name.occ)},
+    "name.ytype"={return(x@name.ytype)},
+    "trans.cov"={return(x@trans.cov)},    
     "units"={return(x@units)},
     "data"={return(x@data)},
     "ocov"={return(x@ocov)},
     "N"={return(x@N)},
     "yorig"={return(x@yorig)},
+    "ind.gen"={return(x@ind.gen)},
     "ntot.obs"={return(x@ntot.obs)},
     "nind.obs"={return(x@nind.obs)},
     stop("No such attribute\n")
@@ -239,10 +370,16 @@ setReplaceMethod(
     "name.response"={x@name.response<-value},
     "name.covariates"={x@name.covariates<-value},
     "name.X"={x@name.X<-value},
+    "name.mdv"={x@name.mdv<-value},
+    "name.cens"={x@name.cens<-value},
+    "name.occ"={x@name.occ<-value},
+    "name.ytype"={x@name.ytype<-value},
+    "trans.cov"={x@trans.cov<-value},
     "units"={x@units<-value},
     "data"={x@data<-value},
     "ocov"={x@ocov<-value},
     "N"={x@N<-value},
+    "ind.gen"={x@ind.gen<-value},
     "yorig"={x@yorig<-value},
     "ntot.obs"={x@ntot.obs<-value},
     "nind.obs"={x@nind.obs<-value},
@@ -292,6 +429,7 @@ setMethod(
   definition = function (x,i,j,drop ){
   switch (EXPR=i,
     "N"={return(x@N)},
+    "name.group"={return(x@name.group)},
     "name.response"={return(x@name.response)},
     "name.X"={return(x@name.X)},
     "units"={return(x@units)},
@@ -310,6 +448,7 @@ setReplaceMethod(
   definition = function (x,i,j,value){
   switch (EXPR=i,
     "N"={x@N<-value},
+    "name.group"={x@name.group<-value},
     "name.response"={x@name.response<-value},
     "name.X"={x@name.X<-value},
     "units"={x@units<-value},
@@ -328,14 +467,20 @@ setReplaceMethod(
 ####			SaemixData class - method to read data			####
 ####################################################################################
 
-setMethod("read.saemixData","SaemixData",
+## Create a longitudinal data structure from a file or a dataframe
+## Helper function not intended to be called by the user
+## @exportMethod read
+
+
+setMethod("read",
+          signature="SaemixData",
   function(object) {
     ow <- options("warn")
     options("warn"=-1)
 # ce test devrait aller dans la definition de la classe
     if(class(object@name.data)!="character") {
     cat("Please provide the name of the data (data.frame or path to file on disk) as a character string.\n")
-    return("Creation of saemixData failed")
+    return("Creation of SaemixData object failed")
   }
     if(exists(object@name.data)) {
       cat("Using the object called",object@name.data,"in this R session as the data.\n")
@@ -355,7 +500,7 @@ setMethod("read.saemixData","SaemixData",
     }
     if(dim(dat)[2]<3) {
       cat("The dataset does not contain enough data. The non-linear mixed effect model requires at least 3 columns, with subject ID, predictor (at least one) and response. \nPlease check the field separator, currently given as:", paste("sep=\"",object@sep,"\"",sep=""),"\n")
-      return("Creation of saemixData failed")
+      return("Creation of SaemixData object failed")
     }
 # Automatic recognition of columns 
 #    ID (one of id, subject or sujet regardless of case)
@@ -381,11 +526,11 @@ setMethod("read.saemixData","SaemixData",
     }
     if(is.na(match(object@name.group,colnames(dat)))) {
       cat("Can't find a column named",object@name.group,"in the data.\n")
-      return("Creation of saemixData failed")
+      return("Creation of SaemixData object failed")
     }
     if(object@name.group=="") {
       cat("Please provide a name for the ID column.\n")
-      return("Creation of saemixData failed")
+      return("Creation of SaemixData object failed")
     }
    i1<-as.integer(object@name.predictors[!is.na(as.integer(object@name.predictors))])
     if(length(i1)>0) { 
@@ -408,7 +553,7 @@ setMethod("read.saemixData","SaemixData",
     if(length(xnam)==0) object@name.predictors<-"" else object@name.predictors<-xnam
     if(length(xnam)==0) {
       cat("Please provide at least one predictor.\n")
-      return("Creation of saemixData failed")
+      return("Creation of SaemixData object failed")
     }
     if(!is.na(as.integer(object@name.response))) { 
 # response given as a column number
@@ -428,20 +573,29 @@ setMethod("read.saemixData","SaemixData",
     if(is.na(object@name.response)) object@name.response<-""
     if(is.na(match(object@name.response,colnames(dat)))) {
       cat("Can't find a column named",object@name.response,"for the response column.\n")
-      return("Creation of saemixData failed")
+      return("Creation of SaemixData object failed")
     }
     if(object@name.response=="") {
       cat("Please provide a name for the response column.\n")
-      return("Creation of saemixData failed")
+      return("Creation of SaemixData object failed")
     }
-    if(length(object@name.covariates)>0 & object@name.covariates[1]!="") {
-   i1<-as.integer(object@name.covariates[!is.na(as.integer(object@name.covariates))])
+		if(length(object@name.covariates)>0) {
+    	if(object@name.covariates[1]!="") {
+  		i1<-as.integer(object@name.covariates[!is.na(as.integer(object@name.covariates))])
       object@name.covariates[!is.na(as.integer(object@name.covariates))]<- colnames(dat)[i1]
+    	}
+  		idx<-object@name.covariates[!(object@name.covariates %in% colnames(dat))]
+  		if(length(idx)>0) {
+  			cat("Covariates",object@name.covariates[idx],"not found.\n") 
+  			object@units$covariates<-object@units$covariates[object@name.covariates %in% colnames(dat)]
+  			object@name.covariates<-object@name.covariates[object@name.covariates %in% colnames(dat)]
+  		}
+  		print(object@name.covariates)
     }
     if(nchar(object@name.group)*length(object@name.predictors)* nchar(object@name.response)<=0) {
       stop("Please check the structure of the data file and provide information concerning which columns specify the group structure (ID), the predictors (eg dose, time) and the response (eg Y, conc). See documentation for automatic recognition of column names for these elements.\n")
     }
-    if(nchar(object@name.X)==0)
+	if(nchar(object@name.X)==0)
       object@name.X<-object@name.predictors[1]
     if(!is.na(as.integer(object@name.X))) {
       if(dim(dat)[2]<as.integer(object@name.X)) {
@@ -453,27 +607,47 @@ setMethod("read.saemixData","SaemixData",
       cat("Attribute name.X",object@name.X,"does not correspond to a valid column in the dataset, setting the X axis for graphs to",object@name.predictors[1],".\n")
       object@name.X<-object@name.predictors[1]
     }
-    all.names<-c(object@name.group,object@name.predictors, object@name.response,object@name.covariates)
+		if(nchar(object@name.mdv)==0) mdv<-rep(0,dim(dat)[1]) else {mdv<-dat[,object@name.mdv]}
+		mdv[is.na(dat[,object@name.response])]<-1
+    if(sum(mdv)>0) object@name.mdv<-"mdv"
+		if(nchar(object@name.cens)==0) cens<-rep(0,dim(dat)[1]) else {cens<-dat[,object@name.cens]; object@name.cens <-"cens"}
+		if(nchar(object@name.occ)==0) occ<-rep(1,dim(dat)[1]) else {occ<-dat[,object@name.occ]; object@name.occ<-"occ"}
+		if(nchar(object@name.ytype)==0) ytype<-rep(1,dim(dat)[1]) else {ytype<-dat[,object@name.ytype]; object@name.ytype<-"ytype"}
+		all.names<-c(object@name.group,object@name.predictors, object@name.response,object@name.covariates)
 
     dat<-dat[,all.names,drop=FALSE]
+		dat<-cbind(dat,mdv=mdv,cens=cens,occ=occ,ytype=ytype)
+
     if(class(dat)!="data.frame") dat<-as.data.frame(dat)
-# Removing missing values in response & predictor columns
-    if(sum(is.na(dat[,object@name.response]))>0) {
-    	cat("Removing missing observations.\n")
-    }
-    dat<-dat[!is.na(dat[,object@name.response]),]
-    for(i in object@name.predictors) {
-    	if(sum(is.na(dat[,i]))>0) cat("Removing missing values for predictor",i,"\n")
-    	dat<-dat[!is.na(dat[,i]),]
-    }
 # Saving covariates in the original format in ocov, transforming binary covariates in dat to factors
     object@ocov<-dat[,object@name.covariates,drop=FALSE]
     for(icov in object@name.covariates) {
       if(length(unique(dat[,icov]))==2) dat[,icov]<-as.integer(factor(dat[,icov]))-1
     }   
+# Removing missing values in predictor columns
+# dat<-dat[!is.na(dat[,object@name.response]),]
+	for(i in object@name.predictors) {
+		if(sum(is.na(dat[,i]))>0) cat("Removing missing values for predictor",i,"\n")
+		dat<-dat[!is.na(dat[,i]),]
+	}
+# Removing subjects with only MDV in responses
+	idx<-c();inull<-c()
+	for(isuj in unique(dat[,object@name.group])) {
+		if(sum(1-dat$mdv[dat[,object@name.group]==isuj])==0) {
+			inull<-c(inull,isuj)
+			idx<-c(idx,which(dat[,object@name.group]==isuj))
+		}
+	}
+  print(idx)
+  if(length(inull)>0) {
+  	cat("Some subjects have no observations, removing them:",inull,"\n")
+  	dat<-dat[-idx,]
+  	object@ocov<-object@ocov[-idx,,drop=FALSE]
+  }
+
 # ECO TODO: missing data in covariates kept for the moment, only excluded depending on the model
 #    for(i in object@name.covariates) dat<-dat[!is.na(dat[,i]),]
-    object@ntot.obs<-dim(dat)[1] # total number of observations
+  	object@ntot.obs<-dim(dat)[1] # total number of observations
     id<-dat[,object@name.group]
     object@N<-length(unique(id))
     nind.obs<-tapply(id,id,length) # individual numbers of observations (1xN)
@@ -491,6 +665,9 @@ setMethod("read.saemixData","SaemixData",
 ####################################################################################
 ####			SaemixData class - method to print/show data		####
 ####################################################################################
+
+#' @rdname print-methods
+#' @exportMethod print
 
 setMethod("print","SaemixData",
   function(x,nlines=10,...) {
@@ -542,6 +719,9 @@ setMethod("print","SaemixData",
   }
 )
 
+#' @rdname show-methods
+#' @exportMethod show
+
 setMethod("show","SaemixData",
   function(object) {
     cat("Object of class SaemixData\n")
@@ -563,6 +743,7 @@ setMethod("show","SaemixData",
       }
     }
     if(length(object@data)>0) {
+      if(object@N>0) cat(object@ntot.obs,"    observations in",object@N,"subjects\n")
       cat("First lines of data:\n")
       nrowShow <- min (10 , nrow(object@data ))
       print(object@data[1:nrowShow,-c(1)])
@@ -570,8 +751,11 @@ setMethod("show","SaemixData",
   }
 )
 
+#' @rdname showall-methods
+#' @exportMethod showall
+
 # Could be print, with only head of data
-setMethod("showall","SaemixData",
+setMethod("showall",signature="SaemixData",
   function(object) {
     digits<-2;nsmall<-2
     cat("Object of class SaemixData\n")
@@ -613,6 +797,9 @@ setMethod("showall","SaemixData",
 )
 
 # SaemixRepData
+#' @rdname show-methods
+#' @exportMethod show
+
 setMethod("show","SaemixRepData",
   function(object) {
     cat("Object of class saemixRepData\n")
@@ -624,8 +811,11 @@ setMethod("show","SaemixRepData",
     } else cat("Empty object \n")
     } 
 )
-
+     
 # SaemixSimData
+#' @rdname show-methods
+#' @exportMethod show
+
 setMethod("show","SaemixSimData",
   function(object) {
     cat("Object of class SaemixSimData\n")
@@ -647,6 +837,24 @@ setMethod("show","SaemixSimData",
 ####################################################################################
 ####				Summary method for SaemixData			####
 ####################################################################################
+
+#' Summarising longitudinal data
+#' 
+#' summary method for class SaemixData
+#' @aliases summary summary,SaemixData summary,SaemixData-method
+#' 
+#' @param object an object of clas SaemixData
+#' @param print a boolean controlling whether to print the output or return it silently
+#' @param ... additional arguments (ignored)
+#'     
+#' @return a list with a number of elements extracted from the dataset
+#' \describe{
+#' \item{N}{ number of subjects}
+#' \item{nobs}{ the total number of observations} 
+#' \item{nind.obs}{a vector giving the number of observations for each subject}
+#' \item{id}{subject ID; x: predictors; y: response, and, if present in the data, covariates: the covariates (as many lines as observations) and ind.covariates: the individual covariates (one}
+#' }
+#' @exportMethod summary
 
 setMethod("summary","SaemixData",
   function(object, print=TRUE, ...) {
@@ -673,7 +881,7 @@ setMethod("summary","SaemixData",
     if(length(object@name.covariates)>0) {
       res$covariates<-object@ocov
       ucov<-cbind(object@data[,object@name.group],object@ocov)
-      colnames(ucov)<-object@name.group
+      colnames(ucov)[1]<-object@name.group
 			ucov<-ucov[match(unique(object@data$index),object@data$index),]
       res$ind.covariates<-ucov
     }
@@ -692,12 +900,12 @@ saemix.data.setoptions<-function(saemix.data) {
     new=TRUE,				# whether a new page should be called
     ask=FALSE,				# whether the program should ask before creating a new page
     ilist=c(1:saemix.data["N"]),
-    separate=FALSE,	# if TRUE, plots individual subjects (à la nlme), if FALSE plots a single plot with all the subjects
+    separate=FALSE,	# if TRUE, plots individual subjects (a la nlme), if FALSE plots a single plot with all the subjects
 # Options for individual plots
     nmax=12,					  # maximum number of subjects
     limit=TRUE,					# limit to nmax plots
     sample=FALSE,				# if FALSE=use the (nmax) first subjects; TRUE=randomly sample (nmax) subjects from the dataset
-    interactive=FALSE, 	# whether the program should prompt the user for the number of subjects to plot in the individual plots if this number exceeds nmax
+    interactive=FALSE,  # whether the program should prompt the user for the number of subjects to plot in the individual plots if this number exceeds nmax
 # Layout and plots options
     mfrow=c(),				# page layout (if empty, defaults to the default layout for each graph type)
     main=" ",				# title
@@ -819,6 +1027,8 @@ setMethod("plot","SaemixData",
   }
 )
 
+#' @exportMethod plot
+
 # Check for mirror plots
 setMethod("plot","SaemixSimData",
   function(x,y,irep=-1,...) {
@@ -838,7 +1048,7 @@ setMethod("plot","SaemixSimData",
     if(length(x@sim.y)==0) cat("No simulated data.\n") else {
       if(irep<0) irep<-sample(unique(x@sim.rep),1)
       tit<-paste("Mirror plot (replication ",irep,")",sep="")
-      tab<-data.frame(id=x@data[,name.group],x=x@data[,x@name.X], y=x@datasim$ysim[x@datasim$irep==irep])
+      tab<-data.frame(id=x@data[,x@name.group],x=x@data[,x@name.X], y=x@datasim$ysim[x@datasim$irep==irep])
       if(plot.type=="p" | plot.type=="b") {
         plot(tab[,"x"],tab[,"y"],xlab=plot.opt$xlab, ylab=plot.opt$ylab, col=plot.opt$col,pch=plot.opt$pch,log=logtyp,xlim=plot.opt$xlim, ylim=plot.opt$ylim,main=tit,cex=plot.opt$cex,cex.axis=plot.opt$cex.axis, cex.lab=plot.opt$cex.lab) }
       if(plot.type=="l") {
@@ -857,11 +1067,61 @@ setMethod("plot","SaemixSimData",
 ####		Creating an object of SaemixData class - User-level function	####
 ####################################################################################
 
-saemixData<-function(name.data,header,sep,na,name.group,name.predictors, name.response,name.X,name.covariates=c(), units=list(x="",y="",covariates=c())) {
+#' Function to create a SaemixData object
+#' 
+#' This function creates a SaemixData object. The only mandatory argument is
+#' the name of the dataset. If the dataset has a header (or named columns), the
+#' program will attempt to detect which column correspond to ID, predictor(s)
+#' and response. Warning messages will be printed during the object creation
+#' and should be read for details.
+#' 
+#' This function is the user-friendly constructor for the SaemixData object
+#' class. The read.saemixData is a helper function, used to read the dataset,
+#' and is not intended to be called directly.
+#' 
+#' @name saemixData
+#'     @param name.data name of the dataset (can be a character string giving the name of a file on disk or of a dataset in the R session, or the name of a dataset
+#'     @param header whether the dataset/file contains a header. Defaults to TRUE
+#'     @param sep the field separator character. Defaults to any number of blank spaces ("")
+#'     @param na a character vector of the strings which are to be interpreted as NA values. Defaults to c(NA)
+#'     @param name.group name (or number) of the column containing the subject id
+#'     @param name.predictors name (or number) of the column(s) containing the predictors (the algorithm requires at least one predictor x)
+#'     @param name.response name (or number) of the column containing the response variable y modelled by predictor(s) x
+#'     @param name.covariates name (or number) of the column(s) containing the covariates, if present (otherwise missing)
+#'     @param name.genetic.covariates name (or number) of the column(s) containing the covariates, if present (otherwise missing)
+#'     @param name.mdv name of the column containing the indicator for missing variable
+#'     @param name.cens name of the column containing the indicator for censoring
+#'     @param name.occ name of the column containing the occasion
+#'     @param name.ytype name of the column containing the index of the response
+#'     @param name.X name of the column containing the regression variable to be used on the X axis in the plots (defaults to the first predictor)
+#'     @param units list with up to three elements, x, y and optionally covariates, containing the units for the X and Y variables respectively, as well as the units for the different covariates (defaults to empty)
+#'     @param verbose a boolean indicating whether messages should be printed out during the creation of the object
+#' @details This function is the user-friendly constructor for the SaemixData object class. The read is a helper function, used to read the dataset, and is not intended to be called directly.
+#' @return A SaemixData object (see \code{\link{saemixData}}).
+#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' 
+#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
+#' @author Emmanuelle Comets \email{emmanuelle.comets@@inserm.fr}, Audrey Lavenu, Marc Lavielle.
+#' @seealso \code{\link{SaemixData}},\code{\link{SaemixModel}}, \code{\link{saemixControl}},\code{\link{saemix}}
+#' @examples
+#' 
+#' data(theo.saemix)
+#' 
+#' saemix.data<-saemixData(name.data=theo.saemix,header=TRUE,sep=" ",na=NA, 
+#'   name.group=c("Id"),name.predictors=c("Dose","Time"),
+#'   name.response=c("Concentration"),name.covariates=c("Weight","Sex"),
+#'   units=list(x="hr",y="mg/L",covariates=c("kg","-")), name.X="Time")
+#' 
+#' print(saemix.data)
+#' 
+#' plot(saemix.data)
+#' @export saemixData
+
+saemixData<-function(name.data,header,sep,na,name.group,name.predictors, name.response,name.X, name.covariates=c(), name.genetic.covariates=c(), name.mdv="", name.cens="",name.occ="",name.ytype="", units=list(x="",y="",covariates=c()), verbose=TRUE) {
 # setting proper types for the SaemixData class
-  if(missing(name.data)) {
+  if(missing(name.data) & verbose) {
     cat("Error in saemixData: please provide the name of the datafile or dataframe (between quotes)\n")
-    return("Creation of SaemixData failed")
+    return("Creation of SaemixData object failed")
   }
   if(is.data.frame(name.data)) name.data<-deparse(substitute(name.data))
   if(missing(header)) header<-TRUE
@@ -870,19 +1130,179 @@ saemixData<-function(name.data,header,sep,na,name.group,name.predictors, name.re
   if(missing(name.group)) name.group<-"" else name.group<-as.character(name.group)
   if(missing(name.predictors)) name.predictors<-"" else name.predictors<-as.character(name.predictors)
   if(missing(name.response)) name.response<-"" else  name.response<-as.character(name.response)
+  if(missing(name.mdv)) name.mdv<-"" else  name.mdv<-as.character(name.mdv)
+  if(missing(name.cens)) name.cens<-"" else  name.cens<-as.character(name.cens)
+  if(missing(name.occ)) name.occ<-"" else  name.occ<-as.character(name.occ)
+  if(missing(name.ytype)) name.ytype<-"" else  name.ytype<-as.character(name.ytype)
   if(missing(name.X)) name.X<-"" else name.X<-as.character(name.X)
-  name.covariates<-as.character(name.covariates)
-  x<-new(Class="SaemixData",name.data=name.data,header=header,sep=sep,na=na, name.group=name.group,name.predictors=name.predictors,name.X=name.X, name.response=name.response,name.covariates=name.covariates,units=units)
+  name.covariates<-c(as.character(name.covariates),as.character(name.genetic.covariates))
+  x<-new(Class="SaemixData",name.data=name.data,header=header,sep=sep,na=na, name.group=name.group,name.predictors=name.predictors,name.X=name.X, name.response=name.response,name.covariates=name.covariates,units=units, name.mdv=name.mdv, name.cens=name.cens, name.occ=name.occ, name.ytype=name.ytype, verbose)
 #  showall(x)
-  x1<-read.saemixData(x)
-  if(class(x1)!="character") cat("\n\nThe following SaemixData object was successfully created:\n\n")
-  print(x1,nlines=0)
+  x1<-read(x)
+  if(class(x1)=="SaemixData") {
+  	igen<-rep(FALSE,length(name.covariates))
+  	igen[match(name.genetic.covariates,name.covariates)]<-TRUE
+  	x1@ind.gen<-igen
+  	if(verbose) cat("\n\nThe following SaemixData object was successfully created:\n\n")
+  }
+  if(verbose) print(x1,nlines=0)
   return(x1)
+}
+
+####################################################################################
+####		Covariate transformation																								####
+####################################################################################
+
+# Apply transform to the data element of an object
+# BUT: very dangerous !!! (eg mdv can be transformed to other than 0/1, NA values can be added, etc...)
+
+#' @export transform.SaemixData
+transform.SaemixData<-function(`_data`, ...) {
+	`_data`@data <- data.frame(transform(`_data`@data,...))
+	`_data`
+}
+
+# > transform.data.frame
+# function (`_data`, ...) 
+# {
+# 	e <- eval(substitute(list(...)), `_data`, parent.frame())
+# 	tags <- names(e)
+# 	inx <- match(tags, names(`_data`))
+# 	matched <- !is.na(inx)
+# 	if (any(matched)) {
+# 		`_data`[inx[matched]] <- e[matched]
+# 		`_data` <- data.frame(`_data`)
+# 	}
+# 	if (!all(matched)) 
+# 		do.call("data.frame", c(list(`_data`), e[!matched]))
+# 	else `_data`
+# }
+
+#' Transform covariates
+#' 
+#' Transform and/or center continuous covariates
+#'
+#' @name transformContCov
+#' @aliases transform.SaemixData
+#' 
+#' @param object saemixData object
+#' @param covariate name of the covariate
+#' @param transformation transformation function. Defaults to no transformation
+#' @param centering string, giving the value used to center the covariate; can be "mean" or "median", in which case this value will be computed from the data, 'none' or 0 for no centering, or a value given by the user. Defaults to the median value over the dataset.
+#' @param verbose a boolean, prints messages during the execution of the function if TRUE. Defaults to FALSE.
+#' @examples 
+#' # TODO
+#' @return an object of class \code{"\linkS4class{SaemixData}"}
+#' @keywords data
+#' @export transformContCov
+
+transformContCov<-function(object, covariate, transformation=function(x) x, centering="median" ,verbose=FALSE) {
+ 	covariate<-deparse(substitute(covariate))
+ 	name.trans<-deparse(substitute(transformation))
+	if(!(covariate %in% object@name.covariates)) {
+		cat("Covariate",covariate,"not found\n")
+		return(object)
+	}
+	if(!(centering %in% c('mean','median')) & is.na(as.double(centering))) {
+		cat("Need a proper value to center. Please specify mean, median or a numerical value\n")
+		return(object)
+	}
+	if(tolower(centering)=="none") centering<-0
+	if(centering %in% c('mean','median')) {
+		f1<-match.fun(centering)
+		labl<-paste(object@data[,object@name.group],object@data$occ,sep="-")
+		covar<-object@data[!duplicated(labl),covariate]
+		xcent<-f1(covar)
+	} else xcent<-as.double(centering)
+	if(verbose) cat(covariate,"centered with respect to the value:",xcent,"\n")
+	xcov<-object@data[,covariate]
+	xcov<-transformation(xcov-xcent)
+	object@data[,covariate]<-xcov
+	object@trans.cov[[covariate]]<-list(type="continuous",transformation=transformation,centering=centering)
+	return(object)
+}
+
+#' Transform covariates
+#' 
+#' Regroup categorical covariates
+#'
+#' @name transformCatCov
+#' 
+#' @param object saemixData object
+#' @param covariate name of the covariate
+#' @param group a vector giving the categories to which the initial values of the covariates should be mapped. If the resulting covariate is binary, it will be stored as 0/1. If it has more than 2 categories, dummy covariates will be created for the analysis.
+#' @param reference the reference group
+#' @param verbose a boolean, prints messages during the execution of the function if TRUE. Defaults to FALSE.
+#' @return an object of class \code{"\linkS4class{SaemixData}"}
+#' @examples 
+#' # TODO
+#' @keywords data
+#' @export transformCatCov
+ 
+transformCatCov<-function(object, covariate, group, reference, verbose=FALSE) {
+	covariate<-deparse(substitute(covariate))
+	if(!(covariate %in% object@name.covariates)) {
+		cat("Covariate",covariate,"not found\n")
+		return(object)
+	}
+	if(length(object@ocov)>0) xcov<-object@ocov[,covariate] else xcov<-object@data[,covariate]
+	if(missing(reference)) reference<-sort(group)[1]
+	if(!(reference %in% group) & verbose) {
+		cat("Reference category not in group\n")
+		reference<-sort(group)[1]
+	}
+	if(length(group)>10 & verbose) {
+		cat("Warning: more than 10 categories\n")
+	}
+	ifac<-(is.factor(xcov))
+	gr<-as.character(xcov)
+	ugr<-sort(unique(gr))
+	if(length(ugr)!=length(group)) {
+		cat("The argument group must be the same size as the initial number of categories\n")
+		return(object)
+	}
+	for(i in 1:length(ugr)) gr[as.character(xcov)==ugr[i]]<-group[i]
+	if(ifac) gr<-as.factor(gr)
+	uugr<-unique(gr)
+	uugr<-c(reference,uugr[uugr!=reference])
+	ngr<-length(uugr)
+	if(ngr>2) { # remove initial covariate from data object
+		object@data[,covariate]<-NULL
+		tdum<-NULL # generate dummy covariates
+		for(i in 2:ngr) {
+			dum<-ifelse(gr==uugr[i],1,0)
+			tdum<-cbind(tdum,dum)
+			colnames(tdum)[(i-1)]<-paste(covariate,".G",i,sep="")
+		}
+		object@data<-cbind(object@data,tdum)
+	} else { # 2 categories, remapping to 0/1
+		xgr<-ifelse(unclass(gr)==reference,0,1)
+		object@data[,covariate]<-xgr
+	}
+	object@trans.cov[[covariate]]<-list(type="cat",group=group,reference=reference)
+	return(object)
 }
 
 ####################################################################################
 ####				saemixObject class - S3 methods			####
 ####################################################################################
+
+#' Data subsetting
+#' 
+#' Return an SaemixData object containing the subset of data which meets conditions.
+#'
+#' @name subset.SaemixData
+#' @aliases subset-methods subset
+#' 
+#' @param x saemixData object
+#' @param subset logical expression indicating elements or rows to keep: missing values are taken as false
+#' @param ... additional parameters (ignored)
+#' @return an object of class \code{"\linkS4class{SaemixData}"}
+#' @examples 
+#' # TODO
+#' @keywords methods
+#' @export subset.SaemixData
+NULL
 
 subset.SaemixData<-function (x, subset, ...) {
     if (missing(subset)) 
