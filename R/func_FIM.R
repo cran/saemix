@@ -1,7 +1,5 @@
 ###########################  Fisher Information Matrix & LL by linearisation 	#############################
 
-
-
 #' Computes the Fisher Information Matrix by linearisation
 #' 
 #' Estimate by linearisation the Fisher Information Matrix and the standard
@@ -33,9 +31,9 @@
 #' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
 #' Marc Lavielle.
 #' @seealso \code{\link{SaemixObject}},\code{\link{saemix}}
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
-#' mixed effects models. Computational Statistics and Data Analysis 49, 4
-#' (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 #' 20th meeting of the Population Approach Group in Europe, Athens, Greece
@@ -90,17 +88,24 @@ fim.saemix<-function(saemixObject) {
   xind<-saemix.data["data"][,saemix.data["name.predictors"],drop=FALSE]
   yobs<-saemix.data["data"][,saemix.data["name.response"]]
   
-  covariance.model<-0*saemix.model["covariance.model"]
-  diag(covariance.model)<-mydiag(saemix.model["covariance.model"])
-  omega<-0*saemix.res["omega"]
-  diag(omega)<-mydiag(saemix.res["omega"])
+  #  covariance.model<-0*saemix.model["covariance.model"]
+  covariance.model<-saemix.model["covariance.model"]
+  omega<-saemix.res["omega"]
+  omega.null<-0*omega
+  #  diag(covariance.model)<-mydiag(saemix.model["covariance.model"])
+  #  omega<-0*saemix.res["omega"] # Why use only diag(omega) ???
+  #  diag(omega)<-mydiag(saemix.res["omega"])
   hat.phi<-saemix.res["cond.mean.phi"]
   nphi<-dim(hat.phi)[2]
+  nomega<-sum(covariance.model[lower.tri(covariance.model,diag=TRUE)])
+  nres<-length(saemix.res["indx.res"])
+  nytype<-length(unique(saemix.data["data"]["ytype"]))
   dphi<-cutoff(abs(colMeans(hat.phi))*1e-4,1e-10)
   coefphi<-c(0,-1,1)
   
   F<-array(data=0,dim=c(saemix.data["ntot.obs"],nphi,length(coefphi)))
   gs<-matrix(0,saemix.data["ntot.obs"],4)
+  etype.exp<-which(saemix.model["error.model"]=='exponential')
   
   for (l in 1:length(coefphi)) {
     for (j in 1:nphi) {
@@ -108,23 +113,39 @@ fim.saemix<-function(saemixObject) {
       phi[,j]<-phi[,j]+coefphi[l]*dphi[j]
       psi<-transphi(phi,saemix.model["transform.par"])
       f <- saemix.model["model"](psi, saemix.data["data"][,"index"],xind)
-      if(saemix.model["error.model"]=='exponential') 
-        f<-log(cutoff(f))        
+      for(ityp in etype.exp) f[saemix.data["data"][,saemix.data["name.ytype"]]==ityp]<-log(cutoff(f[saemix.data["data"][,saemix.data["name.ytype"]]==ityp]))    
       F[,j,l]<-f
     }
   }
   
   ind.covariates<-which(saemix.model["betaest.model"]>0)
   f0<-F[,1,1]
-  g0<-cutoff(saemix.res["respar"][1]+saemix.res["respar"][2]*abs(f0))
-  DF<-(F[,,3]-F[,,2])/matrix(rep(dphi,each=saemix.data["ntot.obs"]), ncol=length(dphi))/2 #gradient of f 
+  # g0<-cutoff(saemix.res["respar"][1]+saemix.res["respar"][2]*abs(f0))
+  g0<-error(f0,saemix.res@respar,saemix.data["data"]["ytype"])
+  #  DF<-(F[,,3]-F[,,2])/matrix(rep(dphi,each=saemix.data["ntot.obs"]), ncol=length(dphi))/2 
+  DF<-(F[,,3]-F[,,1])/matrix(rep(dphi,each=saemix.data["ntot.obs"]), ncol=length(dphi)) #gradient of f (changed from F[,,2] to F[,,1])
   z<-matrix(0,saemix.data["ntot.obs"],1)
-  j2<-0
   
+  invVi<-Gi<-list() # Individual variance matrices
+  j2<-0
   for (i in 1:saemix.data["N"]) {
+    ni<-saemix.data["nind.obs"][i]
     j1<-j2+1
-    j2<-j2+saemix.data["nind.obs"][i]
+    j2<-j2+ni
     z[j1:j2]<-yobs[j1:j2] - f0[j1:j2] + DF[j1:j2,,drop=FALSE]%*%hat.phi[i,]
+    Vi<- DF[j1:j2,,drop=FALSE] %*% omega %*% t(DF[j1:j2,,drop=FALSE]) + mydiag((g0[j1:j2])^2, nrow=ni)
+    #    invVi[[i]]<-solve(Vi[[i]])
+    # Invert avoiding numerical problems
+    Gi[[i]]<-round(Vi*1e10)/1e10
+    VD<-try(eigen(Gi[[i]]))
+    if(class(VD)=="try-error") {
+      cat("Unable to compute the FIM by linearisation.\n")
+      stop()
+      #    return(saemixObject)
+    }
+    D<-Re(VD$values)
+    V<-Re(VD$vectors)
+    invVi[[i]] <- V%*%mydiag(1/D,nrow=length(D))%*%t(V)
   }
   
   # ECO ici modifie car role de covariate.estim pas clair
@@ -132,13 +153,14 @@ fim.saemix<-function(saemixObject) {
   covariate.estim<-matrix(rep(saemix.model["fixed.estim"], dim(saemix.model["betaest.model"])[1]),byrow=TRUE, ncol=length(saemix.model["fixed.estim"]))*saemix.model["betaest.model"]
   j<-which(saemix.model["betaest.model"]>0)
   ind.fixed.est<-(covariate.estim[j]>0)
+  npar<-length(ind.fixed.est)
   
   # hw=waitbar(1,'Estimating the population parameters (SAEM). Wait...')
   
   ll.lin<- -0.5*saemix.data["ntot.obs"]*log(2*pi)
-  Fmu<-0
-  FO<-0
   j2<-0
+#  indMF<-list() # Individual FIM
+  MF<-matrix(0,nrow=(npar+nomega+nres),ncol=(npar+nomega+nres))
   for (i in 1:saemix.data["N"]) {
     #waitbar(i/N,hw)
     ni<-saemix.data["nind.obs"][i]
@@ -152,64 +174,63 @@ fim.saemix<-function(saemixObject) {
     Ai<-kronecker(diag(nphi),as.matrix(saemix.model["Mcovariates"][i,]))
     Ai<-Ai[,ind.covariates,drop=FALSE]
     DFAi<-DFi%*%Ai
-    Gi<-DFi%*%omega%*%t(DFi) + mydiag(g0i^2,nrow=ni)  #variance of zi
-    
-    Gi<-round(Gi*1e10)/1e10
-    VD<-try(eigen(Gi))
-    if(class(VD)=="try-error") {
-      cat("Unable to compute the FIM by linearisation.\n")
-      return(saemixObject)
-    }
-    D<-Re(VD$values)
-    V<-Re(VD$vectors)
-    IGi<-V%*%mydiag(1/D,nrow=length(D))%*%t(V)
     Dzi<-zi-DFAi%*%saemix.res["betas"]
     
-    if (sum(ind.fixed.est)>0) {
-      DFAiest<-DFAi[,ind.fixed.est,drop=FALSE]
-      Fmu<-Fmu-t(DFAiest)%*%IGi%*%DFAiest
+    # Derivatives of Vi=var(yi) for subject i, w/r to lambda (FO approximation, neglecting dVi/dmu)
+    DV<-list()
+    myidx.omega<-c()
+    for(ipar in 1:npar) {
+      DV[[ipar]]<-matrix(0,ncol=ni,nrow=ni)
     }
-    
-    ###########################################################
-    OP<-NULL
-    for (k in 1:nphi) {
-      for (l in 1:nphi) {
-        if (covariance.model[k,l]==1) {
-          OPkl<-DFi[,k,drop=FALSE]%*%t(DFi[,l,drop=FALSE])
-          OP<-cbind(OP,c(OPkl))
+    for(iom in 1:dim(covariance.model)[1]) {
+      for(jom in iom:dim(covariance.model)[1]) {
+        if(covariance.model[iom,jom]==1) {
+          ipar<-ipar+1
+          if(iom==jom) myidx.omega<-c(myidx.omega,ipar)
+          domega<-omega.null
+          domega[iom,jom]<-domega[jom,iom]<-1 
+          #          if(iom==jom) domega[iom,jom]<-1*sqrt(omega[iom,jom]) else domega[iom,jom]<-1 # if parameterised in omega and not omega2,
+          DV[[ipar]]<-DFi %*% domega %*% t(DFi)
         }
       }
     }
-    if (sum(saemix.res["indx.res"]==1)>0) {
-      SIi<-2*g0i
-      dSIi<-mydiag(SIi)
-      OP<-cbind(OP,c(dSIi))
-    }
-    if (sum(saemix.res["indx.res"]==2)>0) {
-      SIi<-2*f0i%*%g0i
-      dSIi<-mydiag(SIi)
-      OP<-cbind(OP,c(dSIi))
-    }
-    kl<-0
-    FG<-matrix(0,dim(OP)[2],ni*ni)
-    for (k in 1:ni)
-    {
-      for (l in 1:ni)
-      {
-        FGkl<- -IGi[,k]%*%t(IGi[l,])/2
-        kl<-kl+1
-        FG[,kl]<-t(OP)%*%c(FGkl)
+    # for(ipar in 1:nomega) {
+    #   domega<-omega.null
+    #   domega[ipar,ipar]<-sqrt(omega[ipar,ipar])*2
+    #   DV[[ipar+npar]] <- DFi %*% t(DFi)
+    # }
+    for(ipar.res in 1:(2*nytype)) {
+      if(!is.na(match(ipar.res,saemix.res@indx.res))) {
+        ipar<-ipar+1
+        if(ipar.res%%2 == 1) DV[[ipar]]<-mydiag(2*g0i, nrow=ni) else DV[[ipar]]<-mydiag(2*g0i*f0i, nrow=ni)
       }
     }
-    FO<-FO+FG%*%OP
+    #    blocA <- t(DFAi) %*% invVi[[i]] %*% DFAi
+    if (sum(ind.fixed.est)>0) {
+      DFAiest<-DFAi[,ind.fixed.est,drop=FALSE]
+      blocA<-t(DFAiest)%*% invVi[[i]] %*%DFAiest
+    } else blocA<-NULL
     
-    ###############################################################
-    ll.lin <- ll.lin - 0.5*log(det(Gi)) - 0.5*t(Dzi)%*%IGi%*%Dzi 
+    # blocAbis<-matrix(0,ncol=(npar),nrow=(npar))
+    # for(ii in 1:npar) {
+    #   for(ij in 1:npar) {
+    #     blocAbis[ii,ij]<-DFi[,ii] %*% invVi[[i]] %*% DFi[,ij]
+    #   }
+    # }
+    blocB<-matrix(0,ncol=(nomega+nres),nrow=(nomega+nres))
+    for(ij in 1:(nomega+nres)) { # columns
+      for(ii in 1:(nomega+nres)) { # lines, so that blocB is ordered according to c(covariance.model)
+        blocB[ii,ij]<-sum(diag(DV[[ii+npar]] %*% invVi[[i]] %*% DV[[ij+npar]] %*% invVi[[i]] ))/2
+      }
+    }
+    blocC<-matrix(0,ncol=(npar),nrow=(nomega+nres))
+    MFi <-rbind( cbind(blocA,t(blocC)), cbind(blocC, blocB))
+#    indMF[[i]]<-MFi
+    MF <- MF+MFi
+    ll.lin <- ll.lin - 0.5*log(det(Gi[[i]])) - 0.5*t(Dzi)%*% invVi[[i]] %*%Dzi 
   }
-  #partie precedente verifiee pas a pas avec matlab
   
-  if(saemix.model["error.model"]=='exponential')
-    ll.lin<-ll.lin-sum(yobs)
+  for(ityp in etype.exp) ll.lin<-ll.lin-sum(yobs[saemix.data["data"][,saemix.data["name.ytype"]]==ityp])
   
   if (sum(ind.fixed.est)>0) {
     Mparam<-matrix(0,dim(saemix.model["betaest.model"])[1], dim(saemix.model["betaest.model"])[2])
@@ -218,8 +239,15 @@ fim.saemix<-function(saemixObject) {
     Mtp<-Mtp[ind.fixed.est]
     dbetas <- dtransphi(saemix.res["betas"][ind.fixed.est],Mtp)
     Mupth<-mydiag(1/dbetas,nrow=length(dbetas))
+    Fmu<-MF[1:npar,1:npar]
     Fth<-t(Mupth)%*%Fmu%*%Mupth
-    Cth<-try(solve(-Fth))
+    MF[1:npar,1:npar]<-Fth
+    # Individual FIM
+    # for(i in 1:saemix.data["N"]) {
+    #   Fmui<-t(Mupth) %*% indMF[[i]][1:npar,1:npar] %*% Mupth
+    #   indMF[[i]][1:npar,1:npar]<-Fmui
+    # }
+    Cth<-try(solve(Fth))
     if(class(Cth)=="try-error") {
       cat("Error computing the Fisher Information Matrix: singular system.\n")
       Cth<-NA*Fth
@@ -227,8 +255,7 @@ fim.saemix<-function(saemixObject) {
   } else {
     Cth<-NULL
   }
-  
-  fim<-rbind(cbind(Fth,matrix(0,dim(Fth)[1],dim(FO)[2])), cbind(matrix(0,dim(FO)[1],dim(Fth)[2]),FO)) 
+  fim<-MF
   
   sTHest<-sqrt(mydiag(Cth))
   #sTH<-matrix(0,1,length(saemix.res["betas"]))
@@ -236,21 +263,33 @@ fim.saemix<-function(saemixObject) {
   sTH[ind.fixed.est]<-sTHest
   se.fixed<-sTH
   
-  CO<-try(solve(-FO))
+  FO<-MF[-c(1:npar),-c(1:npar)]
+  CO<-try(solve(FO))
   if(class(CO)=="try-error") {
     CO<-NA*FO
     cat("Error computing the Fisher Information Matrix: singular system.\n")
   }
   sO<-sqrt(mydiag(CO))
-  nb.omega2<-length(saemix.model["indx.omega"])
   se.omega<-matrix(0,nphi,1)
-  se.omega[saemix.model["indx.omega"]]<-sO[1:nb.omega2]
-  se.res<-matrix(0,2,1)
-  se.res[saemix.res["indx.res"]]<-sO[(nb.omega2+1):length(sO)]    
+  se.cov<-matrix(0,nphi,nphi)
+  se.omega[saemix.model["indx.omega"]]<-sO[myidx.omega-npar]
+  if(length(saemix.model["indx.cov"])>0) {
+    ipar<-0
+    for(iom in 1:nphi) {
+      for(jom in iom:nphi) {
+        if(covariance.model[iom,jom]==1) {
+          ipar<-ipar+1
+          se.cov[iom,jom]<-se.cov[jom,iom]<-sO[ipar]
+        }
+      }
+    }
+  } else diag(se.cov)<-se.omega
+  se.res<-matrix(0,2*nytype,1)
+  se.res[saemix.res["indx.res"]]<-sO[(nomega+1):length(sO)]    
   
-  # ECO TODO : pourquoi negatif ??? FIM = -fim calculee ici ?
   saemix.res["se.fixed"]<-se.fixed
   saemix.res["se.omega"]<-c(se.omega)
+  saemix.res["se.cov"]<-se.cov
   saemix.res["se.respar"]<-c(se.res)
   saemix.res["ll.lin"]<-c(ll.lin )
   saemix.res["fim"]<-fim
@@ -261,4 +300,6 @@ fim.saemix<-function(saemixObject) {
   #delete(hw)
   saemixObject["results"]<-saemix.res
   return(saemixObject)
+#  return(list(ll.lin,fim,DFi, Dzi, invVi))
 }
+

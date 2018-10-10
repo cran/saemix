@@ -70,7 +70,7 @@
 #' \item{sample}{ for individual plots, if TRUE, randomly samples nmax different subjects to plot. Defaults to FALSE (the first nmax subjects are used in the plots)} 
 #' } 
 #' 
-#' @aliases saemix.plot.setoptions saemix.data.setoptions replace.plot.options replace.data.options plot.saemix
+#' @aliases saemix.plot.setoptions saemix.data.setoptions replace.plot.options replace.data.options
 #' @param saemixObject an object returned by the \code{\link{saemix}} function
 #' @return A list containing the options set at their default value. This list
 #' can be stored in an object and its elements modified to provide suitable graphs.
@@ -81,9 +81,9 @@
 #' \code{\link{saemix.plot.obsvspred}}, \code{\link{saemix.plot.fits}},
 #' \code{\link{saemix.plot.parcov}}, \code{\link{saemix.plot.distpsi}},
 #' \code{\link{saemix.plot.scatterresiduals}}, \code{\link{saemix.plot.vpc}}
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
-#' mixed effects models. Computational Statistics and Data Analysis 49, 4
-#' (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 #' 20th meeting of the Population Approach Group in Europe, Athens, Greece
@@ -303,9 +303,9 @@ replace.plot.options<-function(plot.opt,...) {
 #' \code{\link{saemix.plot.distpsi}},
 #' \code{\link{saemix.plot.scatterresiduals}},
 #' \code{\link{saemix.plot.distribresiduals}}, \code{\link{saemix.plot.vpc}}
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
-#' mixed effects models. Computational Statistics and Data Analysis 49, 4
-#' (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 #' 20th meeting of the Population Approach Group in Europe, Athens, Greece
@@ -457,9 +457,9 @@ saemix.plot.select<-function(saemixObject,data=FALSE,convergence=FALSE, likeliho
 #' Marc Lavielle.
 #' @seealso \code{\link{saemix}}, \code{\link{saemix.plot.data}},
 #' \code{\link{saemix.plot.setoptions}}, \code{\link{plot.saemix}}
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
-#' mixed effects models. Computational Statistics and Data Analysis 49, 4
-#' (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 #' 20th meeting of the Population Approach Group in Europe, Athens, Greece
@@ -597,29 +597,35 @@ covariate.fits<-function(saemixObject,which="parameters",...) {
 #' saemix.plot.parcov.aux, compute.sres and compute.eta.map are helper
 #' functions, not intended to be called by the user directly.
 #' 
-#' By default, the following plots are produced: \describe{
+#' By default, the following plots are produced:
+#'  \describe{
 #' \item{saemix.plot.data:}{A spaghetti plot of the data, displaying the
 #' observed data y as a function of the regression variable (time for a PK
-#' application)} \item{saemix.plot.convergence:}{For each parameter in the
+#' application)} 
+#' \item{saemix.plot.convergence:}{For each parameter in the
 #' model, this plot shows the evolution of the parameter estimate versus the
-#' iteration number} \item{saemix.plot.llis:}{Graph showing the evolution of
+#' iteration number} 
+#' \item{saemix.plot.llis:}{Graph showing the evolution of
 #' the log-likelihood during the estimation by importance sampling}
 #' \item{saemix.plot.obsvspred:}{Plot of the predictions computed with the
 #' population parameters versus the observations (left), and plot of the
 #' predictions computed with the individual parameters versus the observations
-#' (right)} \item{saemix.plot.scatterresiduals:}{Scatterplot of the residuals
+#' (right)} 
+#' \item{saemix.plot.scatterresiduals:}{Scatterplot of the residuals
 #' versus the predictor (top) and versus predictions (bottom), for weighted
 #' residuals (population residuals, left), individual weighted residuals
 #' (middle) and npde (right).}
 #' \item{saemix.plot.distribresiduals:}{Distribution of the residuals, plotted
 #' as histogram (top) and as a QQ-plot (bottom), for weighted residuals
 #' (population residuals, left), individual weighted residuals (middle) and
-#' npde (right).} \item{saemix.plot.fits:}{Model fits. Individual fits are
+#' npde (right).} 
+#' \item{saemix.plot.fits:}{Model fits. Individual fits are
 #' obtained using the individual parameters with the individual covariates.
 #' Population fits are obtained using the population parameters with the
 #' individual covariates (red) and the individual parameters with the
 #' individual covariates (green). By default the individual plots are
-#' displayed.} \item{saemix.plot.distpsi:}{Distribution of the parameters
+#' displayed.} 
+#' \item{saemix.plot.distpsi:}{Distribution of the parameters
 #' (conditional on covariates when some are included in the model). A histogram
 #' of individual parameter estimates can be overlayed on the plot, but it
 #' should be noted that the histogram does not make sense when there are
@@ -631,13 +637,16 @@ covariate.fits<-function(saemixObject,which="parameters",...) {
 #' covariates, boxplot for categorical covariates}
 #' \item{saemix.plot.randeffcov:}{Plots of the estimates of the random effects
 #' versus the covariates, using scatterplot for continuous covariates, boxplot
-#' for categorical covariates} \item{saemix.plot.npde:}{Plots 4 graphs to
+#' for categorical covariates} 
+#' \item{saemix.plot.npde:}{Plots 4 graphs to
 #' evaluate the shape of the distribution of the normalised prediction
-#' distribution errors (npde)} \item{saemix.plot.vpc:}{Visual Predictive Check,
+#' distribution errors (npde)} 
+#' \item{saemix.plot.vpc:}{Visual Predictive Check,
 #' with options to include the prediction intervals around the boundaries of
 #' the selected interval as well as around the median (50th percentile of the
 #' simulated data). Several methods are available to define binning on the
-#' X-axis (see methods in the PDF guide).} }
+#' X-axis (see methods in the PDF guide).} 
+#' }
 #' 
 #' Each plot can be customised by modifying options, either through a list of
 #' options set by the \code{\link{saemix.plot.setoptions}} function, or on the
@@ -657,9 +666,9 @@ covariate.fits<-function(saemixObject,which="parameters",...) {
 #' @seealso \code{\link{SaemixObject}},\code{\link{saemix}},
 #' \code{\link{saemix.plot.setoptions}}, \code{\link{saemix.plot.select}},
 #' \code{\link{plot.saemix}}
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
-#' mixed effects models. Computational Statistics and Data Analysis 49, 4
-#' (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 #' 20th meeting of the Population Approach Group in Europe, Athens, Greece
@@ -1132,7 +1141,7 @@ saemix.plot.fits<-function(saemixObject,...) {
   if(plot.opt$xlog) logtyp<-paste(logtyp,"x",sep="")
   if(plot.opt$ylog) logtyp<-paste(logtyp,"y",sep="")
   pl.line<-(length(plot.opt$level)>0)
-  xind<-saemixObject["data"]["data"][,saemixObject["data"]["name.predictors"], drop=FALSE]
+  xind<-saemixObject["data"]["data"][,c(saemixObject["data"]["name.predictors"],saemixObject["data"]["name.cens"],saemixObject["data"]["name.mdv"],saemixObject["data"]["name.ytype"]),drop=FALSE]
   id<-saemixObject["data"]["data"][,saemixObject["data"]["name.group"]]
   if(saemixObject["model"]["error.model"]=="exponential")
     yobs<-saemixObject["data"]["yorig"] else yobs<-saemixObject["data"]["data"][,saemixObject["data"]["name.response"]]

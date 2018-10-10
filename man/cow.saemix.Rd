@@ -62,9 +62,8 @@ saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,nbiter.saemix=c(200,100),
 # Plotting the data
 plot(saemix.data,xlab="Time (day)",ylab="Weight of the cow (kg)")
 
- \donttest{
 # Not run (strict time constraints for CRAN)
- saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
-  } 
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+
 }
 \keyword{datasets}

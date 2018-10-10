@@ -50,13 +50,8 @@ The SAEM package includes a number of undocumented functions, which are not mean
 }
 \author{ Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu, Marc Lavielle.
 }
-\references{ 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis (2005), 49(4):1020-38.
-
+\references{ Kuhn, E., and Lavielle, M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 Monolix32_UsersGuide.pdf (http://software.monolix.org/sdoms/software/)
-
-Comets E, Lavenu A, Lavielle M. Parameter Estimation in Nonlinear Mixed Effect Models Using saemix, an R Implementation of the SAEM Algorithm. Journal of Statistical Software (2017), 80(3):1-41. doi:10.18637/jss.v080.i03
-
 }
 \keyword{saemix}
 \keyword{model}

@@ -11,22 +11,13 @@
 #' @docType methods
 #' @keywords internal
 #' @export
+# Importing packages grDevices, stats and utils
+#' @import stats
+#' @import grDevices
+#' @import utils
 
 setGeneric(name="read",
-           def=function(object){standardGeneric("read")}
-)
-
-#' Methods for Function plotmodel
-#' 
-#' Plot the predictions from a SaemixModel
-#' 
-#' @name plotmodel-methods
-#' @aliases plotmodel
-#' @docType methods
-#' @export
-
-setGeneric(name="plotmodel",
-           def=function(x,y,range=c(0,1),psi,predictors,...){standardGeneric("plotmodel")}
+           def=function(object, verbose=TRUE){standardGeneric("read")}
 )
 
 #' Methods for Function showall
@@ -104,13 +95,13 @@ setGeneric(name="showall",
 #' 
 #' @name psi-methods
 #' 
-#' @aliases psi-methods phi-methods eta-methods psi,SaemixObject-method
+#' @aliases psi-methods phi-methods eta-methods
 #' @aliases phi,SaemixObject-method eta,SaemixObject-method psi,SaemixObject-method 
 #' @aliases psi phi eta 
 #' @aliases psi.SaemixObject psi.saemix phi.SaemixObject eta.SaemixObject phi.saemix eta.saemix
 #' 
 #' @param object an SaemixObject object returned by the \code{\link{saemix}} function
-#' @param type a string specifying whether to use the MAP (type="map") or the mode (type="mode") of the conditional distribution of the individual parameters. Defaults to "map"
+#' @param type a string specifying whether to use the MAP (type="mode") or the mean (type="mean") of the conditional distribution of the individual parameters. Defaults to mode
 #' @return a matrix with the individual parameters (psi/phi) or the random effects (eta). 
 #' These functions are used to access and output the estimates of
 #' parameters and random effects. When the object passed to the function does
@@ -124,16 +115,16 @@ setGeneric(name="showall",
 #' @seealso \code{\link{SaemixData}},\code{\link{SaemixModel}},
 #' \code{\link{SaemixObject}}, \code{\link{saemixControl}},
 #' \code{\link{plot.saemix}}
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
-#' mixed effects models. Computational Statistics and Data Analysis 49, 4
-#' (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 #' 20th meeting of the Population Approach Group in Europe, Athens, Greece
 #' (2011), Abstr 2173.
 #' @docType methods
 #' @keywords methods
-#' @examples
+#' @examples 
 #' 
 #' data(theo.saemix)
 #' 
@@ -168,20 +159,22 @@ setGeneric(name="showall",
 #' 
 #' # psi(saemix.fit)
 #' # phi(saemix.fit)
-#' # eta(saemix.fit,indiv.par="eap")
+#' # eta(saemix.fit,type="mean")
 #' @export
 setGeneric(name="psi",
-           def=function(object,type=c("map","mode")){standardGeneric("psi")}
+           def=function(object,type=c("mode","mean")) {standardGeneric("psi")}
 )
 
+#' @rdname psi-methods
 #' @export
 setGeneric(name="phi",
-           def=function(object,type=c("map","mode")){standardGeneric("phi")}
+           def=function(object,type=c("mode","mean")) {standardGeneric("phi")}
 )
 
+#' @rdname psi-methods
 #' @export
 setGeneric(name="eta",
-           def=function(object,type=c("map","mode")){standardGeneric("eta")}
+           def=function(object,type=c("mode","mean")) {standardGeneric("eta")}
 )
 
 #######################################################
@@ -201,6 +194,10 @@ NULL
 NULL
 
 #' @importFrom stats coef
+NULL
+
+# Suggestion when compiling data alone
+#' @importFrom utils head read.table
 NULL
 
 #######################################################
@@ -367,12 +364,6 @@ NULL
 #' These are not to be called by the user.
 #' 
 #' @name saemix.internal
-#' @aliases .First.lib plotnpde ssq
+#' @aliases .First.lib plotnpde ssq error.typ
 #' @keywords internal
 NULL
-
-
-
-
-
-

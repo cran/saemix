@@ -48,7 +48,7 @@ simul.saemix<-function(saemixObject,nsim=saemixObject["options"]$nb.sim, predict
   saemix.model<-saemixObject["model"]
   saemix.data<-saemixObject["data"]
   saemix.res<-saemixObject["results"]
-  xind<-saemix.data["data"][,saemix.data["name.predictors"],drop=FALSE]
+  xind<-saemix.data["data"][,c(saemix.data["name.predictors"],saemix.data["name.cens"],saemix.data["name.mdv"],saemix.data["name.ytype"]),drop=FALSE]
   
   N<-saemix.data["N"]
   ind.eta<-saemix.model["indx.omega"]
@@ -67,15 +67,15 @@ simul.saemix<-function(saemixObject,nsim=saemixObject["options"]$nb.sim, predict
   if(predictions) {
     index<-rep(1:N,times=saemix.data["nind.obs"])
     IdM<-kronecker(c(0:(nsim-1)),rep(N,saemix.data["ntot.obs"]))+rep(index,nsim)
-    XM<-do.call(rbind,rep(list(xind),nsim))
+    XM<-do.call(rbind,rep(list(xind), nsim))
     pres<-saemix.res["respar"]
     sim.pred<-sim.data<-NULL
     fpred<-saemix.model["model"](psiM, IdM, XM)
     sim.pred<-fpred
     if(res.var) {
-      if(saemix.model["error.model"]=="exponential")
-        fpred<-log(cutoff(fpred))
-      gpred<-error(fpred,pres)
+      ind.exp<-which(saemix.model["error.model"]=="exponential")
+      for(ityp in ind.exp) fpred[XM$ytype==ityp]<-log(cutoff(fpred[XM$ytype==ityp]))
+      gpred<-error(fpred,pres,XM$ytype)
       eps<-rnorm(length(fpred))
       sim.data<-fpred+gpred*eps
     }

@@ -80,6 +80,12 @@ setClass(Class="SaemixObject",
 ###############################
 # Initialize
 #' @rdname initialize-methods
+#' 
+#' @param .Object a SaemixObject, SaemixRes, SaemixData or SaemixModel object to initialise
+#' @param data an SaemixData object
+## #' @param model an SaemixModel object
+#' @param options a list of options passed to the algorithm
+#' 
 #' @exportMethod initialize
 
 setMethod(
@@ -87,9 +93,10 @@ setMethod(
   signature="SaemixObject",
   definition= function (.Object,data,model,options=list()){
 #    cat ("--- initialising SaemixObject --- \n")
-    if(model["error.model"]=='exponential') {
-      yobs<-data["data"][,data["name.response"]]
-      y<-log(cutoff(yobs))
+    ind.exp<-which(model["error.model"]=='exponential')
+    if(length(ind.exp)>0) {
+      y<-yobs<-data["data"][,data["name.response"]]
+      for(ityp in ind.exp) y[data["data"][,data["name.ytype"]]==ityp]<-log(cutoff(yobs[data["data"][,data["name.ytype"]]==ityp]))
       data["yorig"]<-yobs
       data["data"][,data["name.response"]]<-y
     }
@@ -120,6 +127,8 @@ setMethod(
     model@name.random<-paste("omega2",model@name.modpar[model@indx.omega], sep=".")
     .Object@model<-model
     .Object@model@betaest.model<-matrix(c(rep(1,.Object@model@nb.parameters), c(t(.Object@model@covariate.model))),ncol=.Object@model@nb.parameters,byrow=TRUE)
+# Aligning the name of the response for the model object to the same as in the data object
+    if(model@name.response=="") model@name.response<-data@name.response
     
 # Covariates
     .Object@model@name.cov<-.Object@data@name.covariates
@@ -148,16 +157,25 @@ setMethod(
       opt$seed<-.Random.seed[5]
       }
     if(is.null(options$nb.chains) & data@N>0) opt$nb.chains<-ceiling(50/data@N)
-    if(data@N>0 && data@N<50 & opt$nb.chains<ceiling(50/data@N)) {
+      if(data@N>0 && data@N<50 & opt$nb.chains<ceiling(50/data@N)) {
       cat("The number of subjects is small, increasing the number of chains to", ceiling(50/data@N),"to improve convergence\n")
       opt$nb.chains<-ceiling(50/data@N)
     }
+    } else{
+      opt$nb.chains<-opt$nb.chains
+    }
+    
     if(opt$ipar.lmcmc<2) {
       opt$ipar.lmcmc<-2
       cat("Value of L_MCMC too small, setting it to 2 (computation of the conditional means and variances of the individual parameters)\n")
     }
+
+    if(is.null(opt$nbiter.sa)){
+      opt$nbiter.sa<-round(opt$nbiter.saemix[1]/2)
+    } else{
+      opt$nbiter.sa<-max(1,opt$nbiter.sa)
     }
-    opt$nbiter.sa<-round(opt$nbiter.saemix[1]/2)
+
     opt$nbiter.tot<-sum(opt$nbiter.saemix)
     .Object@options<-opt
 # Options for plots
@@ -244,15 +262,14 @@ setMethod(
 #' saved to files. Defaults to TRUE
 #' @param directory the directory in which to save the results. Defaults to
 #' "newdir" in the current directory
-#' @param warnings whether warnings should be output during the fit. Defaults
-#' to FALSE
+#' @param warnings whether warnings should be output during the fit. Defaults to FALSE
 #' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
 #' Marc Lavielle.
 #' @seealso \code{\link{SaemixData}},\code{\link{SaemixModel}},
 #' \code{\link{SaemixObject}}, \code{\link{saemix}}
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
-#' mixed effects models. Computational Statistics and Data Analysis 49, 4
-#' (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 #' 20th meeting of the Population Approach Group in Europe, Athens, Greece
@@ -299,6 +316,7 @@ ipar.lmcmc=ipar.lmcmc,ipar.rmcmc=ipar.rmcmc)
 #' @keywords methods
 #' @exportMethod [
 #' @exportMethod [<-
+#' @exportPattern "^[[:alpha:]]+"
 ##### @name [
 ##### @aliases [,SaemixObject-method
 ##### @docType methods
@@ -346,6 +364,8 @@ setReplaceMethod(
 ####################################################################################
 ####				Summary method for SaemixObject			####
 ####################################################################################
+#' @rdname summary-methods
+#' 
 #' @exportMethod summary
 
 setMethod("summary","SaemixObject",
@@ -361,10 +381,10 @@ setMethod("summary","SaemixObject",
     cat("----------------------------------------------------\n")
     }
     if(length(object@results@se.fixed)==0) {
-      tab<-data.frame(c(object@results@name.fixed, object@results@name.res[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]))
+      tab<-data.frame(c(object@results@name.fixed, object@results@name.sigma[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]))
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-data.frame(c(object@results@name.fixed, object@results@name.res[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]),c(object@results@se.fixed,object@results@se.respar[object@results@indx.res]), stringsAsFactors=FALSE)
+      tab<-data.frame(c(object@results@name.fixed, object@results@name.sigma[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]),c(object@results@se.fixed,object@results@se.respar[object@results@indx.res]), stringsAsFactors=FALSE)
       tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
       if(length(object@results@indx.cov)>0) {
@@ -471,6 +491,7 @@ setMethod("summary","SaemixObject",
 ####			Print and show methods for SaemixObject			####
 ####################################################################################
 
+#' @rdname print-methods
 #' @exportMethod print
 
 setMethod("print","SaemixObject",
@@ -510,6 +531,8 @@ setMethod("print","SaemixObject",
   }
 )
 
+#' @rdname show-methods
+#' 
 #' @exportMethod show
 
 setMethod("show","SaemixObject",
@@ -575,6 +598,8 @@ setMethod("show","SaemixObject",
 )
 
 
+#' @rdname showall-methods
+#' 
 #' @exportMethod showall
 
 # Could be print, with only head of data
@@ -652,12 +677,22 @@ setMethod("showall","SaemixObject",
 ####			SaemixObject class - method to predict			####
 ####################################################################################
 
+#' @rdname predict-methods
+#' 
+#' @param object an SaemixObject
+#' @param newdata an optional dataframe for which predictions are desired
+#' @param type the type of predictions (ipred= individual, ypred= mean of the population predictions, ppred=population predictions obtained with the population estimates, icpred=conditional predictions). With newdata, predictions correspond to the population predictions and type is ignored
+#' @param se.fit whether the SE are to be taken into account in the model predictions
+#' @param ... additional arguments passed on to fitted()
+#' 
 #' @exportMethod predict
 
 setMethod(f="predict",
   signature="SaemixObject",
   def=function(object,newdata=NULL,type=c("ipred", "ypred", "ppred", "icpred"), se.fit=FALSE, ...) {
     type<-match.arg(type)
+    saemix.data<-object["data"]
+    saemix.model<-object["model"]
 #    se.fit<-match.arg(se.fit) # doesn't work with logical type, change
 #    if(se.fit) cat("Currently predict() does not handle argument se.fit=TRUE.\n")
     if(missing(newdata)) {
@@ -701,11 +736,11 @@ setMethod(f="predict",
       structural.model<-object["model"]["model"]
       chdat<-new(Class="SaemixRepData",data=newdata, nb.chains=1)
       IdM<-chdat["dataM"]$IdM
-      XM<-chdat["dataM"][,newdata["name.predictors"],drop=FALSE]
+      XM<-chdat["dataM"][,c(saemix.data["name.predictors"],saemix.data["name.cens"],saemix.data["name.mdv"],saemix.data["name.ytype"]),drop=FALSE]
       # Model predictions with pop.psi
       fpred<-structural.model(pop.psi, IdM, XM)
-      if(object["model"]["error.model"]=="exponential")
-        fpred<-log(cutoff(fpred))
+      ind.exp<-which(saemix.model["error.model"]=="exponential")
+      for(ityp in ind.exp) fpred[XM$ytype==ityp]<-log(cutoff(fpred[XM$ytype==ityp]))
       xpred<-fpred
     }
     xpred
@@ -727,8 +762,10 @@ saemix.predict<-function(object) {
   if(length(object["results"]["cond.mean.phi"])==0)
     object<-conddist.saemix(object)
   saemix.res<-object["results"]
-  xind<-object["data"]["data"][,object["data"]["name.predictors"],drop=FALSE]
-  if(object["model"]["error.model"]=="exponential") yobs<-object["data"]["yorig"] else yobs<-object["data"]["data"][,object["data"]["name.response"]]
+  xind<-object["data"]["data"][,c(object["data"]["name.predictors"],object["data"]["name.cens"],object["data"]["name.mdv"],object["data"]["name.ytype"]),drop=FALSE]
+  # If exponential model, this is the transformed data
+  yobs<-object["data"]["data"][,object["data"]["name.response"]]
+
   index<-object["data"]["data"][,"index"]
   # Individual predictions
   ipred<-object["model"]["model"](saemix.res["map.psi"][, 2:dim(saemix.res["map.psi"])[2]],index,xind)
@@ -739,9 +776,9 @@ saemix.predict<-function(object) {
   saemix.res["icpred"]<-icond.pred
   # Individual weighted residuals
   pres<-saemix.res["respar"]
-  gpred<-error(ipred,pres)
+  gpred<-error(ipred,pres,xind$ytype)
   iwres<-(ipred-yobs)/gpred
-  gpred<-error(icond.pred,pres)
+  gpred<-error(icond.pred,pres,xind$ytype)
   icwres<-(icond.pred-yobs)/gpred
   saemix.res["iwres"]<-iwres
   saemix.res["icwres"]<-icwres
@@ -844,6 +881,7 @@ saemix.predict<-function(object) {
 #' }
 #' 
 #' @aliases plot.saemix plot,SaemixObject plot
+#' @aliases plotnpde
 #' @param x an object returned by the \code{\link{saemix}} function
 #' @param y empty
 #' @param \dots optional arguments passed to the plots
@@ -853,9 +891,9 @@ saemix.predict<-function(object) {
 #' @seealso \code{\link{SaemixObject}},\code{\link{saemix}},
 #' \code{\link{saemix.plot.setoptions}}, \code{\link{saemix.plot.select}},
 #' \code{\link{saemix.plot.data}}
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear
-#' mixed effects models. Computational Statistics and Data Analysis 49, 4
-#' (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 #' 20th meeting of the Population Approach Group in Europe, Athens, Greece
@@ -1111,7 +1149,9 @@ setMethod(f="plot",
 ##' @param ... additional arguments
 ##' @param k numeric, the penalty per parameter to be used; the default k = 2 is the classical AIC
 ##' @return Returns the selected statistical criterion (log-likelihood, AIC, BIC) extracted from the SaemixObject, computed with the 'method' argument if given (defaults to IS).
-##' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+##' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 ##' 
 ##' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 #' @author Emmanuelle Comets \email{emmanuelle.comets@@inserm.fr}
@@ -1120,7 +1160,7 @@ setMethod(f="plot",
 #' @seealso \code{\link{AIC}},\code{\link{BIC}}, \code{\link{saemixControl}}, \code{\link{saemix}}
 #' @docType methods
 #' @keywords methods
-#' @export logLik.SaemixObject
+#' @export
 
 ## log-likelihood for SaemixObject objects
 logLik.SaemixObject<- function(object, method="is", ...) {
@@ -1170,7 +1210,7 @@ logLik.SaemixObject<- function(object, method="is", ...) {
   val
 }
 
-#' @export AIC.SaemixObject
+#' @export 
 #' @rdname logLik
 
 AIC.SaemixObject<-function(object, ..., k=2) {
@@ -1200,7 +1240,7 @@ AIC.SaemixObject<-function(object, ..., k=2) {
   val
 }
 
-#' @export BIC.SaemixObject
+#' @export
 #' @rdname logLik
 
 BIC.SaemixObject<-function(object, ...) {
@@ -1238,13 +1278,15 @@ BIC.SaemixObject<-function(object, ...) {
 ####			saemixObject class - accesseurs parametres		####
 ####################################################################################
 #' @rdname psi-methods
+#' @aliases psi
 #' @exportMethod psi
 
 # Extract individual parameter estimates (psi_i)
 setMethod("psi","SaemixObject",
-  function(object,type=c("map","mode")) {
+  function(object,type=c("mode","mean")) {
+    type <- match.arg(type)
     namObj<-deparse(substitute(object))
-    if(type=="map") { # mode
+    if(type=="mode") { # MAP
       if(length(object@results@map.psi)==0) {
         object<-map.saemix(object)
         assign(namObj,object,envir=parent.frame())
@@ -1266,9 +1308,10 @@ setMethod("psi","SaemixObject",
 
 # Extract individual parameter estimates on non-transformed scale (phi_i)
 setMethod("phi","SaemixObject",
-  function(object,type=c("map","mode")) {
+  function(object,type=c("mode","mean")) {
+    type <- match.arg(type)
     namObj<-deparse(substitute(object))
-    if(type=="map") { # mode
+    if(type=="mode") { # MAP
       if(length(object@results@map.phi)==0) {
         object<-map.saemix(object)
         assign(namObj,object,envir=parent.frame())
@@ -1290,10 +1333,11 @@ setMethod("phi","SaemixObject",
 #' @exportMethod eta
 
 setMethod("eta","SaemixObject",
-  function(object,type=c("map","mode")) {
+  function(object,type=c("mode","mean")) {
+    type <- match.arg(type)
     namObj<-deparse(substitute(object))
 #    cat("Nom objet",namObj,"\n")
-    if(type=="map") { # mode
+    if(type=="mode") { # MAP
       if(length(object@results@map.eta)==0) {
         object<-compute.eta.map(object)
         assign(namObj,object,envir=parent.frame())
@@ -1313,8 +1357,7 @@ setMethod("eta","SaemixObject",
 #' Extract coefficients from a saemix fit
 #' 
 #' @name coef.saemix
-#' @aliases coef coef.SaemixObject
-#' @aliases coef,SaemixObject coef,SaemixObject-method
+#' 
 #' @param object a SaemixObject
 #' @param ... further arguments to be passed to or from other methods
 #' @return a list with 3 components:
@@ -1323,14 +1366,17 @@ setMethod("eta","SaemixObject",
 #' \item{population}{a list of population parameters with two elements, a matrix containing the untransformed parameters psi and a matrix containing the transformed parameters phi}
 #' \item{individual}{a list of individual parameters with two elements, a matrix containing the untransformed parameters psi and a matrix containing the transformed parameters phi}
 #' }
-#' @export coef.SaemixObject
+#' 
+#' @aliases coef coef.SaemixObject
+#' @aliases coef,SaemixObject coef,SaemixObject-method
+#' @export
 
 coef.SaemixObject<-function(object, ...) {
 #    if(missing(level)) level<-1
     pfix<-object@results@fixed.effects[object@results@indx.fix]
     names(pfix)<-object@results@name.fixed[object@results@indx.fix]
-#c(object@results@fixed.effects,object@name.res[object@indx.res])
-#    names(pfix)<-c(object@results@name.fixed,object@name.res[object@indx.res])    
+#c(object@results@fixed.effects,object@name.sigma[object@indx.res])
+#    names(pfix)<-c(object@results@name.fixed,object@name.sigma[object@indx.res])    
     pop.phi<-object@results@mean.phi
     pop.psi<-transphi(pop.phi,object@model@transform.par)
     ind.psi<-list(map=object@results@map.psi[,-c(1)], cond=object@results@cond.mean.psi)
@@ -1343,7 +1389,7 @@ coef.SaemixObject<-function(object, ...) {
   }
 
 #' @rdname resid.saemix
-#' @export resid.SaemixObject
+#' @export 
 
 # Extract residuals and fitted
 resid.SaemixObject<-function (object, type = c("ires", "wres", "npde", "pd", "iwres", "icwres"), ...) {
@@ -1352,7 +1398,7 @@ resid.SaemixObject<-function (object, type = c("ires", "wres", "npde", "pd", "iw
 }
 
 #' @rdname fitted.saemix
-#' @export fitted.SaemixObject
+#' @export 
 
 fitted.SaemixObject<-function (object, type = c("ipred", "ypred", "ppred", "icpred"), ...) 
           {

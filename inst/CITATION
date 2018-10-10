@@ -1,5 +1,5 @@
 bibentry(bibtype = "Article",
-  title        = "Parameter Estimation in Nonlinear Mixed Effect Models Using {saemix}, an {R} Implementation of the SAEM Algorithm",
+  title        = "Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm",
   author       = c(person(given = "Emmanuelle",
                           family = "Comets",
                           email = "emmanuelle.comets@inserm.fr"),
@@ -17,7 +17,7 @@ bibentry(bibtype = "Article",
   header       = "To cite saemix in publications use:",
   textVersion  =
   paste("Emmanuelle Comets, Audrey Lavenu, Marc Lavielle (2017).",
-        "Parameter Estimation in Nonlinear Mixed Effect Models Using saemix, an R Implementation of the SAEM Algorithm.",
+        "Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm.",
         "Journal of Statistical Software, 80(3), 1-41.",
         "doi:10.18637/jss.v080.i03")
 )

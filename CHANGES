@@ -1,9 +1,27 @@
+Version 2.2 -  October 2018
+
+ o Bugfixes
+   * computation of the Fisher Information Matrix recoded to fix an underestimation in the standard errors of the residual error terms 
+   * FIM is now given in the results (slot fim of the results element) instead of -FIM
+ o Changes to SaemixData object
+   * changes to read method to correct warnings and improve automatic recognition
+   * elements name cens, mdv, occ and ytype are now set during object creation, to prepare for models with multiple responses (not supported in version 2.2)
+   * a slot of type logical called messages has been added to the SaemixData. Setting it to FALSE suppresses the messages output during the creation of an SaemixData object
+o Changes to SaemixModel object
+   * covariate.model can now be given as a vector (eg c(0,1,0)) or a matrix (eg matrix(c(0,1,0),ncol=3)
+o Changes to SaemixObject object
+   * the number of chains can be set to 1 by the user even with a small number of subjects (the minimum recommended number of subjects*times is 50 but the user can now choose to ignore this recommendation)
+   * the number of iterations for simulated annealing can now be set to 0 by the user
+ o Minor changes to comply with more stringent checks on CRAN
+
 Version 2.1 -  August 2017
+
  o Version of the saemix package to CRAN that refers back to the JSS manuscript
 Comets E, Lavenu A, Lavielle M. Parameter Estimation in Nonlinear Mixed Effect Models Using saemix, an R Implementation of the SAEM Algorithm. Journal of Statistical Software (2017), 80(3):1-41. doi:10.18637/jss.v080.i03
 
 
 Version 2.0 -  September 2015
+
  o New features
     * the predict() function has been changed to return model predictions (see help file for details)
     * new extractor functions have been programmed: logLik, residuals, AIC, BIC

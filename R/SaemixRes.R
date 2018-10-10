@@ -15,10 +15,66 @@
 #' @aliases [<-,SaemixRes-method plot,SaemixRes print,SaemixRes showall,SaemixRes show,SaemixRes 
 #' 
 #' @section Objects from the Class: 
-#' An object of the SaemixRes class is returned as part of a SaemixObject object after a call to \code{\link{saemix}} and contain the following slots:
-#'   \describe{
-#'     \item{\code{name.fixed}:}{a vector containing the names of the fixed parameters in the model}
-#'     }
+#' An object of the SaemixData class can be created by using the function \code{\link{saemixData}} and contain the following slots:
+#' 
+#' @slot name.fixed a vector containing the names of the fixed parameters in the model
+#' @slot name.random a vector containing the names of the random parameters in the model
+#' @slot name.sigma a vector containing the names of the parameters of the residual error model
+#' @slot npar.est the number of parameters estimated (fixed, random and residual)
+#' @slot fixed.effects a vector giving the estimated h(mu) and betas
+#' @slot fixed.psi  a vector giving the estimated h(mu)
+#' @slot betas a vector giving the estimated mu
+#' @slot betaC a vector with the estimates of the fixed effects for covariates
+#' @slot omega the estimated variance-covariance matrix
+#' @slot respar the estimated parameters of the residual error model
+#' @slot fim the Fisher information matrix
+#' @slot se.fixed  a vector giving the estimated standard errors of estimation for the fixed effect parameters
+#' @slot se.omega a vector giving the estimated standard errors of estimation for Omega 
+#' @slot se.cov a matrix giving the estimated SE for each term of the covariance matrix (diagonal elements represent the SE on the variances of the random effects and off-diagonal elements represent the SE on the covariance terms)
+#' @slot se.respar a vector giving the estimated standard errors of estimation for the parameters of the residual variability
+#' @slot parpop a matrix tracking the estimates of the population parameters at each iteration
+#' @slot allpar a matrix tracking the estimates of all the parameters (including covariate effects) at each iteration
+#' @slot indx.fix the index of the fixed parameters (used in the estimation algorithm)
+#' @slot indx.cov the index of the covariance parameters (used in the estimation algorithm)
+#' @slot indx.omega the index of the random effect parameters (used in the estimation algorithm)
+#' @slot indx.res the index of the residual error model parameters (used in the estimation algorithm)
+#' @slot MCOV a matrix of covariates (used in the estimation algorithm)
+#' @slot cond.mean.phi a matrix giving the conditional mean estimates of phi (estimated as the mean of the conditional distribution)
+#' @slot cond.mean.psi a matrix giving the conditional mean estimates of psi (h(cond.mean.phi))
+#' @slot cond.var.phi a matrix giving the variance on the conditional mean estimates of phi (estimated as the variance of the conditional distribution)
+#' @slot cond.mean.eta  a matrix giving the conditional mean estimates of the random effect eta
+#' @slot cond.shrinkage a vector giving the shrinkage on the conditional mean estimates of eta
+#' @slot mean.phi a matrix giving the population estimate (Ci*mu) including covariate effects
+#' @slot map.psi a matrix giving the MAP estimates of individual parameters
+#' @slot map.phi a matrix giving the MAP estimates of individual phi
+#' @slot map.eta a matrix giving the individual estimates of the random effects corresponding to the MAP estimates
+#' @slot map.shrinkage  a vector giving the shrinkage on the MAP estimates of eta
+#' @slot phi phi
+#' @slot psi.samp a three-dimensional array with samples of psi from the conditional distribution
+#' @slot phi.samp a three-dimensional array with samples of phi from the conditional distribution
+#' @slot phi.samp.var a three-dimensional array with the variance of phi
+#' @slot ll.lin log-likelihood computed by lineariation
+#' @slot aic.lin Akaike Information Criterion computed by linearisation
+#' @slot bic.lin Bayesian Information Criterion computed by linearisation
+#' @slot ll.is log-likelihood computed by Importance Sampling
+#' @slot aic.is Akaike Information Criterion computed by Importance Sampling
+#' @slot bic.is Bayesian Information Criterion computed by Importance Sampling
+#' @slot LL a vector giving the conditional log-likelihood at each iteration of the algorithm
+#' @slot ll.gq log-likelihood computed by Gaussian Quadrature
+#' @slot aic.gq Akaike Information Criterion computed by Gaussian Quadrature
+#' @slot bic.gq Bayesian Information Criterion computed by Gaussian Quadrature
+#' @slot predictions a data frame containing all the predictions and residuals in a table format
+#' @slot ypred a vector giving the mean population predictions
+#' @slot ppred a vector giving the population predictions obtained with the MAP estimates
+#' @slot ipred a vector giving the individual predictions obtained with the MAP estimates
+#' @slot icpred a vector giving the individual predictions obtained with the conditional estimates
+#' @slot ires a vector giving the individual residuals obtained with the MAP estimates
+#' @slot iwres a vector giving the individual weighted residuals obtained with the MAP estimates
+#' @slot icwres a vector giving the individual weighted residuals obtained with the conditional estimates
+#' @slot wres a vector giving the population weighted residuals
+#' @slot npde  a vector giving the normalised prediction distribution errors
+#' @slot pd a vector giving the prediction discrepancies
+#' 
 #' @section Methods:
 #'   \describe{
 #'     \item{[<-}{\code{signature(x = "SaemixRes")}: replace elements of object}
@@ -30,7 +86,9 @@
 #'     \item{show}{\code{signature(object = "SaemixRes")}: prints details about the object}
 #'     \item{summary}{\code{signature(object = "SaemixRes")}: summary of the results. Returns a list with a number of elements extracted from the results ().}
 #' 	 }
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' 
+#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 #' 
 #' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
 #' @author Emmanuelle Comets \email{emmanuelle.comets@@inserm.fr}
@@ -50,7 +108,7 @@ setClass(
   representation=representation(
     name.fixed="character",	# names of fixed parameters in the model
     name.random="character",	# names of random effects
-    name.res="character",	# names of parameters of residual error model
+    name.sigma="character",	# names of parameters of residual error model
     npar.est="numeric",		# nb of parameters estimated (fixed, random & resid)
     fixed.effects="numeric",	# vector with h(mu) and betas in estimation order
     fixed.psi="numeric",	# h(mu)
@@ -60,7 +118,8 @@ setClass(
     respar="numeric",		# estimated residual variability
     fim="matrix",		# Fisher information matrix
     se.fixed="numeric",		# estimated SE for fixed effects
-    se.omega="numeric",	# estimated SE for Omega
+    se.omega="numeric",	# estimated SE for Omega (diagonal terms of Omega, presented as  vector)
+    se.cov="matrix",	# matrix giving the estimated SE for each term of the covariance matrix (diagonal elements represent the SE on the variances of the random effects and off-diagonal elements represent the SE on the covariance terms)
     se.respar="numeric",	# estimated SE for residual variability
     parpop="matrix",	# population parameters at each iteration
     allpar="matrix",	# all parameters (including covariate effects) at each iteration
@@ -68,7 +127,7 @@ setClass(
     indx.cov="numeric",	# index of cov param estimated (was indx.betaC)
     indx.omega="numeric",	# index of random param estimated (was i1.omega2)
     indx.res="numeric",	# index of param of residual errors estimated (was indx.res)
-    MCOV="matrix",		# 
+    MCOV="matrix",		# ECO TODO define
 # Individual parameters
     cond.mean.phi="matrix",	# Cond mean estimates of Phi (mean of conditional distribution)
     cond.mean.psi="matrix",	# Cond mean estimates of Psi (h(cond.mean.phi))
@@ -80,7 +139,7 @@ setClass(
     map.phi="data.frame",	# MAP estimates of phi
     map.eta="matrix",		# ETAs corresponding to the MAP estimates (computed as map.phi-COV%*%MCOV in compute.eta.map)
     map.shrinkage="numeric", 	# shrinkage on MAP estimates
-    phi="matrix",
+    phi="matrix",       # ECO TODO define
     psi.samp="array",		# nb.chains samples in the individual conditional distributions (psi)
     phi.samp="array",		# nb.chains samples in the individual conditional distributions (phi)
     phi.samp.var="array",	# variance of samples
@@ -118,19 +177,37 @@ setClass(
 # initialize
 
 #' @rdname initialize-methods
+#' 
+#' @param name.fixed a character string  giving the name of the fixed parameters
+#' @param name.random a character string  giving the name of the random parameters
+#' @param fixed.effects vector with the estimates of h(mu) and betas in estimation order
+#' @param fixed.psi vector with the estimates of h(mu)
+#' @param betaC vector with the estimates of betas (estimated fixed effects for covariates)
+#' @param betas vector with the estimates of mu
+#' @param omega estimated variance-covariance matrix
+#' @param respar vector with the estimates of the parameters of the residual error
+#' @param cond.mean.phi matrix of size (number of subjects) x (nb of parameters) containing the conditional mean estimates of the, defined as the mean of the conditional distribution
+#' @param cond.var.phi matrix of the variances on cond.mean.phi, defined as the variance of the conditional distribution
+#' @param mean.phi matrix of size (number of subjects) x (nb of parameters) giving for each subject the estimates of the population parameters including covariate effects
+#' @param phi matrix of size (number of subjects) x (nb of parameters) giving for each subject
+#' @param phi.samp samples from the individual conditional distributions of the phi
+#' @param parpop population parameters at each iteration
+#' @param allpar all parameters (including covariate effects) at each iteration
+#' @param MCOV design matrix C
+#' 
 #' @exportMethod initialize
 
 setMethod(
   f="initialize",
   signature="SaemixRes",
-  definition= function(.Object,name.fixed,name.random,name.res,fixed.effects, fixed.psi,betaC,betas,omega,respar,cond.mean.phi,cond.var.phi,mean.phi,phi, phi.samp,parpop, allpar,MCOV){
+  definition= function(.Object,name.fixed,name.random,name.sigma,fixed.effects, fixed.psi,betaC,betas,omega,respar,cond.mean.phi,cond.var.phi,mean.phi,phi, phi.samp,parpop, allpar,MCOV){
 #    cat ("--- initialising SaemixRes Object --- \n")
     if(missing(name.fixed)) name.fixed<-character(0)
     .Object@name.fixed<-name.fixed
     if(missing(name.random)) name.random<-character(0)
     .Object@name.random<-name.random
-    if(missing(name.res)) name.res<-character(0)
-    .Object@name.res<-name.res
+    if(missing(name.sigma)) name.sigma<-character(0)
+    .Object@name.sigma<-name.sigma
     if(missing(fixed.effects)) fixed.effects<-numeric(0)
     .Object@fixed.effects<-fixed.effects
     if(missing(fixed.psi)) fixed.psi<-numeric(0)
@@ -183,6 +260,7 @@ setMethod(
 #' @keywords methods
 #' @exportMethod [
 #' @exportMethod [<-
+#' @exportPattern "^[[:alpha:]]+"
 
 
 # Getteur
@@ -192,7 +270,7 @@ setMethod(
   definition = function (x,i,j,drop ){
   switch (EXPR=i,
     "name.fixed"={return(x@name.fixed)},
-    "name.res"={return(x@name.res)},
+    "name.sigma"={return(x@name.sigma)},
     "name.random"={return(x@name.random)},
     "npar.est"={return(x@npar.est)},
     "fixed.effects"={return(x@fixed.effects)},
@@ -204,6 +282,7 @@ setMethod(
     "fim"={return(x@fim)},
     "se.fixed"={return(x@se.fixed)},
     "se.omega"={return(x@se.omega)},
+    "se.cov"={return(x@se.cov)},
     "se.respar"={return(x@se.respar)},
     "parpop"={return(x@parpop)},
     "allpar"={return(x@allpar)},
@@ -253,6 +332,13 @@ setMethod(
 )
 #paste("    ",slotNames(saemix.res),"={return(x@",slotNames(saemix.res),")},",sep="")
 
+#' replace names of SaemixRes
+#'
+#' @name [
+#' @aliases [<-,SaemixRes-method
+#' @docType methods
+#' @rdname extract-methods
+
 # Setteur
 setReplaceMethod(
   f ="[",
@@ -261,7 +347,7 @@ setReplaceMethod(
   switch (EXPR=i,
     "name.fixed"={x@name.fixed<-value},
     "name.random"={x@name.random<-value},
-    "name.res"={x@name.res<-value},
+    "name.sigma"={x@name.sigma<-value},
     "npar.est"={x@npar.est<-value},
     "fixed.effects"={x@fixed.effects<-value},
     "fixed.psi"={x@fixed.psi<-value},
@@ -272,6 +358,7 @@ setReplaceMethod(
     "fim"={x@fim<-value},
     "se.fixed"={x@se.fixed<-value},
     "se.omega"={x@se.omega<-value},
+    "se.cov"={x@se.cov<-value},
     "se.respar"={x@se.respar<-value},
     "parpop"={x@parpop<-value},
     "allpar"={x@allpar<-value},
@@ -326,6 +413,11 @@ setReplaceMethod(
 ####			SaemixRes class - method to print/show data		####
 ####################################################################################
 
+#' @rdname print-methods
+#' 
+#' @param digits number of digits to use for pretty printing
+#' @param map when map is TRUE the individual parameter estimates are shown (defaults to FALSE)
+#' 
 #' @exportMethod print
 
 setMethod("print","SaemixRes",
@@ -340,10 +432,10 @@ setMethod("print","SaemixRes",
     cat("-----------------  Fixed effects  ------------------\n")
     cat("----------------------------------------------------\n")
     if(length(x@se.fixed)==0) {
-      tab<-cbind(c(x@name.fixed,x@name.res[x@indx.res]), c(x@fixed.effects,x@respar[x@indx.res]))
+      tab<-cbind(c(x@name.fixed,x@name.sigma[x@indx.res]), c(x@fixed.effects,x@respar[x@indx.res]))
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-cbind(c(x@name.fixed,x@name.res[x@indx.res]), c(x@fixed.effects,x@respar[x@indx.res]),c(x@se.fixed,x@se.respar[x@indx.res]))
+      tab<-cbind(c(x@name.fixed,x@name.sigma[x@indx.res]), c(x@fixed.effects,x@respar[x@indx.res]),c(x@se.fixed,x@se.respar[x@indx.res]))
       tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
       if(length(x@indx.cov)>0) {
@@ -428,6 +520,8 @@ setMethod("print","SaemixRes",
   }
 )
 
+#' @rdname show-methods
+#' 
 #' @exportMethod show
 
 setMethod("show","SaemixRes",
@@ -435,10 +529,10 @@ setMethod("show","SaemixRes",
 #    cat("Nonlinear mixed-effects model fit by the SAEM algorithm\n")
     cat("Fixed effects\n")
     if(length(object@se.fixed)==0) {
-      tab<-cbind(c(object@name.fixed,object@name.res[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]))
+      tab<-cbind(c(object@name.fixed,object@name.sigma[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]))
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-cbind(c(object@name.fixed,object@name.res[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]), c(object@se.fixed,object@se.respar[object@indx.res]))
+      tab<-cbind(c(object@name.fixed,object@name.sigma[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]), c(object@se.fixed,object@se.respar[object@indx.res]))
       tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","  SE"," CV(%)")
       if(length(object@indx.cov)>0) {
@@ -519,10 +613,10 @@ setMethod("showall","SaemixRes",
     cat("-----------------  Fixed effects  ------------------\n")
     cat("----------------------------------------------------\n")
     if(length(object@se.fixed)==0) {
-      tab<-cbind(c(object@name.fixed,object@name.res[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]))
+      tab<-cbind(c(object@name.fixed,object@name.sigma[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]))
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-cbind(c(object@name.fixed,object@name.res[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]), c(object@se.fixed,object@se.respar[object@indx.res]))
+      tab<-cbind(c(object@name.fixed,object@name.sigma[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]), c(object@se.fixed,object@se.respar[object@indx.res]))
       tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
       if(length(object@indx.cov)>0) {
@@ -616,7 +710,7 @@ setMethod("showall","SaemixRes",
 #' 
 #' @docType methods
 #' @keywords methods
-#' @export resid.SaemixRes
+#' @export 
 
 resid.SaemixRes<-function (object, type = c("ires", "wres", "npde", "pd", "iwres", "icwres"), ...) {
             type <- match.arg(type)
@@ -630,7 +724,7 @@ resid.SaemixRes<-function (object, type = c("ires", "wres", "npde", "pd", "iwres
 #' fitted is a generic function which extracts model predictions from objects returned by modelling functions
 #' 
 #' @name fitted.saemix
-#' @aliases fitted fitted.SaemixRes fitted.SaemixObject
+#' @aliases fitted fitted.SaemixRes
 #' 
 #' @param object an object of type SaemixRes or SaemixObject
 #' @param type string determining which predictions are extracted. Possible values are: "ipred" (individual predictions obtained using the mode of the individual distribution for each subject, default), "ypred" (population predictions obtained using the population parameters f(E(theta))), "ppred" (mean of the population predictions (E(f(theta)))) and "icpred" (individual predictions obtained using the conditional mean of the individual distribution). See user guide for details.
@@ -640,7 +734,7 @@ resid.SaemixRes<-function (object, type = c("ires", "wres", "npde", "pd", "iwres
 #' 
 #' @docType methods
 #' @keywords methods
-#' @export fitted.SaemixRes
+#' @export
 
 fitted.SaemixRes<-function (object, type = c("ipred", "ypred", "ppred", "icpred"), ...) {
   type <- match.arg(type)
@@ -664,12 +758,14 @@ fitted.SaemixRes<-function (object, type = c("ipred", "ypred", "ppred", "icpred"
 #' 
 #' @return A matrix of the estimated covariances between the parameter estimates in model. In saemix, this matrix is obtained as the inverse of the Fisher Information Matrix computed by linearisation
 #' 
-#' @export vcov.SaemixRes
-#' @export vcov.SaemixObject
+#' @export
 
 vcov.SaemixRes<-function(object, ...) {
   object@fim
 }
+
+#' @rdname vcov
+#' @export
 
 vcov.SaemixObject<-function(object, ...) {
   vcov(object@results)

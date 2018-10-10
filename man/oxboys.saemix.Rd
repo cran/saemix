@@ -56,10 +56,8 @@ saemix.model<-saemixModel(model=growth.linear,description="Linear model",
 saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,seed=201004,
   save=FALSE,save.graphs=FALSE)
 
- \donttest{
 # Not run (strict time constraints for CRAN)
- saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
-  } 
+# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 }
 \keyword{datasets}
