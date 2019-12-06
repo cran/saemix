@@ -15,8 +15,7 @@ NULL
 #' @name SaemixData-class 
 #' @docType class
 #' @aliases SaemixData SaemixData-class 
-#' @aliases [<-,SaemixData-method 
-#' @aliases print,SaemixData showall,SaemixData show,SaemixData read read,SaemixData-method
+#' @aliases print,SaemixData showall,SaemixData show,SaemixData
 #' @aliases SaemixRepData-class SaemixRepData 
 #' @aliases SaemixSimData-class SaemixSimData 
 #' 
@@ -608,7 +607,6 @@ validate.names<-function(usernames,datanames,recognisednames=c(),verbose=TRUE) {
 #' @param object an SaemixData object
 #'  
 #' @rdname read-methods
-#' @aliases read,SaemixData read,SaemixData-method
 #'  
 #' @exportMethod read
 
@@ -618,7 +616,7 @@ setMethod("read",
     ow <- options("warn")
     options("warn"=-1)
 # ce test devrait aller dans la definition de la classe
-    if(class(object@name.data)!="character") {
+    if(!is(object@name.data,"character")) {
       if(object@messages) cat("Please provide the name of the data (data.frame or path to file on disk) as a character string.\n")
     return("Creation of SaemixData object failed")
   }
@@ -634,7 +632,7 @@ setMethod("read",
       na.strings<-object@na
       if(is.null(na.strings)) na.strings<-"NA"
       dat<-try(read.table(object@name.data,header=header,sep=sep,na.strings=na.strings))
-      if(class(dat)=="try-error") stop("The file ",object@name.data," does not exist. Please check the name and path.\n")      
+      if(is(dat,"try-error")) stop("The file ",object@name.data," does not exist. Please check the name and path.\n")      
       if(object@messages) {
         cat("These are the first lines of the dataset as read into R. Please check the format of the data is appropriate, if not, modify the na and/or sep items and retry:\n")
         print(head(dat))
@@ -716,7 +714,7 @@ setMethod("read",
     dat<-dat[,all.names,drop=FALSE]
 		dat<-cbind(dat,mdv=mdv,cens=cens,occ=occ,ytype=ytype)
 
-    if(class(dat)!="data.frame") dat<-as.data.frame(dat)
+    if(!is(dat,"data.frame")) dat<-as.data.frame(dat)
 # Saving covariates in the original format in ocov, transforming binary covariates in dat to factors
     object@ocov<-dat[,object@name.covariates,drop=FALSE]
     for(icov in object@name.covariates) {
@@ -1003,6 +1001,8 @@ setMethod("summary","SaemixData",
 ### #' @export
 ### #' @docType methods
 ### #' @rdname plot-methods
+### #' @aliases plot,SaemixData 
+
 
 saemix.data.setoptions<-function(saemix.data) {
 # setting default plot options
@@ -1062,8 +1062,6 @@ replace.data.options<-function(plot.opt,...) {
 #' 
 #' This function will plot a longitudinal dataframe contained in an SaemixData object. By default it produces a spaghetti plot, but arguments can be passed on to modify this behaviour. 
 #' 
-#' @name plot-SaemixData
-#' 
 #' @param x an SaemixData object or an SaemixSimData object
 #' @param y unused, present for compatibility with base plot function
 #' @param ... additional arguments to be passed on to plot (titles, legends, ...)
@@ -1071,8 +1069,8 @@ replace.data.options<-function(plot.opt,...) {
 #' @aliases plot,SaemixData-methods 
 #' @aliases plot-SaemixData
 #' @aliases plot,SaemixData
-#' @keywords plot
-### #' @docType methods
+#' @aliases plot,SaemixData
+#' @keywords methods
 #' @exportMethod plot
 #' @rdname plot-SaemixData
 
@@ -1158,14 +1156,12 @@ setMethod("plot","SaemixData",
 
 #' When applied to an SaemixSimData object, mirror plots are produced which help assess whether the simulated data has similar features when compared to the original data.
 #'
-#' @name plot-SaemixData
-#' 
 #' @param irep number of replicate datasets to use in the mirror plot
 #' 
-#' @aliases plot,SaemixSimData-method plot,SaemixSimData
-### #' @docType methods
-#' @exportMethod plot
+#' @aliases plot,SaemixSimData-method plot,SaemixSimData plot,SaemixData
+#' @aliases plot,SaemixData
 #' @rdname plot-SaemixData
+
 
 # Check for mirror plots
 setMethod("plot","SaemixSimData",
@@ -1280,7 +1276,7 @@ saemixData<-function(name.data,header,sep,na,name.group,name.predictors, name.re
   x<-new(Class="SaemixData",name.data=name.data,header=header,sep=sep,na=na, name.group=name.group,name.predictors=name.predictors,name.X=name.X, name.response=name.response,name.covariates=name.covariates,units=units, name.mdv=name.mdv, name.cens=name.cens, name.occ=name.occ, name.ytype=name.ytype, verbose)
 #  showall(x)
   x1<-read(x)
-  if(class(x1)=="SaemixData") {
+  if(is(x1,"SaemixData")) {
   	igen<-rep(FALSE,length(name.covariates))
   	igen[match(name.genetic.covariates,name.covariates)]<-TRUE
   	x1@ind.gen<-igen

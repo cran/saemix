@@ -2,8 +2,8 @@ Package: saemix
 Type: Package
 Title: Stochastic Approximation Expectation Maximization (SAEM)
         Algorithm
-Version: 2.2
-Date: 2018-10-05
+Version: 2.3
+Date: 2019-12-07
 Author: Emmanuelle Comets, Audrey Lavenu, Marc Lavielle (2017) <doi:10.18637/jss.v080.i03> 
 Maintainer: Emmanuelle Comets <emmanuelle.comets@inserm.fr>
 Description: The SAEMIX package implements the Stochastic Approximation EM algorithm for parameter estimation in (non)linear mixed effects models. The SAEM algorithm: - computes the maximum likelihood estimator of the population parameters, without any approximation of the model (linearisation, quadrature approximation,...), using the Stochastic Approximation Expectation Maximization (SAEM) algorithm, - provides standard errors for the maximum likelihood estimator - estimates the conditional modes, the conditional means and the conditional standard deviations of the individual parameters, using the Hastings-Metropolis algorithm. Several applications of SAEM in agronomy, animal breeding and PKPD analysis have been published by members of the Monolix group (<http://group.monolix.org/>).
@@ -17,8 +17,8 @@ Collate: 'aaa_generics.R' 'SaemixData.R' 'SaemixModel.R' 'SaemixRes.R'
         'func_distcond.R' 'func_plots.R' 'func_simulations.R' 'main.R'
         'main_estep.R' 'main_initialiseMainAlgo.R' 'main_mstep.R'
         'zzz.R'
-RoxygenNote: 6.1.0
+RoxygenNote: 7.0.2
 NeedsCompilation: no
-Packaged: 2018-10-10 13:09:15 UTC; eco
+Packaged: 2019-12-06 16:34:53 UTC; eco
 Repository: CRAN
-Date/Publication: 2018-10-10 16:00:03 UTC
+Date/Publication: 2019-12-06 17:10:02 UTC

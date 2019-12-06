@@ -4,11 +4,24 @@
 \alias{saemixData}
 \title{Function to create a SaemixData object}
 \usage{
-saemixData(name.data, header, sep, na, name.group, name.predictors,
-  name.response, name.X, name.covariates = c(),
-  name.genetic.covariates = c(), name.mdv = "", name.cens = "",
-  name.occ = "", name.ytype = "", units = list(x = "", y = "",
-  covariates = c()), verbose = TRUE)
+saemixData(
+  name.data,
+  header,
+  sep,
+  na,
+  name.group,
+  name.predictors,
+  name.response,
+  name.X,
+  name.covariates = c(),
+  name.genetic.covariates = c(),
+  name.mdv = "",
+  name.cens = "",
+  name.occ = "",
+  name.ytype = "",
+  units = list(x = "", y = "", covariates = c()),
+  verbose = TRUE
+)
 }
 \arguments{
 \item{name.data}{name of the dataset (can be a character string giving the name of a file on disk or of a dataset in the R session, or the name of a dataset}

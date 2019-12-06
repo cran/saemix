@@ -12,28 +12,69 @@
 \alias{initialize,SaemixObject-method}
 \title{Methods for Function initialize}
 \usage{
-\S4method{initialize}{SaemixData}(.Object, name.data, header, sep, na,
-  name.group, name.predictors, name.response, name.covariates, name.X,
-  units, name.mdv, name.cens, name.occ, name.ytype, verbose)
+\S4method{initialize}{SaemixData}(
+  .Object,
+  name.data,
+  header,
+  sep,
+  na,
+  name.group,
+  name.predictors,
+  name.response,
+  name.covariates,
+  name.X,
+  units,
+  name.mdv,
+  name.cens,
+  name.occ,
+  name.ytype,
+  verbose
+)
 
-\S4method{initialize}{SaemixRepData}(.Object, data = NULL,
-  nb.chains = 1)
+\S4method{initialize}{SaemixRepData}(.Object, data = NULL, nb.chains = 1)
 
-\S4method{initialize}{SaemixSimData}(.Object, data = NULL,
-  datasim = NULL)
+\S4method{initialize}{SaemixSimData}(.Object, data = NULL, datasim = NULL)
 
-\S4method{initialize}{SaemixModel}(.Object, model, description, psi0,
-  name.response, name.sigma, transform.par, fixed.estim, error.model,
-  covariate.model, covariance.model, omega.init, error.init, name.modpar,
-  verbose = TRUE)
+\S4method{initialize}{SaemixModel}(
+  .Object,
+  model,
+  description,
+  psi0,
+  name.response,
+  name.sigma,
+  transform.par,
+  fixed.estim,
+  error.model,
+  covariate.model,
+  covariance.model,
+  omega.init,
+  error.init,
+  name.modpar,
+  verbose = TRUE
+)
 
-\S4method{initialize}{SaemixRes}(.Object, name.fixed, name.random,
-  name.sigma, fixed.effects, fixed.psi, betaC, betas, omega, respar,
-  cond.mean.phi, cond.var.phi, mean.phi, phi, phi.samp, parpop, allpar,
-  MCOV)
+\S4method{initialize}{SaemixRes}(
+  .Object,
+  name.fixed,
+  name.random,
+  name.sigma,
+  fixed.effects,
+  fixed.psi,
+  betaC,
+  betas,
+  omega,
+  respar,
+  cond.mean.phi,
+  cond.var.phi,
+  mean.phi,
+  phi,
+  phi.samp,
+  parpop,
+  allpar,
+  MCOV
+)
 
-\S4method{initialize}{SaemixObject}(.Object, data, model,
-  options = list())
+\S4method{initialize}{SaemixObject}(.Object, data, model, options = list())
 }
 \arguments{
 \item{.Object}{a SaemixObject, SaemixRes, SaemixData or SaemixModel object to initialise}

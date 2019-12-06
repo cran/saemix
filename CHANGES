@@ -1,3 +1,9 @@
+Version 2.3 -  October 2019
+o Modifications following a change in the R compiler for 4.4.0
+   "matrix objects now also inherit from class "array", namely, e.g., class(diag(1)) is c("matrix", "array") which invalidates code assuming that length(class(obj)) == 1, an incorrect assumption that is less frequently fulfilled now. "
+   "S3 methods for "array", i.e., <someFun>.array(), are now also dispatched for matrix objects."
+
+
 Version 2.2 -  October 2018
 
  o Bugfixes

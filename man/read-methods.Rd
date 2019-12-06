@@ -5,7 +5,6 @@
 \alias{read-methods}
 \alias{read}
 \alias{read,SaemixData-method}
-\alias{read,SaemixData}
 \title{Methods for Function read}
 \usage{
 read(object, verbose = TRUE)

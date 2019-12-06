@@ -5,8 +5,13 @@
 \alias{transform.SaemixData}
 \title{Transform covariates}
 \usage{
-transformContCov(object, covariate, transformation = function(x) x,
-  centering = "median", verbose = FALSE)
+transformContCov(
+  object,
+  covariate,
+  transformation = function(x) x,
+  centering = "median",
+  verbose = FALSE
+)
 }
 \arguments{
 \item{object}{saemixData object}

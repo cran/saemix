@@ -4,13 +4,26 @@
 \alias{saemix.plot.select}
 \title{Plots of the results obtained by SAEM}
 \usage{
-saemix.plot.select(saemixObject, data = FALSE, convergence = FALSE,
-  likelihood = FALSE, individual.fit = FALSE, population.fit = FALSE,
-  both.fit = FALSE, observations.vs.predictions = FALSE,
-  residuals.scatter = FALSE, residuals.distribution = FALSE,
-  random.effects = FALSE, correlations = FALSE,
-  parameters.vs.covariates = FALSE, randeff.vs.covariates = FALSE,
-  marginal.distribution = FALSE, vpc = FALSE, npde = FALSE, ...)
+saemix.plot.select(
+  saemixObject,
+  data = FALSE,
+  convergence = FALSE,
+  likelihood = FALSE,
+  individual.fit = FALSE,
+  population.fit = FALSE,
+  both.fit = FALSE,
+  observations.vs.predictions = FALSE,
+  residuals.scatter = FALSE,
+  residuals.distribution = FALSE,
+  random.effects = FALSE,
+  correlations = FALSE,
+  parameters.vs.covariates = FALSE,
+  randeff.vs.covariates = FALSE,
+  marginal.distribution = FALSE,
+  vpc = FALSE,
+  npde = FALSE,
+  ...
+)
 }
 \arguments{
 \item{saemixObject}{an object returned by the \code{\link{saemix}} function}

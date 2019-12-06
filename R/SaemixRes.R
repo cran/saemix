@@ -12,7 +12,7 @@
 #' @name SaemixRes-class 
 #' @docType class
 #' @aliases SaemixRes SaemixRes-class
-#' @aliases [<-,SaemixRes-method plot,SaemixRes print,SaemixRes showall,SaemixRes show,SaemixRes 
+#' @aliases plot,SaemixRes print,SaemixRes showall,SaemixRes show,SaemixRes 
 #' 
 #' @section Objects from the Class: 
 #' An object of the SaemixData class can be created by using the function \code{\link{saemixData}} and contain the following slots:

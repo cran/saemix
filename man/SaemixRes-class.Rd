@@ -4,6 +4,10 @@
 \name{SaemixRes-class}
 \alias{SaemixRes-class}
 \alias{SaemixRes}
+\alias{plot,SaemixRes}
+\alias{print,SaemixRes}
+\alias{showall,SaemixRes}
+\alias{show,SaemixRes}
 \title{Class "SaemixRes"}
 \description{
 An object of the SaemixRes class, representing the results of a fit through the SAEM algorithm.

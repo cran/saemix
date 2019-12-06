@@ -95,11 +95,11 @@ saemix<-function(model,data,control=list()) {
       abline(v=K1)
     }
   }
-  if(class(model)!="SaemixModel") {
+  if(!is(model,"SaemixModel")) {
     cat("Please provide a valid model object (see the help page for SaemixModel)\n")
     return()
   }
-  if(class(data)!="SaemixData") {
+  if(!is(data,"SaemixData")) {
     cat("Please provide a valid data object (see the help page for SaemixData)\n")
     return()
   }
@@ -319,7 +319,7 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
   if(saemix.options$save) {
     namres<-ifelse(saemix.options$directory=="","pop_parameters.txt", file.path(saemix.options$directory,"pop_parameters.txt"))
     xtry<-try(sink(namres))
-    if(class(xtry)!="try-error") {
+    if(!is(xtry,"try-error")) {
     print(saemixObject)
     sink()
     namres<-ifelse(saemix.options$directory=="","indiv_parameters.txt", file.path(saemix.options$directory,"indiv_parameters.txt"))
@@ -336,7 +336,7 @@ cond.mean.eta<-t(apply(cond.mean.eta,c(1,2),mean))
     if(saemix.options$directory=="") namgr<-"diagnostic_graphs.ps" else
       namgr<-file.path(saemix.options$directory,"diagnostic_graphs.ps")
     xtry<-try(postscript(namgr,horizontal=TRUE))
-    if(class(xtry)!="try-error") {
+    if(!is(xtry,"try-error")) {
     par(mfrow=c(1,1))
     try(plot(saemixObject,plot.type="data"))
 

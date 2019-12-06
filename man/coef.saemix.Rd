@@ -4,6 +4,8 @@
 \alias{coef.saemix}
 \alias{coef.SaemixObject}
 \alias{coef}
+\alias{coef,SaemixObject}
+\alias{coef,SaemixObject-method}
 \title{Extract coefficients from a saemix fit}
 \usage{
 \method{coef}{SaemixObject}(object, ...)

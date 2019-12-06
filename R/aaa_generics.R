@@ -364,6 +364,6 @@ NULL
 #' These are not to be called by the user.
 #' 
 #' @name saemix.internal
-#' @aliases .First.lib plotnpde ssq error.typ
+#' @aliases .First.lib ssq error.typ
 #' @keywords internal
 NULL

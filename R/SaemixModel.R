@@ -563,8 +563,6 @@ setMethod("summary","SaemixModel",
 #' 
 #' This function will plot predictions obtained from an SaemixModel object over a given range of X. Additional predictors may be passed on to the function using the predictors argument.
 #' 
-#' @name plot-SaemixModel
-#' 
 #' @param x an SaemixData object or an SaemixSimData object
 #' @param y unused, present for compatibility with base plot function
 #' @param range range of X over which the model is to be plotted

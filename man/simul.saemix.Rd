@@ -4,8 +4,13 @@
 \alias{simul.saemix}
 \title{Perform simulations under the model}
 \usage{
-simul.saemix(saemixObject, nsim = saemixObject["options"]$nb.sim,
-  predictions = TRUE, res.var = TRUE, uncertainty = FALSE)
+simul.saemix(
+  saemixObject,
+  nsim = saemixObject["options"]$nb.sim,
+  predictions = TRUE,
+  res.var = TRUE,
+  uncertainty = FALSE
+)
 }
 \arguments{
 \item{saemixObject}{an object returned by the \code{\link{saemix}} function}

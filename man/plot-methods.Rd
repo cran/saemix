@@ -3,8 +3,6 @@
 \docType{methods}
 \name{plot-methods}
 \alias{plot-methods}
-\alias{plot,SaemixData-method}
-\alias{plot,SaemixModel-method}
 \alias{plot,ANY-method}
 \title{Methods for Function plot}
 \description{

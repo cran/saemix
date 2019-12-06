@@ -5,6 +5,10 @@
 \alias{SaemixModel-class}
 \alias{SaemixModel}
 \alias{[<-,SaemixModel-method}
+\alias{print,SaemixModel}
+\alias{showall,SaemixModel}
+\alias{show,SaemixModel}
+\alias{summary,SaemixModel}
 \title{Class "SaemixModel"}
 \description{
 An object of the SaemixModel class, representing a nonlinear mixed-effect

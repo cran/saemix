@@ -3,7 +3,6 @@
 \name{saemix.internal}
 \alias{saemix.internal}
 \alias{.First.lib}
-\alias{plotnpde}
 \alias{ssq}
 \alias{error.typ}
 \title{Internal saemix objects}

@@ -4,13 +4,22 @@
 \alias{saemixModel}
 \title{Function to create a SaemixModel object}
 \usage{
-saemixModel(model, psi0, description = "", name.response = "",
-  name.sigma = character(), error.model = character(),
-  transform.par = numeric(), fixed.estim = numeric(),
+saemixModel(
+  model,
+  psi0,
+  description = "",
+  name.response = "",
+  name.sigma = character(),
+  error.model = character(),
+  transform.par = numeric(),
+  fixed.estim = numeric(),
   covariate.model = matrix(nrow = 0, ncol = 0),
   covariance.model = matrix(nrow = 0, ncol = 0),
-  omega.init = matrix(nrow = 0, ncol = 0), error.init = numeric(),
-  name.modpar = character(), verbose = TRUE)
+  omega.init = matrix(nrow = 0, ncol = 0),
+  error.init = numeric(),
+  name.modpar = character(),
+  verbose = TRUE
+)
 }
 \arguments{
 \item{model}{name of the function used to compute the structural model. The

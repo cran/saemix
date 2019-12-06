@@ -7,8 +7,13 @@
 \alias{predict,SaemixObject-method}
 \title{Methods for Function predict}
 \usage{
-\S4method{predict}{SaemixObject}(object, newdata = NULL,
-  type = c("ipred", "ypred", "ppred", "icpred"), se.fit = FALSE, ...)
+\S4method{predict}{SaemixObject}(
+  object,
+  newdata = NULL,
+  type = c("ipred", "ypred", "ppred", "icpred"),
+  se.fit = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{an SaemixObject}

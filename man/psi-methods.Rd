@@ -5,12 +5,18 @@
 \alias{psi-methods}
 \alias{phi-methods}
 \alias{eta-methods}
-\alias{phi}
-\alias{eta}
-\alias{psi,SaemixObject-method}
-\alias{psi}
 \alias{phi,SaemixObject-method}
 \alias{eta,SaemixObject-method}
+\alias{psi,SaemixObject-method}
+\alias{psi}
+\alias{phi}
+\alias{eta}
+\alias{psi.SaemixObject}
+\alias{psi.saemix}
+\alias{phi.SaemixObject}
+\alias{eta.SaemixObject}
+\alias{phi.saemix}
+\alias{eta.saemix}
 \title{Functions to extract the individual estimates of the parameters and random
 effects}
 \usage{

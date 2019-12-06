@@ -4,15 +4,39 @@
 \alias{saemixControl}
 \title{List of options for running the algorithm SAEM}
 \usage{
-saemixControl(map = TRUE, fim = TRUE, ll.is = TRUE, ll.gq = FALSE,
-  nbiter.saemix = c(300, 100), nb.chains = 1, fix.seed = TRUE,
-  seed = 23456, nmc.is = 5000, nu.is = 4, print.is = FALSE,
-  nbdisplay = 100, displayProgress = TRUE, nbiter.burn = 5,
-  nbiter.mcmc = c(2, 2, 2), proba.mcmc = 0.4, stepsize.rw = 0.4,
-  rw.init = 0.5, alpha.sa = 0.97, nnodes.gq = 12, nsd.gq = 4,
-  maxim.maxiter = 100, nb.sim = 1000, nb.simpred = 100,
-  ipar.lmcmc = 50, ipar.rmcmc = 0.05, print = TRUE, save = TRUE,
-  save.graphs = TRUE, directory = "newdir", warnings = FALSE)
+saemixControl(
+  map = TRUE,
+  fim = TRUE,
+  ll.is = TRUE,
+  ll.gq = FALSE,
+  nbiter.saemix = c(300, 100),
+  nb.chains = 1,
+  fix.seed = TRUE,
+  seed = 23456,
+  nmc.is = 5000,
+  nu.is = 4,
+  print.is = FALSE,
+  nbdisplay = 100,
+  displayProgress = TRUE,
+  nbiter.burn = 5,
+  nbiter.mcmc = c(2, 2, 2),
+  proba.mcmc = 0.4,
+  stepsize.rw = 0.4,
+  rw.init = 0.5,
+  alpha.sa = 0.97,
+  nnodes.gq = 12,
+  nsd.gq = 4,
+  maxim.maxiter = 100,
+  nb.sim = 1000,
+  nb.simpred = 100,
+  ipar.lmcmc = 50,
+  ipar.rmcmc = 0.05,
+  print = TRUE,
+  save = TRUE,
+  save.graphs = TRUE,
+  directory = "newdir",
+  warnings = FALSE
+)
 }
 \arguments{
 \item{map}{a boolean specifying whether to estimate the individual parameters (MAP estimates). Defaults to TRUE}

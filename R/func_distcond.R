@@ -113,6 +113,7 @@
 #' 
 #' 
 #' @export conddist.saemix
+
 conddist.saemix<-function(saemixObject,nsamp=1,max.iter=NULL,...) {
   # Estimate conditional means and estimates for the individual parameters PSI_i using the MCMC algorithm
   # nsamp= number of MCMC samples

@@ -5,14 +5,16 @@
 \alias{resid.saemix}
 \alias{resid.SaemixRes}
 \alias{residuals.SaemixRes}
+\alias{residuals.saemix}
+\alias{residuals}
+\alias{resid}
 \alias{resid.SaemixObject}
+\alias{residuals.SaemixObject}
 \title{Extract Model Residuals}
 \usage{
-\method{resid}{SaemixRes}(object, type = c("ires", "wres", "npde", "pd",
-  "iwres", "icwres"), ...)
+\method{resid}{SaemixRes}(object, type = c("ires", "wres", "npde", "pd", "iwres", "icwres"), ...)
 
-\method{resid}{SaemixObject}(object, type = c("ires", "wres", "npde",
-  "pd", "iwres", "icwres"), ...)
+\method{resid}{SaemixObject}(object, type = c("ires", "wres", "npde", "pd", "iwres", "icwres"), ...)
 }
 \arguments{
 \item{object}{an SaemixRes or an SaemixObject object}

@@ -8,11 +8,9 @@
 \alias{fitted.SaemixObject}
 \title{Extract Model Predictions}
 \usage{
-\method{fitted}{SaemixRes}(object, type = c("ipred", "ypred", "ppred",
-  "icpred"), ...)
+\method{fitted}{SaemixRes}(object, type = c("ipred", "ypred", "ppred", "icpred"), ...)
 
-\method{fitted}{SaemixObject}(object, type = c("ipred", "ypred", "ppred",
-  "icpred"), ...)
+\method{fitted}{SaemixObject}(object, type = c("ipred", "ypred", "ppred", "icpred"), ...)
 }
 \arguments{
 \item{object}{an object of type SaemixRes or SaemixObject}

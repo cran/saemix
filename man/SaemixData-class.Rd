@@ -4,8 +4,13 @@
 \name{SaemixData-class}
 \alias{SaemixData-class}
 \alias{SaemixData}
+\alias{print,SaemixData}
+\alias{showall,SaemixData}
+\alias{show,SaemixData}
 \alias{SaemixRepData-class}
+\alias{SaemixRepData}
 \alias{SaemixSimData-class}
+\alias{SaemixSimData}
 \title{Class "SaemixData"}
 \description{
 An object of the SaemixData class, representing a longitudinal data structure, used by the SAEM algorithm.
