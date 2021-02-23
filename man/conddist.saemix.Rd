@@ -18,7 +18,25 @@ conditional estimates. Defaults to twice the total number of iterations
 (sum(saemixObject["options"]$nbiter.saemix)*2)}
 
 \item{\dots}{optional arguments passed to the plots. Plots will appear if
-the option displayProgress in the saemixObject object is TRUE}
+the option displayProgress in the saemixObject object is TRUE (Note: currently disabled to avoid dependency on ggplot)}
+}
+\value{
+The function adds or modifies the following elements in the results slot of saemixObject:
+\describe{ 
+\item{cond.mean.phi}{Conditional mean of the individual
+distribution of the parameters (obtained as the mean of the samples)}
+\item{cond.var.phi}{Conditional variance of the individual distribution of
+the parameters (obtained as the mean of the estimated variance of the samples)} 
+\item{cond.shrinkage}{Estimate of the shrinkage for the
+conditional estimates} 
+\item{cond.mean.eta}{Conditional mean of the
+individual distribution of the parameters (obtained as the mean of the samples)} 
+\item{phi.samp}{An array with 3 dimensions, giving nsamp samples
+from the conditional distributions of the individual parameters}
+\item{phi.samp.var}{The estimated individual variances for the sampled
+parameters phi.samp} } A warning is output if the maximum number of
+iterations is reached without convergence (the maximum number of iterations
+is saemix.options$nbiter.saemix[2]).
 }
 \description{
 When the parameters of the model have been estimated, we can estimate the
@@ -41,7 +59,13 @@ convergence of the mean and variance of the conditional distributions. When
 nsamp>1, several chains of the MCMC algorithm are run in parallel to obtain
 samples from the conditional distributions, and the convergence criterion
 must be achieved for all chains. When nsamp>1, the estimate of the
-conditional mean is obtained by averaging over the different samples.
+conditional mean is obtained by averaging over the different samples, and the 
+samples from the conditional distribution are output as an array of dimension
+N x nb of parameters x nsamp in arrays phi.samp for the sampled phi_i and psi.samp
+for the corresponding psi_i. The variance of the conditional phi_i for each
+sample is given in a corresponding array phi.samp.var (the variance of the 
+conditional psi_i is not given but may be computed via the delta-method or by 
+transforming the confidence interval for phi_i).
 
 The shrinkage for any given parameter for the conditional estimate is
 obtained as
@@ -51,20 +75,11 @@ Sh=1-var(eta_i)/omega(eta)
 where var(eta_i) is the empirical variance of the estimates of the
 individual random effects, and omega(eta) is the estimated variance.
 
-The function adds or modifies the following elements in the results:
-\describe{ \item{cond.mean.phi}{Conditional mean of the individual
-distribution of the parameters (obtained as the mean of the samples)}
-\item{cond.var.phi}{Conditional variance of the individual distribution of
-the parameters (obtained as the mean of the estimated variance of the
-samples)} \item{cond.shrinkage}{Estimate of the shrinkage for the
-conditional estimates} \item{cond.mean.eta}{Conditional mean of the
-individual distribution of the parameters (obtained as the mean of the
-samples)} \item{phi.samp}{An array with 3 dimensions, giving nsamp samples
-from the conditional distributions of the individual parameters}
-\item{phi.samp.var}{The estimated individual variances for the sampled
-parameters phi.samp} } A warning is output if the maximum number of
-iterations is reached without convergence (the maximum number of iterations
-is saemix.options$nbiter.saemix[2]).
+When the option displayProgress is set to TRUE, convergence graphs are produced
+They can be used assess whether the mean of the individual estimates (on the scale of the parameters) 
+and the mean of the SD of the random effects have stabilised over the ipar.lmcmc (defaults to 50) iterations. 
+The evolution of these variables for each parameter is shown as a continuous line
+while the shaded area represents the acceptable variation.
 }
 \examples{
  

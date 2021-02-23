@@ -1,7 +1,5 @@
 #######################	Model simulations ########################
 
-
-
 #' Perform simulations under the model
 #' 
 #' This function is used to simulate from the model. It can be called with the
@@ -40,6 +38,7 @@
 #' Approach Group in Europe, Pamplona, Spain, 2005.
 #' @keywords model
 #' @export simul.saemix
+
 simul.saemix<-function(saemixObject,nsim=saemixObject["options"]$nb.sim, predictions=TRUE,res.var=TRUE,uncertainty=FALSE) {
   # Simulate individual parameters from the population distribution
   # predictions: if TRUE, use the parameters to predict observations

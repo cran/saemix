@@ -9,7 +9,7 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
   ### varList: variability-related elements - passed to functions and optimised
   ### opt: list of options and settings (fixed) - passed on to functions, unchanged
   ### DYF: used for the acceptance/rejection algorithm
-  ### parameters optimised during the fit: phiM, mean.phi, betas, fuxedpsi.ini
+  ### parameters optimised during the fit: phiM, mean.phi, betas, fixedpsi.ini
   ### allpar0: array holding the successive values of population parameters
 
 # Elements of the lists
@@ -59,7 +59,9 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 		tab<-data.frame(id=id,saemix.data["data"][, saemix.data["name.covariates",drop=FALSE]])
 	temp2<-unique(tab)
 	temp<-tab[!duplicated(id),,drop=FALSE]
-	if(dim(temp)[1]!=dim(temp2)[1]) cat("Some covariates have time-varying values; only the first is taken into account in the current version of the algorithm.\n")
+	if(dim(temp)[1]!=dim(temp2)[1]) {
+	  if(saemix.options$warnings) cat("Some covariates have time-varying values; only the first is taken into account in the current version of the algorithm.\n")
+	}
 	#temp<-temp[order(temp[,1]),]
 	if(length(saemix.data["name.covariates"])>0) {
 		Mcovariates<-data.frame(id=rep(1,N),temp[,2:dim(temp)[2]])} else {
@@ -102,9 +104,13 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 	if(nr.psi0>1) fixed.ini[2:nr.psi0,]<-saemix.model["psi0"][2:nr.psi0,]
 	
 	#covariate.estim<-matrix(c(rep(saemix.model$fixed.estim,nr.psi0),t1),byrow=TRUE, nrow=nr.cov)
-	covariate.estim<-matrix(rep(saemix.model["fixed.estim"],nr.psi0),byrow=TRUE, ncol=length(saemix.model["fixed.estim"]))
+#	covariate.estim<-matrix(rep(saemix.model["fixed.estim"],nr.psi0),byrow=TRUE, ncol=length(saemix.model["fixed.estim"]))
 	#if(!is.null(dim(t1))) covariate.estim<-rbind(covariate.estim,t1) 
-	covariate.estim<-covariate.estim*saemix.model["betaest.model"]
+#	covariate.estim<-covariate.estim*saemix.model["betaest.model"]
+	# 29/05/2020 - changing definition of covariate.estim to 
+	covariate.estim<-saemix.model["betaest.model"]
+	covariate.estim[1,]<-saemix.model["fixed.estim"]
+	
 	
 	betas.ini<-fixed.ini[which(saemix.model["betaest.model"]>0)]
 	betas.ini<-matrix(betas.ini,ncol=1)
@@ -200,7 +206,7 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 		#	print(saemix.model["omega.init"])
 		#	print(omega[ind.eta,ind.eta])
 		chol.omega<-saemix.model["omega.init"][ind.eta,ind.eta]<-omega[ind.eta, ind.eta]<-mydiag(nrow=length(ind.eta),ncol=length(ind.eta))
-		cat("Problem inverting covariance matrix, setting initial Omega to diagonal.\n")
+		if(saemix.options$warnings) cat("Problem inverting covariance matrix, setting initial Omega to diagonal.\n")
 	}
 	
 	# Find a valid set of parameters wrt to the structural.model.

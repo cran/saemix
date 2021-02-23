@@ -590,13 +590,13 @@ setMethod("plot","SaemixModel",
         npred<-1+length(predictors)
       } else {
         if(npred>1 & (missing(predictors) || length(predictors)<(npred-1))) {
-        cat("Please provide the value of the predictors other than X\n")
-        return()
+        message("Please provide the value of the predictors other than X\n")
+        return("Missing predictors")
       }
      }
     }
     if(length(x@name.response)>1) {
-      cat("Currently the plot can only be obtained for single-response models.\n")
+      message("Currently the plot can only be obtained for single-response models.\n")
       return()
     }
     npts<-100
@@ -614,26 +614,26 @@ setMethod("plot","SaemixModel",
     }
     ypred<-try(x@model(psi,id,xdep))
     if(!is.numeric(ypred)) {
-      cat("Problem when attempting to obtain predictions from the model.\n")
-      cat("Usage: plot(x,range=c(0,1),psi,predictors) \n")
-      cat("Possible solutions can be:\n")
-      cat("   1. provide suitable values for X (option range=c(<lower bound>, <upper bound>))\n")
-      cat("   2. provide values for additional predictors (option predictors=c(<value for predictor 1>, <value for predictor 2>, ...)).\n")
-      cat("   3. check values for the model parameters (defaults to component psi0[1,] of the model).\n")
-      cat("   4. the predictor used the X-axis is assumed to be in the first column; please check your model is written in a compatible way.\n")
+      message("Problem when attempting to obtain predictions from the model.\n")
+      message("Usage: plot(x,range=c(0,1),psi,predictors) \n")
+      message("Possible solutions can be:\n")
+      message("   1. provide suitable values for X (option range=c(<lower bound>, <upper bound>))\n")
+      message("   2. provide values for additional predictors (option predictors=c(<value for predictor 1>, <value for predictor 2>, ...)).\n")
+      message("   3. check values for the model parameters (defaults to component psi0[1,] of the model).\n")
+      message("   4. the predictor used the X-axis is assumed to be in the first column; please check your model is written in a compatible way.\n")
     } else {
-      if(length(x@name.X)==0 | length(x@name.predictors)==0) cat("Warning: X predictor supposed to be on the first axis\n")
-      cat("Plot characteristics:\n")
+      if(length(x@name.X)==0 | length(x@name.predictors)==0) message("Warning: X predictor supposed to be on the first axis\n")
+      message("Plot characteristics:\n")
       if(npred>1) {
         for(j in 1:dim(xdep)[2]) {
     if(length(x@name.X)==0) {
-      if(j>1) cat("   predictor:",colnames(xdep)[j],"=",xdep[1,j],"\n")
+      if(j>1) message("   predictor:",colnames(xdep)[j],"=",xdep[1,j],"\n")
     } else {
-      if(colnames(xdep)[j]!=x@name.X) cat("    predictor:",colnames(xdep)[j],"=",xdep[1,j],"\n")
+      if(colnames(xdep)[j]!=x@name.X) message("    predictor:",colnames(xdep)[j],"=",xdep[1,j],"\n")
     }
       }}
-      cat("   range for X-axis:",min(xval),"-",max(xval),"\n")
-      cat("   parameters used in the simulation:", paste(x@name.modpar,"=",psi[1,],collapse=", "),"\n")
+      message("   range for X-axis:",min(xval),"-",max(xval),"\n")
+      message("   parameters used in the simulation:", paste(x@name.modpar,"=",psi[1,],collapse=", "),"\n")
       plot(xval,ypred,type="l",xlab=ifelse(length(x@name.X)==0, "X",x@name.X),ylab=ifelse(length(x@name.response)==0, "Response",x@name.response))
     }
   }
@@ -783,10 +783,11 @@ saemixModel<-function(model,psi0,description="", name.response="", name.sigma=ch
 #' Extract or replace the diagonal of a matrix, or construct a diagonal matrix (replace diag function from R-base)
 #' 
 #' @param x	a matrix, vector or 1D array, or missing.
-#' @param nrow, ncol Optional dimensions for the result when x is not a matrix. 
-#' @param value either a single value or a vector of length equal to that of the current diagonal. Should be of a mode which can be coerced to that of x.
+#' @param nrow Optional number of rows for the result when x is not a matrix. 
+#' @param ncol Optional number of columns for the result when x is not a matrix. 
+#' 
 #' @return If x is a matrix then diag(x) returns the diagonal of x. The resulting vector will have names if the matrix x has matching column and rownames.
-#' \seealso{\code{diag}}
+#' @seealso \code{diag}
 #' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
 #' Marc Lavielle.
 #' @keywords models

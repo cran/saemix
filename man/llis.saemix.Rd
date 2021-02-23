@@ -2,6 +2,7 @@
 % Please edit documentation in R/compute_LL.R
 \name{llis.saemix}
 \alias{llis.saemix}
+\alias{gqg.mlx}
 \title{Log-likelihood using Importance Sampling}
 \usage{
 llis.saemix(saemixObject)

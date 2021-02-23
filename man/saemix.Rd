@@ -62,20 +62,20 @@ saemix.model<-saemixModel(model=model1cpt,
   covariance.model=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),
   omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="constant")
 
-
+\donttest{
 # Not run (strict time constraints for CRAN)
-# saemix.fit<-saemix(saemix.model,saemix.data,list(seed=632545,directory="newtheo",
-# save=FALSE,save.graphs=FALSE))
-
+ saemix.fit<-saemix(saemix.model,saemix.data,list(seed=632545,directory="newtheo",
+ save=FALSE,save.graphs=FALSE, print=FALSE))
+ 
 # Prints a summary of the results
-# print(saemix.fit)
+print(saemix.fit)
 
 # Outputs the estimates of individual parameters
-# psi(saemix.fit)
+psi(saemix.fit)
 
 # Shows some diagnostic plots to evaluate the fit
-# plot(saemix.fit)
-
+plot(saemix.fit)
+}
 
 }
 \references{

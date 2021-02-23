@@ -7,7 +7,7 @@
 #' The likelihood of the observations is estimated without any approximation
 #' using a Monte-Carlo approach (see documentation).
 #' 
-#' @aliases llis.saemix
+#' @aliases llis.saemix gqg.mlx
 #' @param saemixObject an object returned by the \code{\link{saemix}} function
 #' @return the log-likelihood estimated by Importance Sampling
 #' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
@@ -112,7 +112,11 @@ llis.saemix<-function(saemixObject) {
 	
 	c2<- log(det(Omega[i1.omega2,i1.omega2,drop=FALSE])) + nphi1*log(2*pi)
 	c1<-log(2*pi)
-	if(saemixObject["options"]$print.is) par(mfrow=c(1,1))
+	if(saemixObject["options"]$print.is) {
+	  oldpar <- par(no.readonly = TRUE)    # code line i
+	  on.exit(par(oldpar))            # code line i + 1 
+	  par(mfrow=c(1,1))
+	}
 	
 	tit<-"Estimation of the log-likelihood"
 	kmin<-min(10,ceiling(KM/4))
@@ -151,12 +155,19 @@ llis.saemix<-function(saemixObject) {
 	
 	x1<-MM*c(kmin:KM)
 	y1<-(-2)*LL[kmin:KM]
-	if(sum(!is.na(y1))) try(plot(x1,y1,type="l",xlab="Size of the Monte-Carlo sample", ylab="'-2xLog-Likelihood",main=tit)) else cat("Likelihood cannot be computed by Importance Sampling.\n")
-	
+	if(sum(is.na(y1))) { # Johannes
+	  message("Likelihood cannot be computed by Importance Sampling.\n")
+	} else {
+	  if (saemixObject["options"]$print.is) {
+	    try(plot(x1,y1,type="l",xlab="Size of the Monte-Carlo sample", ylab="'-2xLog-Likelihood",main=tit))
+	  }
+	}
+
 	saemixObject["results"]["LL"]<-c(LL)
 	saemixObject["results"]["ll.is"]<-LL[KM]
 	saemixObject["results"]["aic.is"]<-(-2)*saemixObject["results"]["ll.is"]+ 2*saemixObject["results"]["npar.est"]
 	saemixObject["results"]["bic.is"]<-(-2)*saemixObject["results"]["ll.is"]+ log(saemixObject["data"]["N"])*saemixObject["results"]["npar.est"]
+	saemixObject["results"]["bic.covariate.is"]<-(-2)*saemixObject["results"]["ll.is"]+ log(saemixObject["data"]["N"])*saemixObject["results"]["nbeta.random"]+log(sum(saemixObject["data"]["nind.obs"]))*saemixObject["results"]["nbeta.fixed"]
 	
 	return(saemixObject)
 }
@@ -287,6 +298,7 @@ llgq.saemix<-function(saemixObject) {
 	saemixObject["results"]["ll.gq"]<-ll
 	saemixObject["results"]["aic.gq"]<-(-2)*saemixObject["results"]["ll.gq"]+ 2*saemixObject["results"]["npar.est"]
 	saemixObject["results"]["bic.gq"]<-(-2)*saemixObject["results"]["ll.gq"]+ log(saemixObject["data"]["N"])*saemixObject["results"]["npar.est"]
+	saemixObject["results"]["bic.covariate.gq"]<-(-2)*saemixObject["results"]["ll.gq"]+ log(saemixObject["data"]["N"])*saemixObject["results"]["nbeta.random"]+log(sum(saemixObject["data"]["nind.obs"]))*saemixObject["results"]["nbeta.fixed"]
 	
 	return(saemixObject)
 }
@@ -301,7 +313,7 @@ gqg.mlx<-function(dim,nnodes.gq) {
 	#    w    = row vector of corresponding weights
 	#
 	if(nnodes.gq>25) {
-		cat("The number of nodes for Gaussian Quadrature should be less than 25.\n")
+		message("The number of nodes for Gaussian Quadrature should be less than 25.\n")
 		return(list(nodes=NULL,weights=c()))
 	}
 	if(nnodes.gq==1) {

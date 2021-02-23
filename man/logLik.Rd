@@ -6,6 +6,7 @@
 \alias{logLik.SaemixObject}
 \alias{AIC.SaemixObject}
 \alias{BIC.SaemixObject}
+\alias{BIC.covariate}
 \title{Extract likelihood from a saemixObject resulting from a call to saemix}
 \usage{
 \method{logLik}{SaemixObject}(object, method = "is", ...)
@@ -13,6 +14,8 @@
 \method{AIC}{SaemixObject}(object, ..., k = 2)
 
 \method{BIC}{SaemixObject}(object, ...)
+
+\method{BIC}{covariate}(object, ...)
 }
 \arguments{
 \item{object}{name of an SaemixObject object}
@@ -31,12 +34,17 @@ The likelihood in saemix can be computed by one of three methods: linearisation 
 If no method argument is given, this function will attempt to extract the likelihood computed by importance sampling (method="is"), unless the object contains the likelihood computed by linearisation, in which case the function will extract this component instead.
 If the requested likelihood is not present in the object, it will be computed and aded to the object before returning.
 }
+\details{
+BIC.covariate implements the computation of the BIC from Delattre et al. 2014.
+}
 \references{
 Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
 
 Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
 
 Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
+
+Delattre M. Lavielle M. Poursat MA. A note on BIC in mixed-effects models. Electronic Journal of Statistics (2014) 8, 456-475.
 }
 \seealso{
 \code{\link{AIC}},\code{\link{BIC}}, \code{\link{saemixControl}}, \code{\link{saemix}}
@@ -46,6 +54,8 @@ Emmanuelle Comets \email{emmanuelle.comets@inserm.fr}
 
 Audrey Lavenu
 
-Marc Lavielle.
+Marc Lavielle
+
+Maud Delattre
 }
 \keyword{methods}

@@ -23,6 +23,10 @@ An object of the SaemixRes class, representing the results of a fit through the 
 
 \item{\code{npar.est}}{the number of parameters estimated (fixed, random and residual)}
 
+\item{\code{nbeta.random}}{the number of estimated fixed effects for the random parameters in the model}
+
+\item{\code{nbeta.fixed}}{the number of estimated fixed effects for the non random parameters in the model}
+
 \item{\code{fixed.effects}}{a vector giving the estimated h(mu) and betas}
 
 \item{\code{fixed.psi}}{a vector giving the estimated h(mu)}
@@ -44,6 +48,8 @@ An object of the SaemixRes class, representing the results of a fit through the 
 \item{\code{se.cov}}{a matrix giving the estimated SE for each term of the covariance matrix (diagonal elements represent the SE on the variances of the random effects and off-diagonal elements represent the SE on the covariance terms)}
 
 \item{\code{se.respar}}{a vector giving the estimated standard errors of estimation for the parameters of the residual variability}
+
+\item{\code{conf.int}}{a dataframe containing the estimated parameters, their estimation error (SE), coefficient of variation (CV), and the associated confidence intervals; the variabilities for the random effects are presented first as estimated (variances) then converted to standard deviations (SD), and the correlations are computed. For SD and correlations, the SE are estimated via the delta-method}
 
 \item{\code{parpop}}{a matrix tracking the estimates of the population parameters at each iteration}
 
@@ -69,7 +75,7 @@ An object of the SaemixRes class, representing the results of a fit through the 
 
 \item{\code{cond.shrinkage}}{a vector giving the shrinkage on the conditional mean estimates of eta}
 
-\item{\code{mean.phi}}{a matrix giving the population estimate (Ci*mu) including covariate effects}
+\item{\code{mean.phi}}{a matrix giving the population estimate (Ci*mu) including covariate effects, for each subject}
 
 \item{\code{map.psi}}{a matrix giving the MAP estimates of individual parameters}
 
@@ -93,11 +99,15 @@ An object of the SaemixRes class, representing the results of a fit through the 
 
 \item{\code{bic.lin}}{Bayesian Information Criterion computed by linearisation}
 
+\item{\code{bic.covariate.lin}}{Specific Bayesian Information Criterion for covariate selection computed by linearisation}
+
 \item{\code{ll.is}}{log-likelihood computed by Importance Sampling}
 
 \item{\code{aic.is}}{Akaike Information Criterion computed by Importance Sampling}
 
 \item{\code{bic.is}}{Bayesian Information Criterion computed by Importance Sampling}
+
+\item{\code{bic.covariate.is}}{Specific Bayesian Information Criterion for covariate selection computed by Importance Sampling}
 
 \item{\code{LL}}{a vector giving the conditional log-likelihood at each iteration of the algorithm}
 
@@ -107,11 +117,13 @@ An object of the SaemixRes class, representing the results of a fit through the 
 
 \item{\code{bic.gq}}{Bayesian Information Criterion computed by Gaussian Quadrature}
 
+\item{\code{bic.covariate.gq}}{Specific Bayesian Information Criterion for covariate selection computed by Gaussian Quadrature}
+
 \item{\code{predictions}}{a data frame containing all the predictions and residuals in a table format}
 
-\item{\code{ypred}}{a vector giving the mean population predictions}
+\item{\code{ypred}}{a vector giving the mean population predictions obtained with the MAP estimates}
 
-\item{\code{ppred}}{a vector giving the population predictions obtained with the MAP estimates}
+\item{\code{ppred}}{a vector giving the population predictions}
 
 \item{\code{ipred}}{a vector giving the individual predictions obtained with the MAP estimates}
 

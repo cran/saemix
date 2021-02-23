@@ -20,7 +20,7 @@
 
 \item{newdata}{an optional dataframe for which predictions are desired}
 
-\item{type}{the type of predictions (ipred= individual, ypred= mean of the population predictions, ppred=population predictions obtained with the population estimates, icpred=conditional predictions). With newdata, predictions correspond to the population predictions and type is ignored}
+\item{type}{the type of predictions (ipred= individual, ppred= mean of the population predictions, ypred=population predictions obtained with the population estimates, icpred=conditional predictions). With newdata, individual parameters can be estimated if the new data contains observations; otherwise, predictions correspond to the population predictions ypred, and type is ignored.}
 
 \item{se.fit}{whether the SE are to be taken into account in the model predictions}
 

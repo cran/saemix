@@ -1,4 +1,4 @@
-####################################################################################
+  ####################################################################################
 ####			SaemixRes class - definition				####
 ####################################################################################
 
@@ -21,6 +21,8 @@
 #' @slot name.random a vector containing the names of the random parameters in the model
 #' @slot name.sigma a vector containing the names of the parameters of the residual error model
 #' @slot npar.est the number of parameters estimated (fixed, random and residual)
+#' @slot nbeta.random the number of estimated fixed effects for the random parameters in the model
+#' @slot nbeta.fixed the number of estimated fixed effects for the non random parameters in the model
 #' @slot fixed.effects a vector giving the estimated h(mu) and betas
 #' @slot fixed.psi  a vector giving the estimated h(mu)
 #' @slot betas a vector giving the estimated mu
@@ -32,6 +34,7 @@
 #' @slot se.omega a vector giving the estimated standard errors of estimation for Omega 
 #' @slot se.cov a matrix giving the estimated SE for each term of the covariance matrix (diagonal elements represent the SE on the variances of the random effects and off-diagonal elements represent the SE on the covariance terms)
 #' @slot se.respar a vector giving the estimated standard errors of estimation for the parameters of the residual variability
+#' @slot conf.int a dataframe containing the estimated parameters, their estimation error (SE), coefficient of variation (CV), and the associated confidence intervals; the variabilities for the random effects are presented first as estimated (variances) then converted to standard deviations (SD), and the correlations are computed. For SD and correlations, the SE are estimated via the delta-method
 #' @slot parpop a matrix tracking the estimates of the population parameters at each iteration
 #' @slot allpar a matrix tracking the estimates of all the parameters (including covariate effects) at each iteration
 #' @slot indx.fix the index of the fixed parameters (used in the estimation algorithm)
@@ -44,7 +47,7 @@
 #' @slot cond.var.phi a matrix giving the variance on the conditional mean estimates of phi (estimated as the variance of the conditional distribution)
 #' @slot cond.mean.eta  a matrix giving the conditional mean estimates of the random effect eta
 #' @slot cond.shrinkage a vector giving the shrinkage on the conditional mean estimates of eta
-#' @slot mean.phi a matrix giving the population estimate (Ci*mu) including covariate effects
+#' @slot mean.phi a matrix giving the population estimate (Ci*mu) including covariate effects, for each subject
 #' @slot map.psi a matrix giving the MAP estimates of individual parameters
 #' @slot map.phi a matrix giving the MAP estimates of individual phi
 #' @slot map.eta a matrix giving the individual estimates of the random effects corresponding to the MAP estimates
@@ -56,16 +59,19 @@
 #' @slot ll.lin log-likelihood computed by lineariation
 #' @slot aic.lin Akaike Information Criterion computed by linearisation
 #' @slot bic.lin Bayesian Information Criterion computed by linearisation
+#' @slot bic.covariate.lin Specific Bayesian Information Criterion for covariate selection computed by linearisation
 #' @slot ll.is log-likelihood computed by Importance Sampling
 #' @slot aic.is Akaike Information Criterion computed by Importance Sampling
 #' @slot bic.is Bayesian Information Criterion computed by Importance Sampling
+#' @slot bic.covariate.is Specific Bayesian Information Criterion for covariate selection computed by Importance Sampling
 #' @slot LL a vector giving the conditional log-likelihood at each iteration of the algorithm
 #' @slot ll.gq log-likelihood computed by Gaussian Quadrature
 #' @slot aic.gq Akaike Information Criterion computed by Gaussian Quadrature
 #' @slot bic.gq Bayesian Information Criterion computed by Gaussian Quadrature
+#' @slot bic.covariate.gq Specific Bayesian Information Criterion for covariate selection computed by Gaussian Quadrature
 #' @slot predictions a data frame containing all the predictions and residuals in a table format
-#' @slot ypred a vector giving the mean population predictions
-#' @slot ppred a vector giving the population predictions obtained with the MAP estimates
+#' @slot ypred a vector giving the mean population predictions obtained with the MAP estimates
+#' @slot ppred a vector giving the population predictions
 #' @slot ipred a vector giving the individual predictions obtained with the MAP estimates
 #' @slot icpred a vector giving the individual predictions obtained with the conditional estimates
 #' @slot ires a vector giving the individual residuals obtained with the MAP estimates
@@ -110,6 +116,8 @@ setClass(
     name.random="character",	# names of random effects
     name.sigma="character",	# names of parameters of residual error model
     npar.est="numeric",		# nb of parameters estimated (fixed, random & resid)
+    nbeta.random="numeric", #nb of estimated fixed effects for the random parameters in the model
+    nbeta.fixed="numeric", #nb of estimated fixed effects for the non random parameters in the model
     fixed.effects="numeric",	# vector with h(mu) and betas in estimation order
     fixed.psi="numeric",	# h(mu)
     betas="matrix",		# estimated mu
@@ -121,6 +129,7 @@ setClass(
     se.omega="numeric",	# estimated SE for Omega (diagonal terms of Omega, presented as  vector)
     se.cov="matrix",	# matrix giving the estimated SE for each term of the covariance matrix (diagonal elements represent the SE on the variances of the random effects and off-diagonal elements represent the SE on the covariance terms)
     se.respar="numeric",	# estimated SE for residual variability
+    conf.int="data.frame",   # Estimates, SE, CV and confidence intervals (assuming normality of the estimators)
     parpop="matrix",	# population parameters at each iteration
     allpar="matrix",	# all parameters (including covariate effects) at each iteration
     indx.fix="numeric",	# index of mean param estimated (was indx.betaI)
@@ -144,16 +153,19 @@ setClass(
     phi.samp="array",		# nb.chains samples in the individual conditional distributions (phi)
     phi.samp.var="array",	# variance of samples
 # Statistical criteria
-    ll.lin="numeric",		# for each method (linearisation, IS, GQ)
-    aic.lin="numeric",		# ll=log-likelihood
-    bic.lin="numeric",		# aic= Akaike Information Criterion
-    ll.is="numeric",		# bic= Bayesian Information Criterion
+    ll.lin="numeric",           # for each method (linearisation, IS, GQ)
+    aic.lin="numeric",          # ll=log-likelihood
+    bic.lin="numeric",          # aic= Akaike Information Criterion
+    bic.covariate.lin="numeric",# bic= Bayesian Information Criterion
+    ll.is="numeric",        
     aic.is="numeric",
     bic.is="numeric",
-    LL="numeric",		# LL for each iteration in the IS algorithm
+    bic.covariate.is="numeric",
+    LL="numeric",       # LL for each iteration in the IS algorithm
     ll.gq="numeric",
     aic.gq="numeric",
     bic.gq="numeric",
+    bic.covariate.gq="numeric",
 # Model predictions and residuals
 		predictions="data.frame", # data frame containing all the predictions and residuals below
     ypred="numeric",		# vector of mean population predictions
@@ -273,6 +285,8 @@ setMethod(
     "name.sigma"={return(x@name.sigma)},
     "name.random"={return(x@name.random)},
     "npar.est"={return(x@npar.est)},
+    "nbeta.random"={return(x@nbeta.random)},
+    "nbeta.fixed"={return(x@nbeta.fixed)},
     "fixed.effects"={return(x@fixed.effects)},
     "fixed.psi"={return(x@fixed.psi)},
     "betas"={return(x@betas)},
@@ -284,6 +298,7 @@ setMethod(
     "se.omega"={return(x@se.omega)},
     "se.cov"={return(x@se.cov)},
     "se.respar"={return(x@se.respar)},
+    "conf.int"={return(x@conf.int)},
     "parpop"={return(x@parpop)},
     "allpar"={return(x@allpar)},
     "indx.fix"={return(x@indx.fix)},
@@ -308,14 +323,17 @@ setMethod(
     "ll.lin"={return(x@ll.lin)},
     "aic.lin"={return(x@aic.lin)},
     "bic.lin"={return(x@bic.lin)},
+    "bic.covariate.lin"={return(x@bic.covariate.lin)},
     "ll.is"={return(x@ll.is)},
     "aic.is"={return(x@aic.is)},
     "bic.is"={return(x@bic.is)},
+    "bic.covariate.is"={return(x@bic.covariate.is)},
     "LL"={return(x@LL)},
     "ll.gq"={return(x@ll.gq)},
     "aic.gq"={return(x@aic.gq)},
     "bic.gq"={return(x@bic.gq)},
-    "predictions"={return(x@predictions)},
+    "bic.covariate.gq"={return(x@bic.covariate.gq)},
+        "predictions"={return(x@predictions)},
     "ypred"={return(x@ypred)},
     "ppred"={return(x@ppred)},
     "ipred"={return(x@ipred)},
@@ -349,6 +367,8 @@ setReplaceMethod(
     "name.random"={x@name.random<-value},
     "name.sigma"={x@name.sigma<-value},
     "npar.est"={x@npar.est<-value},
+    "nbeta.random"={x@nbeta.random<-value},
+    "nbeta.fixed"={x@nbeta.fixed<-value},
     "fixed.effects"={x@fixed.effects<-value},
     "fixed.psi"={x@fixed.psi<-value},
     "betas"={x@betas<-value},
@@ -360,6 +380,7 @@ setReplaceMethod(
     "se.omega"={x@se.omega<-value},
     "se.cov"={x@se.cov<-value},
     "se.respar"={x@se.respar<-value},
+    "conf.int"={x@conf.int<-value},
     "parpop"={x@parpop<-value},
     "allpar"={x@allpar<-value},
     "indx.fix"={x@indx.fix<-value},
@@ -384,13 +405,16 @@ setReplaceMethod(
     "ll.lin"={x@ll.lin<-value},
     "aic.lin"={x@aic.lin<-value},
     "bic.lin"={x@bic.lin<-value},
+    "bic.covariate.lin"={x@bic.covariate.lin<-value},
     "ll.is"={x@ll.is<-value},
     "aic.is"={x@aic.is<-value},
     "bic.is"={x@bic.is<-value},
+    "bic.covariate.is"={x@bic.covariate.is<-value},
     "LL"={x@LL<-value},
     "ll.gq"={x@ll.gq<-value},
     "aic.gq"={x@aic.gq<-value},
     "bic.gq"={x@bic.gq<-value},
+    "bic.covariate.gq"={x@bic.covariate.gq<-value},
     "predictions"={x@predictions<-value},
     "ypred"={x@ypred<-value},
     "ppred"={x@ppred<-value},
@@ -426,7 +450,7 @@ setMethod("print","SaemixRes",
 #    cat("Dataset",x@name.data,"\n")
     if(length(x@betas)==0) {
       cat("No fit performed yet.\n")
-      return()
+      return("No fit performed")
     }
     cat("----------------------------------------------------\n")
     cat("-----------------  Fixed effects  ------------------\n")
@@ -466,6 +490,16 @@ setMethod("print","SaemixRes",
     } else {
       tab<-cbind(x@name.random,diag(x@omega)[x@indx.omega],x@se.omega[x@indx.omega])
       tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
+      nampar<-unlist(strsplit(x@name.random,"omega2."))
+      nampar<-nampar[nampar!=""]
+      for(i in 1:(length(nampar)-1)) {
+        for(j in (i+1):length(nampar)) {
+          if(x@omega[i,j]!=0) {
+            covar<-c(paste("cov",nampar[i],nampar[j],sep="."),x@omega[i,j],x@se.cov[i,j],x@se.cov[i,j]/x@omega[i,j]*100)
+            tab<-rbind(tab,covar)
+          }
+        }
+      }
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
     }
     if(digits>0) {
@@ -561,6 +595,16 @@ setMethod("show","SaemixRes",
     } else {
       tab<-cbind(object@name.random,diag(object@omega)[object@indx.omega],object@se.omega[object@indx.omega])
       tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
+      nampar<-unlist(strsplit(object@name.random,"omega2."))
+      nampar<-nampar[nampar!=""]
+      for(i in 1:(length(nampar)-1)) {
+        for(j in (i+1):length(nampar)) {
+          if(object@omega[i,j]!=0) {
+            covar<-c(paste("cov",nampar[i],nampar[j],sep="."),object@omega[i,j],object@se.cov[i,j],object@se.cov[i,j]/object@omega[i,j]*100)
+            tab<-rbind(tab,covar)
+          }
+        }
+      }
       colnames(tab)<-c("Parameter","Estimate","  SE"," CV(%)")
     }
       for(i in 2:dim(tab)[2]) 
@@ -643,8 +687,18 @@ setMethod("showall","SaemixRes",
       tab<-cbind(object@name.random,diag(object@omega)[object@indx.omega])
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-      tab<-cbind(object@name.random,diag(object@omega)[object@indx.omega],object@se.omega[object@indx.omega])
-      tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
+      tab<-cbind(c(object@name.fixed,object@name.sigma[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]),c(object@se.fixed,object@se.respar[object@indx.res]))
+      tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
+      nampar<-unlist(strsplit(object@name.random,"omega2."))
+      nampar<-nampar[nampar!=""]
+      for(i in 1:(length(nampar)-1)) {
+        for(j in (i+1):length(nampar)) {
+          if(object@omega[i,j]!=0) {
+            covar<-c(paste("cov",nampar[i],nampar[j],sep="."),object@omega[i,j],object@se.cov[i,j],object@se.cov[i,j]/object@omega[i,j]*100)
+            tab<-rbind(tab,covar)
+          }
+        }
+      }
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
     }
       for(i in 2:dim(tab)[2]) 
@@ -761,7 +815,7 @@ fitted.SaemixRes<-function (object, type = c("ipred", "ypred", "ppred", "icpred"
 #' @export
 
 vcov.SaemixRes<-function(object, ...) {
-  object@fim
+  try(solve(object@fim))
 }
 
 #' @rdname vcov
@@ -790,4 +844,145 @@ vcov.SaemixObject<-function(object, ...) {
 ####			SaemixRes class - method to plot			####
 ####################################################################################
 
+####################################################################################
+####				SaemixRes class - summary method			####
+####################################################################################
+#' @rdname summary-methods
+#' 
+#' @exportMethod summary
+
+setMethod("summary","SaemixRes",
+          function(object, print=TRUE, ...) {
+            if(length(object@fixed.effects)==0) {
+              cat("Object of class SaemixRes, no fit performed yet.\n")
+              return()
+            }
+            digits<-2;nsmall<-2
+            if(print) {
+              cat("----------------------------------------------------\n")
+              cat("-----------------  Fixed effects  ------------------\n")
+              cat("----------------------------------------------------\n")
+            }
+            #    browser()
+            if(length(object@se.fixed)==0) {
+                tab<-data.frame(c(object@name.fixed, object@name.sigma[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]))
+              colnames(tab)<-c("Parameter","Estimate")
+            } else {
+                tab<-data.frame(c(object@name.fixed, object@name.sigma[object@indx.res]), c(object@fixed.effects,object@respar[object@indx.res]),c(object@se.fixed,object@se.respar[object@indx.res]), stringsAsFactors=FALSE)
+              tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
+              colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
+              if(length(object@indx.cov)>0) {
+                wstat<-as.double(tab[,2])/as.double(tab[,3])
+                pval<-rep("-",length(wstat))
+                pval[object@indx.cov]<-1-normcdf(abs(wstat[object@indx.cov]))
+                tab<-cbind(tab,"p-value"=pval,stringsAsFactors=FALSE)
+              }
+            }
+            tab.fix<-tab
+            for(i in 2:dim(tab)[2]) {
+              xcol<-as.double(as.character(tab[,i]))
+              idx<-which(!is.na(xcol) & xcol!="-")
+              tab[idx,i]<-format(xcol[idx],digits=digits,nsmall=nsmall)
+            }
+            if(print) {
+              print(tab,quote=FALSE)
+              cat("----------------------------------------------------\n")
+              cat("-----------  Variance of random effects  -----------\n")
+              cat("----------------------------------------------------\n")
+              #  cat("   ECO TODO: check if Omega or Omega2 (SD or variances) and can we choose ?\n")
+            }
+            if(length(object@se.omega)==0) {
+              tab<-data.frame(object@name.random, diag(object@omega)[object@indx.omega])
+              colnames(tab)<-c("Parameter","Estimate")
+            } else {
+              tab<-data.frame(object@name.random, diag(object@omega)[object@indx.omega], object@se.omega[object@indx.omega])
+              tab<-cbind(tab,100*as.double(tab[,3])/as.double(tab[,2]))
+              nampar<-unlist(strsplit(object@name.random,"omega2."))
+              nampar<-nampar[nampar!=""]
+              for(i in 1:(length(nampar)-1)) {
+                for(j in (i+1):length(nampar)) {
+                  if(object@omega[i,j]!=0) {
+                    nam1<-paste("cov",nampar[i],nampar[j],sep=".")
+                    covar<-data.frame(nam1, object@omega[i,j],object@se.cov[i,j],object@se.cov[i,j]/object@omega[i,j]*100)
+                    names(covar)<-names(tab)
+                    tab<-rbind(tab,covar)
+                    tab[dim(tab),1]<-paste("cov",nampar[i],nampar[j],sep=".")
+                  }
+                }
+              }
+              colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
+            }
+            tab.random<-tab
+            for(i in 2:dim(tab)[2]) 
+              tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits,nsmall=nsmall)
+            if(print) {
+              print(tab,quote=FALSE)
+              cat("----------------------------------------------------\n")
+              cat("------  Correlation matrix of random effects  ------\n")
+              cat("----------------------------------------------------\n")
+            }
+            tab<-cov2cor(object@omega[object@indx.omega, object@indx.omega,drop=FALSE])
+            tab.corr<-tab
+            for(i in 1:dim(tab)[2])
+              tab[,i]<-format(as.double(as.character(tab[,i])),digits=digits,nsmall=nsmall)
+            try(colnames(tab)<-rownames(tab)<-object@name.random)
+            if(print) print(tab,quote=FALSE)
+            l1<-rep(NA,3)
+            tab.ll<-data.frame(Method=c("Linearisation","Importance Sampling","Gaussian Quadrature"),"-2xLL"=l1,AIC=l1,BIC=l1)
+            if(length(object@ll.lin)>0 | length(object@ll.is)>0 | length(object@ll.gq)>0) {
+              if(print) {
+                cat("----------------------------------------------------\n")
+                cat("---------------  Statistical criteria  -------------\n")
+                cat("----------------------------------------------------\n")
+              }
+              if(length(object@ll.lin)>0) {
+                if(print) {
+                  cat("Likelihood computed by linearisation\n")
+                  cat("      -2LL=",(-2*object@ll.lin),"\n")
+                  cat("      AIC =",object@aic.lin,"\n")
+                  cat("      BIC =",object@bic.lin,"\n")
+                }
+                tab.ll[1,2:4]<-c((-2*object@ll.lin),object@aic.lin, object@bic.lin)
+              }
+              if(length(object@ll.is)>0) {
+                if(print) {
+                  cat("\nLikelihood computed by importance sampling\n")
+                  cat("      -2LL=",(-2*object@ll.is),"\n")
+                  cat("      AIC =",object@aic.is,"\n")
+                  cat("      BIC =",object@bic.is,"\n")
+                }
+                tab.ll[2,2:4]<-c((-2*object@ll.is),object@aic.is, object@bic.is)
+              }  
+              if(length(object@ll.gq)>0) {
+                if(print) {
+                  cat("\nLikelihood computed by Gaussian quadrature\n")
+                  cat("      -2LL=",(-2*object@ll.gq),"\n")
+                  cat("      AIC =",object@aic.gq,"\n")
+                  cat("      BIC =",object@bic.gq,"\n")
+                }
+                tab.ll[3,2:4]<-c((-2*object@ll.gq),object@aic.gq, object@bic.gq)
+              }
+              if(print) cat("----------------------------------------------------\n")
+            }
+            tab<-data.frame(Id=1:dim(object@cond.mean.phi)[1], object@cond.mean.psi)
+            namparfix<-object@name.fixed
+            try(colnames(tab)[-c(1)]<-namparfix(-grep("beta",object@name.fixed)),silent=TRUE)
+            npar<-length(object@name.fixed)
+            coef<-list(fixed=tab.fix[1:npar,2],random=list(map.psi=object@map.psi, cond.mean.psi=tab))
+            sigma<-tab.fix[-c(1:npar),2]
+            
+            res<-list(modeltype=object@modeltype,fixed.effects=tab.fix,sigma=sigma,random.effects=tab.random, correlation.matrix=tab.corr,logLik=tab.ll,coefficients=coef)
+            if(length(object@fim)>0) res$FIM<-object@fim
+            if(length(object@ypred)>0 | length(object@ipred)>0  | length(object@ppred)>0 | length(object@icpred)>0) {
+              res$fitted<-list(population=list(pop.param=object@ppred, pop.mean=object@ypred),individual=list(map.ipred=object@ipred, cond.ipred=object@icpred))
+            }
+            if(length(object@wres)>0 | length(object@iwres)>0  | length(object@icwres)>0 | length(object@pd)>0) {
+              res$residuals<-list(population=list(wres=object@wres), individual=list(map.iwres=object@iwres,cond.iwres=object@icwres, pd=object@pd, npde=object@npde))
+            }
+            
+            invisible(res)
+          }
+)
+
+####################################################################################
 ####################################################################################

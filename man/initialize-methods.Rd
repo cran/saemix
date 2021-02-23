@@ -107,7 +107,7 @@
 
 \item{name.ytype}{name of the column containing the index of the response}
 
-\item{verbose}{a boolean indicating whether messages should be printed out during the creation of the object}
+\item{verbose}{a boolean indicating whether messages should be printed out during the creation of the object (defaults to TRUE)}
 
 \item{data}{an SaemixData object}
 

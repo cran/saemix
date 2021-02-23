@@ -2,11 +2,24 @@ Package: saemix
 Type: Package
 Title: Stochastic Approximation Expectation Maximization (SAEM)
         Algorithm
-Version: 2.3
-Date: 2019-12-07
-Author: Emmanuelle Comets, Audrey Lavenu, Marc Lavielle (2017) <doi:10.18637/jss.v080.i03> 
+Version: 2.4
+Date: 2021-02-22
+Authors@R: c(person(given = "Emmanuelle",
+           family = "Comets",
+           role = c("aut", "cre"),
+           email = "emmanuelle.comets@inserm.fr",
+           comment = c(ORCID = "0000-0002-9150-9886")),
+    person(given = "Audrey",
+           family = "Lavenu",
+           role = "ctb"),
+    person(given = "Marc",
+           family = "Lavielle",
+           role = "ctb"),
+    person(given = "Maud",
+           family = "Delattre",
+           role = "ctb"))
 Maintainer: Emmanuelle Comets <emmanuelle.comets@inserm.fr>
-Description: The SAEMIX package implements the Stochastic Approximation EM algorithm for parameter estimation in (non)linear mixed effects models. The SAEM algorithm: - computes the maximum likelihood estimator of the population parameters, without any approximation of the model (linearisation, quadrature approximation,...), using the Stochastic Approximation Expectation Maximization (SAEM) algorithm, - provides standard errors for the maximum likelihood estimator - estimates the conditional modes, the conditional means and the conditional standard deviations of the individual parameters, using the Hastings-Metropolis algorithm. Several applications of SAEM in agronomy, animal breeding and PKPD analysis have been published by members of the Monolix group (<http://group.monolix.org/>).
+Description: The SAEMIX package implements the Stochastic Approximation EM algorithm for parameter estimation in (non)linear mixed effects models. The SAEM algorithm: - computes the maximum likelihood estimator of the population parameters, without any approximation of the model (linearisation, quadrature approximation,...), using the Stochastic Approximation Expectation Maximization (SAEM) algorithm, - provides standard errors for the maximum likelihood estimator - estimates the conditional modes, the conditional means and the conditional standard deviations of the individual parameters, using the Hastings-Metropolis algorithm. Several applications of SAEM in agronomy, animal breeding and PKPD analysis have been published by members of the Monolix group. Documentation about 'saemix' is provided by a comprehensive user guide in the inst folder, and a reference concerning the methods  is the paper by Comets, Lavenu and Lavielle (2017, <doi:10.18637/jss.v080.i03>). See 'citation("saemix")' for details.
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
@@ -14,11 +27,15 @@ Suggests: testthat (>= 0.3)
 Imports: graphics, stats, methods
 Collate: 'aaa_generics.R' 'SaemixData.R' 'SaemixModel.R' 'SaemixRes.R'
         'SaemixObject.R' 'compute_LL.R' 'func_FIM.R' 'func_aux.R'
-        'func_distcond.R' 'func_plots.R' 'func_simulations.R' 'main.R'
-        'main_estep.R' 'main_initialiseMainAlgo.R' 'main_mstep.R'
-        'zzz.R'
-RoxygenNote: 7.0.2
+        'func_diagnostics.R' 'func_distcond.R' 'func_estimParam.R'
+        'func_plots.R' 'func_simulations.R' 'main.R' 'main_estep.R'
+        'main_initialiseMainAlgo.R' 'main_mstep.R' 'zzz.R'
+RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2019-12-06 16:34:53 UTC; eco
+Packaged: 2021-02-23 18:56:09 UTC; eco
+Author: Emmanuelle Comets [aut, cre] (<https://orcid.org/0000-0002-9150-9886>),
+  Audrey Lavenu [ctb],
+  Marc Lavielle [ctb],
+  Maud Delattre [ctb]
 Repository: CRAN
-Date/Publication: 2019-12-06 17:10:02 UTC
+Date/Publication: 2021-02-23 23:00:02 UTC

@@ -106,7 +106,7 @@ fixed effects in the algorithm. Defaults to 100}
 compute npde. Defaults to 1000}
 
 \item{nb.simpred}{number of simulations used to compute mean predictions
-(ypred element), taken as a random sample within the nb.sim simulations used
+(ppred element), taken as a random sample within the nb.sim simulations used
 for npde}
 
 \item{ipar.lmcmc}{number of iterations required to assume convergence for

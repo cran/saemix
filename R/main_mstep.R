@@ -1,4 +1,6 @@
 ################## Stochastic approximation - compute sufficient statistics (M-step) #####################
+
+
 mstep<-function(kiter, Uargs, Dargs, opt, structural.model, DYF, phiM, varList, phi, betas, suffStat) {
 	# M-step - stochastic approximation
 	# Input: kiter, Uargs, structural.model, DYF, phiM (unchanged)

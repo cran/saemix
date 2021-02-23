@@ -1,4 +1,19 @@
+Version 2.4 -  February 2021
+
+o Minor modifications following a change in the R compiler for 4.4.0
+   
+o Changes
+   * the combined error model has been changed from var(epsilon)=(a+b*f)^2 (previous version) to var(epsilon)=(a^2+b^2*f^2) (saemix 2.4) as the previous form sometimes led to unstable estimates
+   * implemented the BIC proposed by Delattre et al. 2014 for NLMEM weighing differently parameters associated with fixed or random effects (see  )
+   * updated the computation of the FIM, adding slots to compute both correlation coefficients and covariance terms, as well as the standard errors on these parameters, and a table giving the confidence intervals for all estimated parameters (conf.int)
+   * added a summary method for SaemixRes object
+   * added functions to obtain model predictions from a fitted model when a new dataset is given (under development)
+
+o Bugfixes
+   * the computation of the conditional distribution has been corrected, previously the distributions were too narrow
+
 Version 2.3 -  October 2019
+
 o Modifications following a change in the R compiler for 4.4.0
    "matrix objects now also inherit from class "array", namely, e.g., class(diag(1)) is c("matrix", "array") which invalidates code assuming that length(class(obj)) == 1, an incorrect assumption that is less frequently fulfilled now. "
    "S3 methods for "array", i.e., <someFun>.array(), are now also dispatched for matrix objects."
@@ -19,6 +34,7 @@ o Changes to SaemixObject object
    * the number of chains can be set to 1 by the user even with a small number of subjects (the minimum recommended number of subjects*times is 50 but the user can now choose to ignore this recommendation)
    * the number of iterations for simulated annealing can now be set to 0 by the user
  o Minor changes to comply with more stringent checks on CRAN
+
 
 Version 2.1 -  August 2017
 
