@@ -70,9 +70,9 @@ of individual random effects. Defaults to FALSE}
 \item{marginal.distribution}{if TRUE, produce plots of the marginal
 distribution of the random effects. Defaults to FALSE}
 
-\item{vpc}{if TRUE, produce Visual Predictive Check plots. Defaults to FALSE}
+\item{vpc}{if TRUE, produce Visual Predictive Check plots. Defaults to FALSE (we suggest to use \code{\link{npdeSaemix}} instead)}
 
-\item{npde}{if TRUE, produce plots of the npde. Defaults to FALSE}
+\item{npde}{if TRUE, produce plots of the npde. Defaults to FALSE (deprecated in 3.0, please use \code{\link{npdeSaemix}} instead)}
 
 \item{\dots}{optional arguments passed to the plots}
 }
@@ -87,28 +87,28 @@ distribution plots, residual plots, VPC.
 \details{
 This function plots different graphs related to the algorithm (convergence
 plots, likelihood estimation) as well as diagnostic graphs. A description is
-provided in the PDF documentation. 
-\describe{ 
+provided in the PDF documentation.
+\describe{
 \item{data}{A spaghetti plot of the data, displaying the observed data y as a function of the regression
-variable (eg time for a PK application)} 
+variable (eg time for a PK application)}
 \item{convergence}{For each parameter in the model, this plot shows the evolution of the parameter
-estimate versus the iteration number} 
+estimate versus the iteration number}
 \item{likelihood}{Estimation of the likelihood estimated by importance sampling, as a function of the number of
-MCMC samples} 
-\item{individual.fit}{Individual fits, using the individual parameters with the individual covariates} 
+MCMC samples}
+\item{individual.fit}{Individual fits, using the individual parameters with the individual covariates}
 \item{population.fit}{Individual fits, using the population parameters with the individual covariates}
-\item{both.fit}{Individual fits, using the population parameters with the individual covariates and the individual parameters with the individual covariates} 
+\item{both.fit}{Individual fits, using the population parameters with the individual covariates and the individual parameters with the individual covariates}
 \item{observations.vs.predictions}{Plot of the predictions computed with the population parameters versus the observations (left), and plot of the predictions computed with the individual parameters versus the observations (right)}
-\item{residuals.scatter}{Scatterplot of standardised residuals versus the X predictor and versus predictions. These plots are shown for individual and population residuals, as well as for npde when they are available} 
+\item{residuals.scatter}{Scatterplot of standardised residuals versus the X predictor and versus predictions. These plots are shown for individual and population residuals, as well as for npde when they are available}
 \item{residuals.distribution}{Distribution of standardised residuals, using histograms and QQ-plot. These plots are shown for
-individual and population residuals, as well as for npde when they are available} 
+individual and population residuals, as well as for npde when they are available}
 \item{random.effects}{Boxplot of the random effects}
-\item{correlations}{Correlation between the random effects, with a smoothing spline} 
+\item{correlations}{Correlation between the random effects, with a smoothing spline}
 \item{parameters.versus.covariates}{Plots of the estimate of the individual parameters versus the covariates, using scatterplot for continuous covariates, boxplot for categorical covariates}
 \item{randeff.versus.covariates}{Plots of the estimate of the individual random effects versus the covariates, using scatterplot for continuous covariates, boxplot for categorical covariates}
 \item{marginal.distribution}{Distribution of each parameter in the model (conditional on covariates when some are included in the model)}
-\item{npde}{Plot of npde as in package npde} 
-\item{vpc}{Visual Predictive Check} 
+\item{npde}{Plot of npde as in package npde (deprecated in 3.0, please use \code{\link{npdeSaemix}} instead)}
+\item{vpc}{Visual Predictive Check (we suggest to use \code{\link{npdeSaemix}} instead)}
 }
 }
 \examples{
@@ -152,13 +152,14 @@ saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
 
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-20th meeting of the Population Approach Group in Europe, Athens, Greece
-(2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{SaemixObject}},\code{\link{saemix}},
@@ -167,12 +168,12 @@ Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 \code{\link{saemix.plot.llis}}, \code{\link{saemix.plot.randeff}},
 \code{\link{saemix.plot.obsvspred}}, \code{\link{saemix.plot.fits}},
 \code{\link{saemix.plot.parcov}}, \code{\link{saemix.plot.randeffcov}},
-\code{\link{saemix.plot.distpsi}},
+\code{\link{saemix.plot.distpsi}}, \code{\link{npdeSaemix}}
 \code{\link{saemix.plot.scatterresiduals}},
 \code{\link{saemix.plot.distribresiduals}}, \code{\link{saemix.plot.vpc}}
 }
 \author{
-Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu,
+Emmanuelle Comets \href{mailto:emmanuelle.comets@inserm.fr}{emmanuelle.comets@inserm.fr}, Audrey Lavenu,
 Marc Lavielle.
 }
 \keyword{plot}

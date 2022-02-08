@@ -29,11 +29,11 @@ can be stored in an object and its elements modified to provide suitable graphs.
 \item col.fillmed For the VPC plots: color filling the prediction interval for the median. Defaults to "pink"
 \item col.fillpi For the VPC plots: color filling the prediction interval for the limits of the prediction interval. Defaults to "slategray1"
 \item col.lmed For the VPC plots: color of the line showing the median of the simulated data. Defaults to "indianred4"
-\item col.lobs For the VPC plots: color of the lines showing the median, 2.5 and 97.5th percentiles (for a 95% prediction interval). Defaults to "steelblue4"
+\item col.lobs For the VPC plots: color of the lines showing the median, 2.5 and 97.5th percentiles (for a 95\% prediction interval). Defaults to "steelblue4"
 \item col.lpi For the VPC plots: color of the line showing the boundaries of the prediction intervals. Defaults to "slategray4"
 \item col.obs For the VPC plots: color used to plot the observations. Defaults to "steelblue4"
 \item cov.name Name of the covariate to be used in the plots. Defaults to the first covariate in the model
-\item cov.value Value of the covariate to be used in the plots. Defaults to NA, indicating that the median value of the covariate (for continuous covariates) or the reference category (for categorical covariates) will be used 
+\item cov.value Value of the covariate to be used in the plots. Defaults to NA, indicating that the median value of the covariate (for continuous covariates) or the reference category (for categorical covariates) will be used
 \item ilist List of indices of subjects to be included in the individual plots (defaults to all subjects)
 \item indiv.par  a string, giving the type of the individual estimates ("map"= conditional mode, "eap"=conditional mean). Defaults to conditional mode
 \item lcol Main line color (default: black)
@@ -52,11 +52,11 @@ can be stored in an object and its elements modified to provide suitable graphs.
 \item range Range (expressed in number of SD) over which to plot the marginal distribution. Defaults to 4, so that the random effects for the marginal distribution is taken over the range [-4 SD; 4 SD]
 \item res.plot Type of residual plot ("res.vs.x": scatterplot versus X, "res.vs.pred": scatterplot versus predictions, "hist": histogram, "qqplot": QQ-plot) (default: "res.vs.x")
 \item smooth When TRUE, smoothed lines are added in the plots of predictions versus observations (default: FALSE)
-\item tit Title of the graph (default: none) 
+\item tit Title of the graph (default: none)
 \item type Type of the plot (as in the \emph{R} plot function. Defaults to "b", so that both lines and symbols are shown
 \item units Name of the predictor used in the plots (X). Defaults to the name of the first predictor in the model (saemix.data$names$predictors[1])
 \item vpc.bin Number of binning intervals when plotting the VPC (the (vpc.bin-1) breakpoints are taken as the empirical quantiles of the X data). Defaults to 10
-\item vpc.interval Size of the prediction intervals.Defaults to 0.95 for the 95\% prediction interval
+\item vpc.interval Size of the prediction intervals.Defaults to 0.95 for the 95\\% prediction interval
 \item vpc.obs Should the observations be overlayed on the VPC plot. Defaults to TRUE
 \item vpc.pi Should prediction bands be computed around the median and the bounds of the prediction intervals for the VPC. Defaults to TRUE
 \item xlab Label for the X-axis. Defaults to the name of the X predictor followed by the unit in bracket (eg "Time (hr)")
@@ -68,12 +68,12 @@ can be stored in an object and its elements modified to provide suitable graphs.
 \item ylog A logical value. If TRUE, a logarithmic scale is in use. Defaults to FALSE
 }
 
-Plotting a SaemixData object also allows the following options: 
-\describe{ 
-\item{individual}{ if TRUE, plots separate plots for each individual, otherwise plots a spaghetti plot of all the data. Defaults to FALSE} 
-\item{limit}{ for individual plots, plots only a limited number of subjets (nmax). Defaults to TRUE} 
+Plotting a SaemixData object also allows the following options:
+\describe{
+\item{individual}{ if TRUE, plots separate plots for each individual, otherwise plots a spaghetti plot of all the data. Defaults to FALSE}
+\item{limit}{ for individual plots, plots only a limited number of subjets (nmax). Defaults to TRUE}
 \item{nmax}{ for individual plots, when limit is TRUE, the maximum number of plots to produce. Defaults to 12}
-\item{sample}{ for individual plots, if TRUE, randomly samples nmax different subjects to plot. Defaults to FALSE (the first nmax subjects are used in the plots)} 
+\item{sample}{ for individual plots, if TRUE, randomly samples nmax different subjects to plot. Defaults to FALSE (the first nmax subjects are used in the plots)}
 }
 }
 \details{
@@ -95,13 +95,14 @@ latter only applies to data.
 
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-20th meeting of the Population Approach Group in Europe, Athens, Greece
-(2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{SaemixObject}},\code{\link{saemix}},
@@ -109,7 +110,8 @@ Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 \code{\link{saemix.plot.llis}}, \code{\link{saemix.plot.randeff}},
 \code{\link{saemix.plot.obsvspred}}, \code{\link{saemix.plot.fits}},
 \code{\link{saemix.plot.parcov}}, \code{\link{saemix.plot.distpsi}},
-\code{\link{saemix.plot.scatterresiduals}}, \code{\link{saemix.plot.vpc}}
+\code{\link{saemix.plot.scatterresiduals}}, \code{\link{saemix.plot.vpc}},
+\code{\link{saemix.plot.mirror}}
 }
 \author{
 Emmanuelle Comets \email{emmanuelle.comets@inserm.fr}, Audrey Lavenu, Marc Lavielle.

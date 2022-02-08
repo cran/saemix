@@ -15,6 +15,10 @@ An object of the SaemixRes class, representing the results of a fit through the 
 \section{Slots}{
 
 \describe{
+\item{\code{modeltype}}{string giving the type of model used for analysis}
+
+\item{\code{status}}{string indicating whether a model has been run successfully; set to "empty" at initialisation, used to pass on error messages or fit status}
+
 \item{\code{name.fixed}}{a vector containing the names of the fixed parameters in the model}
 
 \item{\code{name.random}}{a vector containing the names of the random parameters in the model}
@@ -77,15 +81,15 @@ An object of the SaemixRes class, representing the results of a fit through the 
 
 \item{\code{mean.phi}}{a matrix giving the population estimate (Ci*mu) including covariate effects, for each subject}
 
-\item{\code{map.psi}}{a matrix giving the MAP estimates of individual parameters}
+\item{\code{map.psi}}{a dataframe giving the MAP estimates of individual parameters}
 
-\item{\code{map.phi}}{a matrix giving the MAP estimates of individual phi}
+\item{\code{map.phi}}{a dataframe giving the MAP estimates of individual phi}
 
 \item{\code{map.eta}}{a matrix giving the individual estimates of the random effects corresponding to the MAP estimates}
 
 \item{\code{map.shrinkage}}{a vector giving the shrinkage on the MAP estimates of eta}
 
-\item{\code{phi}}{phi}
+\item{\code{phi}}{individual parameters, estimated at the end of the estimation process as the average over the chains of the individual parameters sampled during the successive E-steps}
 
 \item{\code{psi.samp}}{a three-dimensional array with samples of psi from the conditional distribution}
 
@@ -121,9 +125,9 @@ An object of the SaemixRes class, representing the results of a fit through the 
 
 \item{\code{predictions}}{a data frame containing all the predictions and residuals in a table format}
 
-\item{\code{ypred}}{a vector giving the mean population predictions obtained with the MAP estimates}
+\item{\code{ppred}}{a vector giving the population predictions obtained with the population estimates}
 
-\item{\code{ppred}}{a vector giving the population predictions}
+\item{\code{ypred}}{a vector giving the mean population predictions}
 
 \item{\code{ipred}}{a vector giving the individual predictions obtained with the MAP estimates}
 
@@ -143,22 +147,22 @@ An object of the SaemixRes class, representing the results of a fit through the 
 }}
 
 \section{Objects from the Class}{
- 
+
 An object of the SaemixData class can be created by using the function \code{\link{saemixData}} and contain the following slots:
 }
 
 \section{Methods}{
 
-  \describe{
-    \item{[<-}{\code{signature(x = "SaemixRes")}: replace elements of object}
-    \item{[}{\code{signature(x = "SaemixRes")}: access elements of object}
-    \item{initialize}{\code{signature(.Object = "SaemixRes")}: internal function to initialise object, not to be used}
-    \item{print}{\code{signature(x = "SaemixRes")}: prints details about the object (more extensive than show)}
-    \item{read}{\code{signature(object = "SaemixRes")}: internal function, not to be used }
-    \item{showall}{\code{signature(object = "SaemixRes")}: shows all the elements in the object}
-    \item{show}{\code{signature(object = "SaemixRes")}: prints details about the object}
-    \item{summary}{\code{signature(object = "SaemixRes")}: summary of the results. Returns a list with a number of elements extracted from the results ().}
-	 }
+\describe{
+\item{[<-}{\code{signature(x = "SaemixRes")}: replace elements of object}
+\item{[}{\code{signature(x = "SaemixRes")}: access elements of object}
+\item{initialize}{\code{signature(.Object = "SaemixRes")}: internal function to initialise object, not to be used}
+\item{print}{\code{signature(x = "SaemixRes")}: prints details about the object (more extensive than show)}
+\item{read}{\code{signature(object = "SaemixRes")}: internal function, not to be used }
+\item{showall}{\code{signature(object = "SaemixRes")}: shows all the elements in the object}
+\item{show}{\code{signature(object = "SaemixRes")}: prints details about the object}
+\item{summary}{\code{signature(object = "SaemixRes")}: summary of the results. Returns a list with a number of elements extracted from the results ().}
+}
 }
 
 \examples{
@@ -168,11 +172,14 @@ showClass("SaemixRes")
 
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{saemixData}} \code{\link{SaemixModel}} \code{\link{saemixControl}} \code{\link{saemix}}

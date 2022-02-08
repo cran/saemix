@@ -25,9 +25,9 @@ scatterplots and distribution of residuals, boxplot of the random effects,
 correlations between random effects, distribution of the parameters, VPC}
 \item{basic.gof}{ basic goodness-of-fit plots: convergence plots, plot of
 the likelihood by importance sampling (if computed), plots of observations
-versus predictions} 
+versus predictions}
 \item{advanced.gof}{ advanced goodness-of-fit plots:
-scatterplots and distribution of residuals, VPC,...} 
+scatterplots and distribution of residuals, VPC,...}
 \item{covariate.fits}{
 plots of all estimated parameters versus all covariates in the dataset}
 \item{individual.fits}{ plots of individual predictions (line) overlayed on
@@ -88,20 +88,21 @@ individual.fits(saemix.fit)
 
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-20th meeting of the Population Approach Group in Europe, Athens, Greece
-(2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{saemix}}, \code{\link{saemix.plot.data}},
 \code{\link{saemix.plot.setoptions}}, \code{\link{plot.saemix}}
 }
 \author{
-Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu,
+Emmanuelle Comets \href{mailto:emmanuelle.comets@inserm.fr}{emmanuelle.comets@inserm.fr}, Audrey Lavenu,
 Marc Lavielle.
 }
 \keyword{plots}

@@ -20,7 +20,8 @@ saemixData(
   name.occ = "",
   name.ytype = "",
   units = list(x = "", y = "", covariates = c()),
-  verbose = TRUE
+  verbose = TRUE,
+  automatic = TRUE
 )
 }
 \arguments{
@@ -55,6 +56,8 @@ saemixData(
 \item{units}{list with up to three elements, x, y and optionally covariates, containing the units for the X and Y variables respectively, as well as the units for the different covariates (defaults to empty)}
 
 \item{verbose}{a boolean indicating whether messages should be printed out during the creation of the object}
+
+\item{automatic}{a boolean indicating whether to attempt automatic name recognition when some colum names are missing or wrong (defaults to TRUE)}
 }
 \value{
 A SaemixData object (see \code{\link{saemixData}}).
@@ -87,11 +90,14 @@ print(saemix.data)
 plot(saemix.data)
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{SaemixData}},\code{\link{SaemixModel}}, \code{\link{saemixControl}},\code{\link{saemix}}

@@ -1,3 +1,38 @@
+Version 3.0 - February 2022
+
+o Extension to noncontinuous data models
+   * New argument in saemixModel to differentiate between continuous (modelType = "structural") and noncontinuous (modelType = "likelihood")
+   * New examples have been included in the package to showcase discrete response models (see the userguide  for more information on lung.saemix, toenail.saemix, knee.saemix, rapi.saemix)
+
+o Verbosity
+   * displayProgress is now set to FALSE by default, which suppresses the convergence plots previously shown during the fit
+   * running saemix, as well as obtaining diagnostic plots, has been made much more silent by suppressing most messages and warnings unless the user explicitely requests a verbose output (usually by passing a verbose=TRUE argument to functions such as plot)
+   
+o Plot functions for models
+   * the predictions of a model over a range of X-values can be plotted for the starting values of the parameters or for a set of selected values
+   * an SaemixModel object can also be combined with an SaemixData object to plot the predictions corresponding to the design in the data object
+   * both these functions can be used to check the starting values before a fit
+
+o Updated user guide (PDF)
+   * available from https://github.com/iame-researchCenter/saemix/blob/7638e1b09ccb01cdff173068e01c266e906f76eb/docsaem.pdf
+   * distributed in the inst folder of the package
+   
+o Covariate model building
+   * new statistical criterion taking into account the fixed or random nature of estimated parameters in the weighting of the BIC (element BIC.covariate in the results component of a fitted object) [Delattre et al. 2014]
+   * compare.saemix function to compare several saemix fitted objects
+   * automated covariate selection via backward, forward and stepwise algorithms
+
+o Bugfixes
+   * the number of iterations with simulated annealing set by default has been corrected. It should have been equal to K1/2 where K1 is the first element of the vector nb.saemix in the list of options, but in the previous version it was incorrectly set to K1. This has now been corrected.
+   * the definition of ypred/ppred had been mixed up in 2.4, in 3.0 we clarified the two types of population predictions as ppred=f(E(psi)), ie the predictions obtained for the population parameters (taking into account individual covariates) and ypred=E(f(psi)), ie the expectation of the predictions over the population. Both types of population predictions should be close in most applications but please update your codes depending on which definition you prefer (note: WRES are still computed using ypred in saemix for consistency with the use of the empirical variance-covariance matrix in their definition)
+
+o Changes
+   * function simul.saemix has been renamed simulate.saemix
+
+o Dependencies
+   * saemix now depends on npde (3.2), ggplot2, grid and gridExtra
+   
+
 Version 2.4 -  February 2021
 
 o Minor modifications following a change in the R compiler for 4.4.0
@@ -12,13 +47,14 @@ o Changes
 o Bugfixes
    * the computation of the conditional distribution has been corrected, previously the distributions were too narrow
 
+   
 Version 2.3 -  October 2019
 
 o Modifications following a change in the R compiler for 4.4.0
    "matrix objects now also inherit from class "array", namely, e.g., class(diag(1)) is c("matrix", "array") which invalidates code assuming that length(class(obj)) == 1, an incorrect assumption that is less frequently fulfilled now. "
    "S3 methods for "array", i.e., <someFun>.array(), are now also dispatched for matrix objects."
 
-
+   
 Version 2.2 -  October 2018
 
  o Bugfixes
@@ -35,7 +71,7 @@ o Changes to SaemixObject object
    * the number of iterations for simulated annealing can now be set to 0 by the user
  o Minor changes to comply with more stringent checks on CRAN
 
-
+ 
 Version 2.1 -  August 2017
 
  o Version of the saemix package to CRAN that refers back to the JSS manuscript

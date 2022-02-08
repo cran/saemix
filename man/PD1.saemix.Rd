@@ -6,11 +6,11 @@
 \alias{PD2.saemix}
 \title{Data simulated according to an Emax response model, in SAEM format}
 \format{
-This data frame contains the following columns: 
+This data frame contains the following columns:
 \describe{
-\item{subject}{an variable identifying the subject on whom the observation was made.  
-The ordering is by the dose at which the observation was made.  } 
-\item{dose}{ simulated dose.  } 
+\item{subject}{an variable identifying the subject on whom the observation was made.
+The ordering is by the dose at which the observation was made.  }
+\item{dose}{ simulated dose.  }
 \item{response}{simulated response}
 \item{gender}{ gender (0 for male, 1 for female) } }
 }
@@ -25,14 +25,14 @@ according to an Emax dose-response model.
 }
 \details{
 These examples were used by P. Girard and F. Mentre for the symposium dedicated to Comparison of Algorithms Using Simulated Data Sets and Blind Analysis, that took place in Lyon, France, September 2004.
-The datasets contain 100 individuals, each receiving 3 different doses:(0, 10, 90), (5, 25, 65) or (0, 20, 30). 
-It was assumed that doses were given in a cross-over study with sufficient wash out period to avoid carry over. 
+The datasets contain 100 individuals, each receiving 3 different doses:(0, 10, 90), (5, 25, 65) or (0, 20, 30).
+It was assumed that doses were given in a cross-over study with sufficient wash out period to avoid carry over.
 Responses (y_ij) were simulated with the following pharmacodynamic model:
-y_ij = E0_i + D_ij Emax_i/(D_ij + ED50_i) +epsilon_ij 
+y_ij = E0_i + D_ij Emax_i/(D_ij + ED50_i) +epsilon_ij
 The individual parameters were simulated according to
-  log (E0_i) = log (E0) + eta_i1
-  log (Emax_i) = log (Emax) + eta_i2
-  log (E50_i) = log (E50) +  beta w_i + eta_i3
+log (E0_i) = log (E0) + eta_i1
+log (Emax_i) = log (Emax) + eta_i2
+log (E50_i) = log (E50) +  beta w_i + eta_i3
 
 PD1.saemix contains the data simulated with a gender effect, beta=0.3.
 PD2.saemix contains the data simulated without a gender effect, beta=0.
@@ -74,7 +74,7 @@ model2<-saemixModel(model=modelemax,description="Emax growth model",
 
 # SE not computed as not needed for the test
 saemix.options<-list(algorithms=c(0,1,1),nb.chains=3,seed=765754, 
-       nbiter.saemix=c(500,300),save=FALSE,save.graphs=FALSE)
+       nbiter.saemix=c(500,300),save=FALSE,save.graphs=FALSE,displayProgress=FALSE)
 
 fit1<-saemix(model1,saemix.data,saemix.options)
 fit2<-saemix(model2,saemix.data,saemix.options)
@@ -84,6 +84,6 @@ cat("LRT test for covariate effect on EC50: p-value=",1-pchisq(wstat,1),"\n")
 }
 }
 \references{
-Girard P., Mentre F. Comparison of Algorithms Using Simulated Data Sets and Blind Analysis workshop, Lyon, France, September 2004.
+P Girard, F Mentre (2004). Comparison of Algorithms Using Simulated Data Sets and Blind Analysis workshop, Lyon, France.
 }
 \keyword{datasets}

@@ -5,19 +5,19 @@
 \alias{theo.saemix}
 \title{Pharmacokinetics of theophylline}
 \format{
-This data frame contains the following columns: 
+This data frame contains the following columns:
 \describe{
 \item{Id}{an ordered factor with levels \code{1}, \dots{}, \code{12}
 identifying the subject on whom the observation was made.  The ordering is
-by Time at which the observation was made.  } 
-\item{Dose}{dose of theophylline administered orally to the subject (mg/kg).  } 
+by time at which the observation was made.  }
+\item{Dose}{dose of theophylline administered orally to the subject (mg/kg).  }
 \item{Time}{time since drug administration when the sample was drawn (hr).  }
-\item{Concentration}{theophylline concentration in the sample (mg/L).  } 
-\item{Weight}{ weight of the subject (kg).  } 
+\item{Concentration}{theophylline concentration in the sample (mg/L).  }
+\item{Weight}{ weight of the subject (kg).  }
 \item{Sex}{ gender (simulated, 0=male, 1=female} }
 }
 \source{
-Boeckmann, A. J., Sheiner, L. B. and Beal, S. L. (1994),
+AJ Boeckmann, LB Sheiner, SL Beal (1994),
 \emph{NONMEM Users Guide: Part V}, NONMEM Project Group, University of
 California, San Francisco.
 }
@@ -71,7 +71,7 @@ saemix.model<-saemixModel(model=model1cpt,
        dimnames=list(NULL, c("ka","V","CL"))),transform.par=c(1,1,1))
  # Note: remove the options save=FALSE and save.graphs=FALSE 
  # to save the results and graphs
- saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE)
+ saemix.options<-list(seed=632545,save=FALSE,save.graphs=FALSE, displayProgress=FALSE)
  \donttest{
  # Not run (strict time constraints for CRAN)
  saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
@@ -85,7 +85,7 @@ saemix.model<-saemixModel(model=model1cpt,
       covariance.model=matrix(c(1,0,0,0,1,1,0,1,1),ncol=3,byrow=TRUE),
       omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="combined")
       
- saemix.options<-list(seed=39546,save=FALSE,save.graphs=FALSE)
+ saemix.options<-list(seed=39546,save=FALSE,save.graphs=FALSE,displayProgress=FALSE)
  \donttest{
  # Not run (strict time constraints for CRAN)
  saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
@@ -93,11 +93,11 @@ saemix.model<-saemixModel(model=model1cpt,
  
 }
 \references{
-Davidian, M. and Giltinan, D. M. (1995) \emph{Nonlinear Models for Repeated
+M Davidian, DM Giltinan (1995) \emph{Nonlinear Models for Repeated
 Measurement Data}, Chapman & Hall (section 5.5, p. 145 and section 6.6, p.
 176)
 
-Pinheiro, J. C. and Bates, D. M. (2000) \emph{Mixed-effects Models in S and
+JC Pinheiro, DM Bates (2000) \emph{Mixed-effects Models in S and
 S-PLUS}, Springer (Appendix A.29)
 }
 \keyword{datasets}

@@ -2,7 +2,6 @@
 % Please edit documentation in R/compute_LL.R
 \name{llis.saemix}
 \alias{llis.saemix}
-\alias{gqg.mlx}
 \title{Log-likelihood using Importance Sampling}
 \usage{
 llis.saemix(saemixObject)
@@ -40,7 +39,7 @@ model1cpt<-function(psi,id,xidep) {
 	  return(ypred)
 }
 saemix.model<-saemixModel(model=model1cpt,
-  description="One-compartment model with first-order absorption", 
+  description="One-compartment model with first-order absorption", modeltype="structural",
   psi0=matrix(c(1.,20,0.5,0.1,0,-0.01),ncol=3, byrow=TRUE,
   dimnames=list(NULL, c("ka","V","CL"))),transform.par=c(1,1,1),
   covariate.model=matrix(c(0,1,0,0,0,0),ncol=3,byrow=TRUE),fixed.estim=c(1,1,1),
@@ -58,19 +57,20 @@ saemix.options<-list(algorithm=c(1,0,0),seed=632545,save=FALSE,save.graphs=FALSE
 
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-20th meeting of the Population Approach Group in Europe, Athens, Greece
-(2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{SaemixObject}},\code{\link{saemix}},\code{\link{llgq.saemix}}
 }
 \author{
-Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu,
+Emmanuelle Comets \href{mailto:emmanuelle.comets@inserm.fr}{emmanuelle.comets@inserm.fr}, Audrey Lavenu,
 Marc Lavielle.
 }
 \keyword{models}

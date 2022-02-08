@@ -19,25 +19,29 @@
 #' which the following elements have been added: \describe{
 #' \item{se.fixed:}{standard error of fixed effects, obtained as part of the
 #' diagonal of the inverse of the Fisher Information Matrix (only when
-#' fim.saemix has been run, or when the saemix.options$algorithms[2] is 1)}
+#' fim.saemix has been run, or when saemix.options$algorithms\[2\] is 1)}
 #' \item{se.omega:}{standard error of the variance of random effects, obtained
 #' as part of the diagonal of the inverse of the Fisher Information Matrix
-#' (only when fim.saemix has been run, or when the saemix.options$algorithms[2]
-#' is 1)} \item{se.res:}{standard error of the parameters of the residual error
+#' (only when fim.saemix has been run, or when the saemix.options$algorithms\[2\]
+#' is 1)} 
+#' \item{se.res:}{standard error of the parameters of the residual error
 #' model, obtained as part of the diagonal of the inverse of the Fisher
 #' Information Matrix (only when fim.saemix has been run, or when the
-#' saemix.options$algorithms[2] is 1)} \item{fim:}{Fisher Information Matrix}
+#' saemix.options$algorithms\[2\] is 1)} 
+#' \item{fim:}{Fisher Information Matrix}
 #' \item{ll.lin:}{ likelihood calculated by linearisation} }
 #' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
 #' Marc Lavielle.
 #' @seealso \code{\link{SaemixObject}},\code{\link{saemix}}
-#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' @references E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+#' an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 #' 
-#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models. 
+#' Computational Statistics and Data Analysis, 49(4):1020-1038.
 #' 
-#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-#' 20th meeting of the Population Approach Group in Europe, Athens, Greece
-#' (2011), Abstr 2173.
+#' E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece, Abstr 2173.
+#' 
 #' @keywords models
 #' @examples
 #'  
@@ -81,7 +85,6 @@
 #' @export fim.saemix
 fim.saemix<-function(saemixObject) {
   # Estimate the Fisher Information Matrix and the s.e. of the estimated parameters  
-  
   saemix.model<-saemixObject["model"]
   saemix.data<-saemixObject["data"]
   saemix.res<-saemixObject["results"]
@@ -98,8 +101,12 @@ fim.saemix<-function(saemixObject) {
   hat.phi<-saemix.res["cond.mean.phi"]
   nphi<-dim(hat.phi)[2]
   nomega<-sum(covariance.model[lower.tri(covariance.model,diag=TRUE)])
+  if (saemixObject["model"]["modeltype"]=="structural"){
   nres<-length(saemix.res["indx.res"])
-  nytype<-length(unique(saemix.data["data"][,"ytype"]))
+  } else{
+    nres <- 0
+  }
+  nytype<-length(unique(saemix.data["data"]["ytype"]))
   dphi<-cutoff(abs(colMeans(hat.phi))*1e-4,1e-10)
   coefphi<-c(0,-1,1)
   
@@ -121,7 +128,9 @@ fim.saemix<-function(saemixObject) {
   ind.covariates<-which(saemix.model["betaest.model"]>0)
   f0<-F[,1,1]
   # g0<-cutoff(saemix.res["respar"][1]+saemix.res["respar"][2]*abs(f0))
-  g0<-error(f0,saemix.res@respar,saemix.data["data"][,"ytype"])
+  if (saemixObject["model"]["modeltype"]=="structural"){
+    g0<-error(f0,saemix.res@respar,saemix.data["data"][["ytype"]]) 
+  }
   #  DF<-(F[,,3]-F[,,2])/matrix(rep(dphi,each=saemix.data["ntot.obs"]), ncol=length(dphi))/2 
   DF<-(F[,,3]-F[,,1])/matrix(rep(dphi,each=saemix.data["ntot.obs"]), ncol=length(dphi)) #gradient of f (changed from F[,,2] to F[,,1])
   z<-matrix(0,saemix.data["ntot.obs"],1)
@@ -133,15 +142,19 @@ fim.saemix<-function(saemixObject) {
     j1<-j2+1
     j2<-j2+ni
     z[j1:j2]<-yobs[j1:j2] - f0[j1:j2] + DF[j1:j2,,drop=FALSE]%*%hat.phi[i,]
+    if (saemixObject["model"]["modeltype"]=="structural"){
     Vi<- DF[j1:j2,,drop=FALSE] %*% omega %*% t(DF[j1:j2,,drop=FALSE]) + mydiag((g0[j1:j2])^2, nrow=ni)
+    } else{
+      Vi<- DF[j1:j2,,drop=FALSE] %*% t(DF[j1:j2,,drop=FALSE])+ mydiag(1, nrow=ni)
+    }
     #    invVi[[i]]<-solve(Vi[[i]])
     # Invert avoiding numerical problems
-    Gi[[i]]<-round(Vi*1e10)/1e10
+    # Invert avoiding numerical problems
+    Gi[[i]]<-round(Vi*1e12)/1e12
     VD<-try(eigen(Gi[[i]]))
-    if(is(VD,"try-error")) {
-      if(saemixObject@options$warnings) cat("Unable to compute the FIM by linearisation.\n")
-      stop("Unable to compute the FIM by linearisation")
-      #    return(saemixObject)
+    if(inherits(VD,"try-error") || det(Gi[[i]])==0) {
+      cat("Unable to compute the FIM by linearisation.\n") # si matrice de variance non inversible
+      stop()
     }
     D<-Re(VD$values)
     V<-Re(VD$vectors)
@@ -150,14 +163,15 @@ fim.saemix<-function(saemixObject) {
   
   # ECO ici modifie car role de covariate.estim pas clair
   # covariate.estim=si un parametre (et ses covariables associees) sont estimees ou non
-#   covariate.estim<-matrix(rep(saemix.model["fixed.estim"], dim(saemix.model["betaest.model"])[1]),byrow=TRUE, ncol=length(saemix.model["fixed.estim"]))*saemix.model["betaest.model"]
+#  covariate.estim<-matrix(rep(saemix.model["fixed.estim"], dim(saemix.model["betaest.model"])[1]),byrow=TRUE, ncol=length(saemix.model["fixed.estim"]))*saemix.model["betaest.model"] # 29/05/20
+
   covariate.estim<-saemix.model["betaest.model"]
   covariate.estim[1,]<-saemix.model["fixed.estim"]
   
   j<-which(saemix.model["betaest.model"]>0)
   ind.fixed.est<-(covariate.estim[j]>0)
   npar<-sum(ind.fixed.est)
-  # Tracking indices for covariances
+# Tracking indices for covariances
   myidx.omega<-c()
   myidx.cor<-c()
   name.rand1<-name.rand2<-c()
@@ -189,7 +203,9 @@ fim.saemix<-function(saemixObject) {
       myidx.track[ij,3]<-track.var[track.var[,2]==myidx.track[ij,3],1]
     }
   }
-  namallpar<-c(saemixObject@results@name.fixed,name.rand1, saemixObject@results@name.sigma[saemixObject@results@indx.res], name.rand2)
+  if(saemixObject@model@modeltype=="structural")
+    namallpar<-c(saemixObject@results@name.fixed,name.rand1, saemixObject@results@name.sigma[saemixObject@results@indx.res], name.rand2) else
+      namallpar<-c(saemixObject@results@name.fixed,name.rand1, name.rand2)
   
   # hw=waitbar(1,'Estimating the population parameters (SAEM). Wait...')
   
@@ -205,7 +221,9 @@ fim.saemix<-function(saemixObject) {
     yi<-yobs[j1:j2]
     DFi<-DF[j1:j2,,drop=FALSE]
     f0i<-f0[j1:j2]
+    if (saemixObject["model"]["modeltype"]=="structural"){
     g0i<-g0[j1:j2]
+    }
     zi<-z[j1:j2]
     Ai<-kronecker(diag(nphi),as.matrix(saemix.model["Mcovariates"][i,]))
     Ai<-Ai[,ind.covariates,drop=FALSE]
@@ -224,7 +242,11 @@ fim.saemix<-function(saemixObject) {
             domega<-omega.null
           domega[iom,jom]<-domega[jom,iom]<-1 
           #          if(iom==jom) domega[iom,jom]<-1*sqrt(omega[iom,jom]) else domega[iom,jom]<-1 # if parameterised in omega and not omega2,
+          if (saemixObject["model"]["modeltype"]=="structural"){
           DV[[ipar]]<-DFi %*% domega %*% t(DFi)
+          } else {
+            DV[[ipar]]<-DFi %*% t(DFi)
+          }
         }
       }
     }
@@ -233,12 +255,25 @@ fim.saemix<-function(saemixObject) {
     #   domega[ipar,ipar]<-sqrt(omega[ipar,ipar])*2
     #   DV[[ipar+npar]] <- DFi %*% t(DFi)
     # }
+    
+    if (saemixObject["model"]["modeltype"]=="structural"){
     for(ipar.res in 1:(2*nytype)) {
       if(!is.na(match(ipar.res,saemix.res@indx.res))) {
         ipar<-ipar+1
         if(ipar.res%%2 == 1) DV[[ipar]]<-mydiag(2*g0i, nrow=ni) else DV[[ipar]]<-mydiag(2*g0i*f0i, nrow=ni)
       }
     }
+    }
+    # for(ipar.res in 1:(2*nytype)) {
+    #   if(!is.na(match(ipar.res,saemix.res@indx.res))) {
+    #     ipar<-ipar+1
+    #     if (saemixObject["model"]["modeltype"]=="structural"){
+    #       if(ipar.res%%2 == 1) DV[[ipar]]<-mydiag(2*g0i, nrow=ni) else DV[[ipar]]<-mydiag(2*g0i*f0i, nrow=ni)
+    #     } else{
+    #       DV[[ipar]]<-mydiag(0, nrow=ni)
+    #     }
+    #   }
+    # }
     #    blocA <- t(DFAi) %*% invVi[[i]] %*% DFAi
     if (sum(ind.fixed.est)>0) {
       DFAiest<-DFAi[,ind.fixed.est,drop=FALSE]
@@ -259,8 +294,8 @@ fim.saemix<-function(saemixObject) {
     }
     blocC<-matrix(0,ncol=(npar),nrow=(nomega+nres))
     MFi <-rbind( cbind(blocA,t(blocC)), cbind(blocC, blocB))
-#    indMF[[i]]<-MFi
     MF <- MF+MFi
+#    FIMi[[i]]<-MFi
     ll.lin <- ll.lin - 0.5*log(det(Gi[[i]])) - 0.5*t(Dzi)%*% invVi[[i]] %*%Dzi 
   }
   
@@ -282,7 +317,7 @@ fim.saemix<-function(saemixObject) {
     #   indMF[[i]][1:npar,1:npar]<-Fmui
     # }
     Cth<-try(solve(Fth))
-    if(is(Cth,"try-error")) {
+    if(inherits(Cth,"try-error")) {
       if(saemixObject@options$warnings) cat("Error computing the Fisher Information Matrix: singular system.\n")
       Cth<-NA*Fth
     }
@@ -299,7 +334,7 @@ fim.saemix<-function(saemixObject) {
   
   FO<-MF[-c(1:npar),-c(1:npar)]
   CO<-try(solve(FO))
-  if(is(CO,"try-error")) {
+  if(inherits(CO,"try-error")) {
     CO<-NA*FO
     if(saemixObject@options$warnings) cat("Error computing the Fisher Information Matrix: singular system.\n")
   }
@@ -308,7 +343,7 @@ fim.saemix<-function(saemixObject) {
   se.sdcor<-se.cov<-matrix(0,nphi,nphi)
   se.omega[saemix.model["indx.omega"]]<-sO[myidx.omega-npar]
   se.res<-matrix(0,2*nytype,1)
-  se.res[saemix.res["indx.res"]]<-sO[(nomega+1):length(sO)]    
+  if(saemixObject@model@modeltype=="structural") se.res[saemix.res["indx.res"]]<-sO[(nomega+1):length(sO)]    
   # Table with SE, CV and confidence intervals
   estpar<-c(saemixObject@results@fixed.effects)
   estSE<-c(se.fixed)
@@ -338,12 +373,15 @@ fim.saemix<-function(saemixObject) {
         }
       }
     }
-    estpar<-c(estpar,est1,saemixObject@results@respar[saemixObject@results@indx.res],est2)
-    estSE<-c(estSE,se1,se.res[saemixObject@results@indx.res],se2)
+    if(saemixObject@model@modeltype=="structural") estpar<-c(estpar,est1,saemixObject@results@respar[saemixObject@results@indx.res],est2) else
+      estpar<-c(estpar,est1,est2)
+    if(saemixObject@model@modeltype=="structural") estSE<-c(estSE,se1,se.res[saemixObject@results@indx.res],se2) else estSE<-c(estSE,se1,se2)
   } else {
     diag(se.cov)<-se.omega
-    estpar<-c(estpar,diag(omega)[saemixObject@results@indx.omega],saemixObject@results@respar[saemixObject@results@indx.res], sqrt(diag(omega)[saemixObject@results@indx.omega]))
-    estSE<-c(estSE,se.omega[saemixObject@results@indx.omega],se.res[saemixObject@results@indx.res],se.omega[saemixObject@results@indx.omega]/2/sqrt(diag(omega)[saemixObject@results@indx.omega]))
+    if(saemixObject@model@modeltype=="structural")  
+      estpar<-c(estpar,diag(omega)[saemixObject@results@indx.omega],saemixObject@results@respar[saemixObject@results@indx.res], sqrt(diag(omega)[saemixObject@results@indx.omega])) else estpar<-c(estpar,diag(omega)[saemixObject@results@indx.omega], sqrt(diag(omega)[saemixObject@results@indx.omega])) 
+    if(saemixObject@model@modeltype=="structural")
+      estSE<-c(estSE,se.omega[saemixObject@results@indx.omega],se.res[saemixObject@results@indx.res],se.omega[saemixObject@results@indx.omega]/2/sqrt(diag(omega)[saemixObject@results@indx.omega])) else estSE<-c(estSE,se.omega[saemixObject@results@indx.omega],se.omega[saemixObject@results@indx.omega]/2/sqrt(diag(omega)[saemixObject@results@indx.omega]))
   }
   conf.int<-data.frame(name=namallpar, estimate=estpar, se=estSE)
   conf.int$cv<-100*conf.int$se/conf.int$estimate
@@ -352,7 +390,7 @@ fim.saemix<-function(saemixObject) {
   saemix.res["se.fixed"]<-se.fixed
   saemix.res["se.omega"]<-c(se.omega)
   saemix.res["se.cov"]<-se.cov
-  saemix.res["se.respar"]<-c(se.res)
+  if(saemixObject@model@modeltype=="structural") saemix.res["se.respar"]<-c(se.res)
   saemix.res["conf.int"]<-conf.int
   saemix.res["ll.lin"]<-c(ll.lin )
   saemix.res["fim"]<-fim
@@ -366,4 +404,3 @@ fim.saemix<-function(saemixObject) {
   return(saemixObject)
 #  return(list(ll.lin,fim,DFi, Dzi, invVi))
 }
-

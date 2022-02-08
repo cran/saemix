@@ -5,10 +5,10 @@
 \alias{cow.saemix}
 \title{Evolution of the weight of 560 cows, in SAEM format}
 \format{
-This data frame contains the following columns: 
+This data frame contains the following columns:
 \describe{
-\item{cow}{the unique identifier for each cow } 
-\item{time}{time (days)} 
+\item{cow}{the unique identifier for each cow }
+\item{time}{time (days)}
 \item{weight}{a numeric vector giving the weight of the cow (kg)}
 \item{birthyear}{year of birth (between 1988 and 1998)}
 \item{twin}{existence of a twin (no=1, yes=2)}
@@ -23,7 +23,7 @@ The \code{cow.saemix} data contains records of the weight of 560 cows on 9 or 10
 }
 \details{
 An exponential model was assumed to describe the weight gain with time:
- y_ij = A_i (1- B_i exp( - K_i t_ij)) +epsilon_ij
+y_ij = A_i (1- B_i exp( - K_i t_ij)) +epsilon_ij
 }
 \examples{
 data(cow.saemix)
@@ -49,7 +49,7 @@ saemix.model<-saemixModel(model=growthcow,
       omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="constant")
 
 saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,nbiter.saemix=c(200,100), 
-             seed=4526,save=FALSE,save.graphs=FALSE)
+             seed=4526,save=FALSE,save.graphs=FALSE,displayProgress=FALSE)
 
 # Plotting the data
 plot(saemix.data,xlab="Time (day)",ylab="Weight of the cow (kg)")
@@ -59,6 +59,6 @@ saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 
 }
 \references{
-Pinheiro, J. C. and Bates, D. M. (2000), \emph{Mixed-Effects Models in S and S-PLUS}, Springer, New York.  (Appendix A.19)
+JC Pinheiro, DM Bates (2000) \emph{Mixed-effects Models in S and S-PLUS}, Springer, New York (Appendix A.19)
 }
 \keyword{datasets}

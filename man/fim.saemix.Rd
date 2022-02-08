@@ -14,14 +14,16 @@ The function returns an updated version of the object saemix.fit in
 which the following elements have been added: \describe{
 \item{se.fixed:}{standard error of fixed effects, obtained as part of the
 diagonal of the inverse of the Fisher Information Matrix (only when
-fim.saemix has been run, or when the saemix.options$algorithms[2] is 1)}
+fim.saemix has been run, or when saemix.options$algorithms[2] is 1)}
 \item{se.omega:}{standard error of the variance of random effects, obtained
 as part of the diagonal of the inverse of the Fisher Information Matrix
 (only when fim.saemix has been run, or when the saemix.options$algorithms[2]
-is 1)} \item{se.res:}{standard error of the parameters of the residual error
+is 1)}
+\item{se.res:}{standard error of the parameters of the residual error
 model, obtained as part of the diagonal of the inverse of the Fisher
 Information Matrix (only when fim.saemix has been run, or when the
-saemix.options$algorithms[2] is 1)} \item{fim:}{Fisher Information Matrix}
+saemix.options$algorithms[2] is 1)}
+\item{fim:}{Fisher Information Matrix}
 \item{ll.lin:}{ likelihood calculated by linearisation} }
 }
 \description{
@@ -79,19 +81,20 @@ saemix.options<-list(algorithm=c(1,0,0),seed=632545,save=FALSE,save.graphs=FALSE
 
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-20th meeting of the Population Approach Group in Europe, Athens, Greece
-(2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{SaemixObject}},\code{\link{saemix}}
 }
 \author{
-Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu,
+Emmanuelle Comets \href{mailto:emmanuelle.comets@inserm.fr}{emmanuelle.comets@inserm.fr}, Audrey Lavenu,
 Marc Lavielle.
 }
 \keyword{models}

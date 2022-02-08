@@ -19,10 +19,11 @@ An object of the SaemixData class, representing a longitudinal data structure, u
 
 \describe{
 \item{\code{name.data}}{Object of class \code{"character"}: name of the dataset
-@slot header Object of class \code{"logical"}: whether the dataset/file contains a header. Defaults to TRUE 
+@slot header Object of class \code{"logical"}: whether the dataset/file contains a header. Defaults to TRUE
 @slot sep Object of class \code{"character"}: the field separator character
 @slot na Object of class \code{"character"}: a character vector of the strings which are to be interpreted as NA values
-@slot verbose Object of class \code{"logical"}: if TRUE, the program will display information about the creation of the data object
+@slot messages Object of class \code{"logical"}: if TRUE, the program will display information about the creation of the data object
+@slot automatic Object of class \code{"logical"}: if TRUE, automatic name recognition is on (used at the creation of the object)
 @slot name.group Object of class \code{"character"}: name of the column containing the subject id
 @slot name.predictors Object of class \code{"character"}: name of the column(s) containing the predictors
 @slot name.response Object of class \code{"character"}: name of the column containing the response variable y modelled by predictor(s) x
@@ -44,24 +45,24 @@ An object of the SaemixData class, representing a longitudinal data structure, u
 }}
 
 \section{Objects from the Class}{
- 
+
 An object of the SaemixData class can be created by using the function \code{\link{saemixData}} and contain the following slots:
 }
 
 \section{Methods}{
 
-  \describe{
-    \item{[<-}{\code{signature(x = "SaemixData")}: replace elements of object}
-    \item{[}{\code{signature(x = "SaemixData")}: access elements of object}
-    \item{initialize}{\code{signature(.Object = "SaemixData")}: internal function to initialise object, not to be used}
-    \item{plot}{\code{signature(x = "SaemixData")}: plot the data}
-    \item{print}{\code{signature(x = "SaemixData")}: prints details about the object (more extensive than show)}
-    \item{read}{\code{signature(object = "SaemixData")}: internal function, not to be used }
-    \item{showall}{\code{signature(object = "SaemixData")}: shows all the elements in the object}
-    \item{show}{\code{signature(object = "SaemixData")}: prints details about the object}
-    \item{summary}{\code{signature(object = "SaemixData")}: summary of the data. Returns a list with a number of elements extracted from the dataset (N: the number of subjects; nobs: the total number of observations; nind.obs: a vector giving the number of observations for each subject; id: subject ID; x: predictors; y: response, and, if present in the data, covariates: the covariates (as many lines as observations) and ind.covariates: the individual covariates (one line per individual).}
-    \item{subset}{\code{signature(object = "SaemixData")}: extract part of the data; this function will operate on the rows of the dataset (it can be used for instance to extract the data corresponding to the first ten subjects)}
-	 }
+\describe{
+\item{[<-}{\code{signature(x = "SaemixData")}: replace elements of object}
+\item{[}{\code{signature(x = "SaemixData")}: access elements of object}
+\item{initialize}{\code{signature(.Object = "SaemixData")}: internal function to initialise object, not to be used}
+\item{plot}{\code{signature(x = "SaemixData")}: plot the data}
+\item{print}{\code{signature(x = "SaemixData")}: prints details about the object (more extensive than show)}
+\item{read}{\code{signature(object = "SaemixData")}: internal function, not to be used }
+\item{showall}{\code{signature(object = "SaemixData")}: shows all the elements in the object}
+\item{show}{\code{signature(object = "SaemixData")}: prints details about the object}
+\item{summary}{\code{signature(object = "SaemixData")}: summary of the data. Returns a list with a number of elements extracted from the dataset (N: the number of subjects; nobs: the total number of observations; nind.obs: a vector giving the number of observations for each subject; id: subject ID; x: predictors; y: response, and, if present in the data, covariates: the covariates (as many lines as observations) and ind.covariates: the individual covariates (one line per individual).}
+\item{subset}{\code{signature(object = "SaemixData")}: extract part of the data; this function will operate on the rows of the dataset (it can be used for instance to extract the data corresponding to the first ten subjects)}
+}
 }
 
 \examples{
@@ -87,11 +88,14 @@ saemix.data<-saemixData(name.data=PD1.saemix,header=TRUE,
 
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{saemixData}} \code{\link{SaemixModel}} \code{\link{saemixControl}} \code{\link{saemix}}

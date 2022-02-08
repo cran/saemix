@@ -11,12 +11,14 @@
 \item{recognisednames}{vector of strings, values for automatic recognition}
 
 \item{verbose}{logical, whether to print warning messages}
+
+\item{automatic}{a boolean indicating whether to attempt automatic name recognition when some colum names are missing or wrong (defaults to TRUE)}
 }
 \value{
 a vector with valid names
 }
 \description{
-Helper function, checks if the names given by the user match to the names in the dataset. If not, automatic recognition is attempted.
+Helper function, checks if the names given by the user match to the names in the dataset. If not, automatic recognition is attempted when automatic=TRUE.
 }
 \examples{
 # TODO

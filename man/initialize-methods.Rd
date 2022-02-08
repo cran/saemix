@@ -28,7 +28,8 @@
   name.cens,
   name.occ,
   name.ytype,
-  verbose
+  verbose = TRUE,
+  automatic = TRUE
 )
 
 \S4method{initialize}{SaemixRepData}(.Object, data = NULL, nb.chains = 1)
@@ -39,6 +40,7 @@
   .Object,
   model,
   description,
+  modeltype,
   psi0,
   name.response,
   name.sigma,
@@ -55,6 +57,8 @@
 
 \S4method{initialize}{SaemixRes}(
   .Object,
+  status = "empty",
+  modeltype,
   name.fixed,
   name.random,
   name.sigma,
@@ -107,7 +111,9 @@
 
 \item{name.ytype}{name of the column containing the index of the response}
 
-\item{verbose}{a boolean indicating whether messages should be printed out during the creation of the object (defaults to TRUE)}
+\item{verbose}{a boolean indicating whether messages should be printed out during the creation of the object}
+
+\item{automatic}{a boolean indicating whether to attempt automatic name recognition when some colum names are missing or wrong (defaults to TRUE)}
 
 \item{data}{an SaemixData object}
 
@@ -123,6 +129,8 @@ below).}
 
 \item{description}{a character string, giving a brief description of the
 model or the analysis}
+
+\item{modeltype}{a character string  giving the model used for analysis}
 
 \item{psi0}{a matrix with a number of columns equal to the number of
 parameters in the model, and one (when no covariates are available) or two
@@ -147,19 +155,25 @@ proportional, combined and exponential). Defaults to constant}
 \item{covariate.model}{a matrix giving the covariate model. Defaults to no
 covariate in the model}
 
-\item{covariance.model}{a square matrix of size equal to the number of parameters in the model, 
-giving the variance-covariance matrix of the model: 1s correspond to estimated variances (in the diagonal) 
+\item{covariance.model}{a square matrix of size equal to the number of parameters in the model,
+giving the variance-covariance matrix of the model: 1s correspond to estimated variances (in the diagonal)
 or covariances (off-diagonal elements). Defaults to the identity matrix}
 
 \item{omega.init}{a square matrix of size equal to the number of parameters
 in the model, giving the initial estimate for the variance-covariance matrix
-of the model. Defaults to the identity matrix}
+of the model. The current default is a diagonal matrix with ones for all
+transformed parameters as well as for all untransformed parameters with an
+absolute value smaller than one.  For untransformed parameters greater or
+equal to one, their squared value is used as the corresponding diagonal
+element.}
 
 \item{error.init}{a vector of size 2 giving the initial value of a and b in
 the error model. Defaults to 1 for each estimated parameter in the error model}
 
 \item{name.modpar}{names of the model parameters, if they are not given as
 the column names (or names) of psi0}
+
+\item{status}{string indicating whether a model has been run successfully; set to "empty" at initialisation, used to pass on error messages or fit status}
 
 \item{name.fixed}{a character string  giving the name of the fixed parameters}
 

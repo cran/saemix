@@ -26,7 +26,7 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 #                 domega2=do.call(cbind,rep(list((sqrt(mydiag(omega.eta)))*saemix.options$rw.ini),nb.etas)),diag.omega=mydiag(omega))
 #   opt<-list(stepsize.rw=saemix.options$stepsize.rw,stepsize=stepsize,
 #             proba.mcmc=saemix.options$proba.mcmc,nbiter.mcmc=saemix.options$nbiter.mcmc,
-#             nbiter.sa=saemix.options$nbiter.sa,alpha1.sa=saemix.options$alpha.sa,
+#             nbiter.sa=saemix.options$nbiter.sa,nbiter.map=saemix.options$nbiter.map,alpha1.sa=saemix.options$alpha.sa,
 #             alpha0.sa=10^(-3/saemix.options$nbiter.sa),nbiter.saemix=saemix.options$nbiter.saemix,
 #             maxim.maxiter=saemix.options$maxim.maxiter,flag.fmin=flag.fmin)
   
@@ -38,10 +38,12 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 	# error models :
 	#   constant            y = f + a*e
 	#   proportional        y = f + b*f*e
-	#   combined            y = f + (a+b*f)*e
+	#   combined            y = f + sqrt(a^2+b^2*f^2)*e
 	#   exponential         y = f*exp(a*e)    ( <=>  log(y) = log(f) + a*e )
 	# error models are a + bf described by [a b], [1]=constant coefficient, [2]= proportional coefficient
-	pres<-saemix.model["error.init"]
+	if(saemix.model["modeltype"]=="structural"){
+		pres<-c(saemix.model["error.init"][1],saemix.model["error.init"][2])
+	}
 	
 	# ECO TODO: integrate all this section in the object creation ?
 	# Initialisation: 
@@ -107,10 +109,9 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 #	covariate.estim<-matrix(rep(saemix.model["fixed.estim"],nr.psi0),byrow=TRUE, ncol=length(saemix.model["fixed.estim"]))
 	#if(!is.null(dim(t1))) covariate.estim<-rbind(covariate.estim,t1) 
 #	covariate.estim<-covariate.estim*saemix.model["betaest.model"]
-	# 29/05/2020 - changing definition of covariate.estim to 
+# 29/05/2020 - changing definition of covariate.estim to 
 	covariate.estim<-saemix.model["betaest.model"]
 	covariate.estim[1,]<-saemix.model["fixed.estim"]
-	
 	
 	betas.ini<-fixed.ini[which(saemix.model["betaest.model"]>0)]
 	betas.ini<-matrix(betas.ini,ncol=1)
@@ -137,7 +138,16 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 		if(length(jcov)<=1) mean.phi[,j]<-aj*lambdaj else mean.phi[,j]<-aj%*%lambdaj
 		pfix[j]<-length(lambdaj)
 	}
-	indx.betaI<-cumsum(c(0,pfix[1:(nb.parameters-1)]))+1
+	
+
+	if(nb.parameters>1){
+		indx.betaI<-cumsum(c(0,pfix[1:(nb.parameters-1)]))+1	
+	} else{
+		indx.betaI<-1
+	}
+	
+
+	
 	idx<-1:nb.betas
 	indx.betaC<-idx[is.na(match(idx,indx.betaI))]
 	saemix.model["indx.fix"]<-indx.betaI
@@ -201,7 +211,7 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 	kt<-0
 	omega<-saemix.model["omega.init"]
 	chol.omega<-try(chol(omega[ind.eta,ind.eta]),silent=TRUE)
-	if(is(chol.omega,"try-error")) {
+	if(inherits(chol.omega,"try-error")) {
 		#	cat("ind.eta=",ind.eta,"\n")
 		#	print(saemix.model["omega.init"])
 		#	print(omega[ind.eta,ind.eta])
@@ -228,16 +238,24 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 		itest.phi<-unique(IdM[inan])
 		ltest.phi<-length(itest.phi)
 	}
+
+	if(saemix.model["modeltype"]=="structural"){
 	var.eta<-mydiag(saemix.model["omega.init"])
 	theta0<-c(fixedpsi.ini,var.eta[i1.omega2],pres[saemix.model["indx.res"]])
 	l1<-betas.ini
 	l1[indx.betaI]<-transphi(matrix(l1[indx.betaI],nrow=1),saemix.model["transform.par"])
 	allpar0<-c(l1,var.eta[i1.omega2],pres[ind.res])
-	
+	} else {
+		var.eta<-mydiag(saemix.model["omega.init"])
+		theta0<-c(fixedpsi.ini,var.eta[i1.omega2])
+		l1<-betas.ini
+		l1[indx.betaI]<-transphi(matrix(l1[indx.betaI],nrow=1),saemix.model["transform.par"])
+		allpar0<-c(l1,var.eta[i1.omega2])
+	}
 	# Data - passed on to functions, unchanged
 	Dargs<-list(IdM=IdM, XM=XM, yM=yM, NM=NM, N=N, nobs=saemix.data["ntot.obs"],
 							yobs=saemix.data["data"][,saemix.data["name.response"]],transform.par=saemix.model["transform.par"],
-							error.model=saemix.model["error.model"],structural.model=structural.model , etype.exp=which(saemix.model["error.model"] == "exponential"))
+							error.model=saemix.model["error.model"],structural.model=structural.model , etype.exp=which(saemix.model["error.model"] == "exponential"),modeltype=saemix.model["modeltype"])
 	
 	# List of indices and variables (fixed) - passed on to functions, unchanged
 	nb.parest<-sum(covariate.estim)+ sum(saemix.model["covariance.model"][upper.tri(saemix.model["covariance.model"], diag=TRUE)])+1+as.integer(saemix.model["error.model"]=="combined")
@@ -250,9 +268,15 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 				Mcovariates=Mcovariates, ind.ioM=ind.ioM)
 	# Variability-related elements
 	omega.eta<-omega[ind.eta,ind.eta] # IIV matrix for estimated parameters
-	varList<-list(pres=pres,ind0.eta=ind0.eta,ind.eta=ind.eta,omega=omega, MCOV=MCOV,
-								domega2=do.call(cbind,rep(list((sqrt(mydiag(omega.eta)))*saemix.options$rw.ini),nb.etas)),
-								diag.omega=mydiag(omega))
+	varList<-list()
+	if(saemix.model["modeltype"]=="structural") varList$pres<-pres
+	varList$indind0.eta<-ind0.eta
+	varList$ind.eta<-ind.eta
+	varList$omega<-omega
+	varList$MCOV=MCOV
+	varList$domega2<-do.call(cbind,rep(list((sqrt(mydiag(omega.eta)))*saemix.options$rw.ini),nb.etas))
+	varList$diag.omega<-mydiag(omega)
+
 	# List of options and settings (fixed) - passed on to functions, unchanged
 	stepsize<-rep(1,saemix.options$nbiter.tot)
 	stepsize[(saemix.options$nbiter.saemix[1]+1):saemix.options$nbiter.tot]<-1/
@@ -260,7 +284,7 @@ initialiseMainAlgo<-function(saemix.data,saemix.model,saemix.options) {
 	stepsize[1:saemix.options$nbiter.burn]<-0
 	opt<-list(stepsize.rw=saemix.options$stepsize.rw,stepsize=stepsize,
 						proba.mcmc=saemix.options$proba.mcmc,nbiter.mcmc=saemix.options$nbiter.mcmc,
-						nbiter.sa=saemix.options$nbiter.sa,alpha1.sa=saemix.options$alpha.sa,
+						nbiter.sa=saemix.options$nbiter.sa,nbiter.map=saemix.options$nbiter.map,alpha1.sa=saemix.options$alpha.sa,
 						alpha0.sa=10^(-3/saemix.options$nbiter.sa),nbiter.saemix=saemix.options$nbiter.saemix,
 						maxim.maxiter=saemix.options$maxim.maxiter,flag.fmin=flag.fmin)
 	

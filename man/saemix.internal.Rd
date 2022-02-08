@@ -22,6 +22,8 @@
 \alias{trnd.mlx}
 \alias{gammarnd.mlx}
 \alias{tpdf.mlx}
+\alias{conditional.distribution_c}
+\alias{conditional.distribution_d}
 \title{Internal saemix objects}
 \usage{
 cutoff(x, seuil = .Machine$double.xmin)

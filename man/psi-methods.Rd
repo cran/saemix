@@ -35,10 +35,11 @@ eta(object, type = c("mode", "mean"))
 \arguments{
 \item{object}{an SaemixObject object returned by the \code{\link{saemix}} function}
 
-\item{type}{a string specifying whether to use the MAP (type="mode") or the mean (type="mean") of the conditional distribution of the individual parameters. Defaults to mode}
+\item{type}{a string specifying whether to use the MAP (type="mode") or the mean (type="mean")
+of the conditional distribution of the individual parameters. Defaults to mode}
 }
 \value{
-a matrix with the individual parameters (psi/phi) or the random effects (eta). 
+a matrix with the individual parameters (psi/phi) or the random effects (eta).
 These functions are used to access and output the estimates of
 parameters and random effects. When the object passed to the function does
 not contain these estimates, they are automatically computed. The object is
@@ -62,7 +63,8 @@ More details can be found in the PDF documentation.
 \section{Methods}{
  \describe{
 \item{list("signature(object = \"SaemixObject\")")}{ please refer to the PDF
-documentation for the models} }
+documentation for the models}
+}
 }
 
 \examples{
@@ -93,7 +95,8 @@ saemix.model<-saemixModel(model=model1cpt,
   covariance.model=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),
   omega.init=matrix(c(1,0,0,0,1,0,0,0,1),ncol=3,byrow=TRUE),error.model="constant")
 
-saemix.options<-list(algorithm=c(1,0,0),seed=632545,save=FALSE,save.graphs=FALSE)
+saemix.options<-list(algorithm=c(1,0,0),seed=632545,save=FALSE,save.graphs=FALSE, 
+displayProgress=FALSE)
 
 # Not run (strict time constraints for CRAN)
 # saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
@@ -103,13 +106,14 @@ saemix.options<-list(algorithm=c(1,0,0),seed=632545,save=FALSE,save.graphs=FALSE
 # eta(saemix.fit,type="mean")
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-20th meeting of the Population Approach Group in Europe, Athens, Greece
-(2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{SaemixData}},\code{\link{SaemixModel}},
@@ -117,7 +121,7 @@ Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 \code{\link{plot.saemix}}
 }
 \author{
-Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu,
+Emmanuelle Comets \href{mailto:emmanuelle.comets@inserm.fr}{emmanuelle.comets@inserm.fr}, Audrey Lavenu,
 Marc Lavielle.
 }
 \keyword{methods}

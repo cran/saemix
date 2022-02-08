@@ -20,18 +20,23 @@
 #' the data by the non-linear mixed effect model. A summary of the results is
 #' printed out to the terminal, and, provided the appropriate options have not
 #' been changed, numerical and graphical outputs are saved in a directory.
-#' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
-#' Marc Lavielle.
+#' 
 #' @seealso \code{\link{SaemixData}},\code{\link{SaemixModel}},
 #' \code{\link{SaemixObject}}, \code{\link{saemixControl}},
 #' \code{\link{plot.saemix}}
-#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' @references E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+#' an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 #' 
-#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models. 
+#' Computational Statistics and Data Analysis, 49(4):1020-1038.
 #' 
-#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-#' 20th meeting of the Population Approach Group in Europe, Athens, Greece
-#' (2011), Abstr 2173.
+#' E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece, Abstr 2173.
+#' 
+#' @author Emmanuelle Comets \email{emmanuelle.comets@@inserm.fr}
+#' @author Audrey Lavenu
+#' @author Marc Lavielle
+#' 
 #' @keywords models
 #' @examples
 #' 
@@ -53,7 +58,7 @@
 #' 	  return(ypred)
 #' }
 #' 
-#' saemix.model<-saemixModel(model=model1cpt,
+#' saemix.model<-saemixModel(model=model1cpt,modeltype="structural",
 #'   description="One-compartment model with first-order absorption", 
 #'   psi0=matrix(c(1.,20,0.5,0.1,0,-0.01),ncol=3, byrow=TRUE,
 #'   dimnames=list(NULL, c("ka","V","CL"))),transform.par=c(1,1,1),
@@ -75,7 +80,6 @@
 #' # Shows some diagnostic plots to evaluate the fit
 #' plot(saemix.fit)
 #' }
-#' 
 #' @export saemix
 
 saemix<-function(model,data,control=list()) {
@@ -140,12 +144,21 @@ saemix<-function(model,data,control=list()) {
   betas<-betas.ini<-xinit$betas
   fixed.psi<-xinit$fixedpsi.ini
   var.eta<-varList$diag.omega
-  theta0<-c(fixed.psi,var.eta[Uargs$i1.omega2],varList$pres[Uargs$ind.res])
 
+  if (Dargs$modeltype=="structural"){
+    theta0<-c(fixed.psi,var.eta[Uargs$i1.omega2],varList$pres[Uargs$ind.res])
   parpop<-matrix(data=0,nrow=(saemix.options$nbiter.tot+1),ncol=(Uargs$nb.parameters+length(Uargs$i1.omega2)+length(saemix.model["indx.res"])))
   colnames(parpop)<-c(saemix.model["name.modpar"], saemix.model["name.random"], saemix.model["name.sigma"][saemix.model["indx.res"]])
   allpar<-matrix(data=0,nrow=(saemix.options$nbiter.tot+1), ncol=(Uargs$nb.betas+length(Uargs$i1.omega2)+length(saemix.model["indx.res"])))
   colnames(allpar)<-c(saemix.model["name.fixed"],saemix.model["name.random"], saemix.model["name.sigma"][saemix.model["indx.res"]])
+  } else{
+    theta0<-c(fixed.psi,var.eta[Uargs$i1.omega2])
+    parpop<-matrix(data=0,nrow=(saemix.options$nbiter.tot+1),ncol=(Uargs$nb.parameters+length(Uargs$i1.omega2)))
+    colnames(parpop)<-c(saemix.model["name.modpar"], saemix.model["name.random"])
+    allpar<-matrix(data=0,nrow=(saemix.options$nbiter.tot+1), ncol=(Uargs$nb.betas+length(Uargs$i1.omega2)))
+    colnames(allpar)<-c(saemix.model["name.fixed"],saemix.model["name.random"])
+  }
+  
   parpop[1,]<-theta0
   allpar[1,]<-xinit$allpar0
   
@@ -192,7 +205,7 @@ saemix<-function(model,data,control=list()) {
   }
 
 	# E-step
-  xmcmc<-estep(kiter, Uargs, Dargs, opt, structural.model, mean.phi, varList, DYF, phiM)
+  xmcmc<-estep(kiter, Uargs, Dargs, opt, mean.phi, varList, DYF, phiM)
   varList<-xmcmc$varList
   DYF<-xmcmc$DYF
   phiM<-xmcmc$phiM
@@ -215,15 +228,24 @@ saemix<-function(model,data,control=list()) {
   	l1<-betas.ini
   	l1[Uargs$indx.betaI]<-fixed.psi
   	l1[Uargs$indx.betaC]<-betaC
+
+    if(Dargs$modeltype=="structural") {
   	allpar[(kiter+1),]<-c(l1,var.eta[Uargs$i1.omega2],varList$pres[Uargs$ind.res])
-  } else { #end of loop on if (stepsize[kiter]>0)
+    } else{
+      allpar[(kiter+1),]<-c(l1,var.eta[Uargs$i1.omega2])
+    }
+
+  } else { #end of loop on if(opt$stepsize[kiter]>0)
     allpar[(kiter+1),]<-allpar[kiter,]
   }
+   if(Dargs$modeltype=="structural") {
   theta<-c(fixed.psi,var.eta[Uargs$i1.omega2],varList$pres[Uargs$ind.res])
-  parpop[(kiter+1),]<-theta
-  
+    } else{
+      theta<-c(fixed.psi,var.eta[Uargs$i1.omega2])
+    }
   # End of loop on kiter
   }
+  
   etaM<-xmcmc$etaM # only need etaM here (re-created in estep otherwise)
   if(saemix.options$warnings) cat("\n    Minimisation finished\n")
   if(saemix.options$warnings) print(date())
@@ -262,7 +284,11 @@ saemix<-function(model,data,control=list()) {
   saemix.model["indx.omega"]<-Uargs$i1.omega2
 
 # Filling in result object
-    saemix.res<-new(Class="SaemixRes",name.fixed=saemix.model["name.fixed"], name.random=saemix.model["name.random"],name.sigma=saemix.model["name.sigma"], fixed.effects=c(fixed.effects),fixed.psi=c(fixed.psi),betas=betas,betaC=betaC, omega=varList$omega,respar=varList$pres,cond.mean.phi=cond.mean.phi,cond.var.phi=cond.var.phi, mean.phi=mean.phi, phi=phi,phi.samp=phi.samp,parpop=parpop,allpar=allpar,MCOV=varList$MCOV)
+  if(Dargs$modeltype=="structural") {
+    saemix.res<-new(Class="SaemixRes",status="fitted",modeltype=Dargs$modeltype,name.fixed=saemix.model["name.fixed"], name.random=saemix.model["name.random"],name.sigma=saemix.model["name.sigma"], fixed.effects=c(fixed.effects),fixed.psi=c(fixed.psi),betas=betas,betaC=betaC, omega=varList$omega,respar=varList$pres,cond.mean.phi=cond.mean.phi,cond.var.phi=cond.var.phi, mean.phi=mean.phi, phi=phi,phi.samp=phi.samp,parpop=parpop,allpar=allpar,MCOV=varList$MCOV)
+  } else{
+    saemix.res<-new(Class="SaemixRes",status="fitted",modeltype=Dargs$modeltype,name.fixed=saemix.model["name.fixed"], name.random=saemix.model["name.random"],name.sigma=saemix.model["name.sigma"], fixed.effects=c(fixed.effects),fixed.psi=c(fixed.psi),betas=betas,betaC=betaC, omega=varList$omega,cond.mean.phi=cond.mean.phi,cond.var.phi=cond.var.phi, mean.phi=mean.phi, phi=phi,phi.samp=phi.samp,parpop=parpop,allpar=allpar,MCOV=varList$MCOV)
+  }
   saemix.res["indx.res"]<-Uargs$ind.res
   saemix.res["indx.fix"]<-Uargs$indx.betaI
   saemix.res["indx.cov"]<-Uargs$indx.betaC
@@ -283,28 +309,28 @@ saemix<-function(model,data,control=list()) {
 # a la fin: mais verifier, pe pb de distribution ??? ie allpar sur l'echelle des betas et pas parpop ? a verifier
 # saemix.res["allpar"]<-allpar
 # saemix.res["parpop"]<-allpar[,-c(indx.betaC)]
-
 #### Final computations
 # Compute the MAP estimates of the PSI_i's 
   if(saemix.options$map) {
     x<-try(saemixObject<-map.saemix(saemixObject))
-    if(class(x)=="try-error" & saemixObject@options$warnings) cat("Problem estimating the MAP parameters\n")
+    if(inherits(x,"try-error") & saemixObject@options$warnings) message("Problem estimating the MAP parameters\n") else 
+      if(!saemix.options$save.graphs) saemixObject<-saemix.predict(saemixObject, type=c("ipred","ppred")) # if no graphs, compute predictions all the same
   }
   
 # Compute the Fisher Information Matrix & update saemix.res
   if(saemix.options$fim) {
     x<-try(saemixObject<-fim.saemix(saemixObject))
-    if(class(x)=="try-error" & saemixObject@options$warnings) cat("Problem estimating the FIM\n")
+    if(inherits(x,"try-error") & saemixObject@options$warnings) message("Problem estimating the FIM\n")
   }
   
 # Estimate the log-likelihood via importance Sampling/Gaussian quadrature
   if(saemix.options$ll.is) {
     x<-try(saemixObject<-llis.saemix(saemixObject))
-    if(class(x)=="try-error" & saemixObject@options$warnings) cat("Problem estimating the likelihood by IS\n")
+    if(inherits(x,"try-error") & saemixObject@options$warnings) message("Problem estimating the likelihood by IS\n")
   }
   if(saemix.options$ll.gq) {
     x<-try(saemixObject<-llgq.saemix(saemixObject))
-    if(class(x)=="try-error" & saemixObject@options$warnings) cat("Problem estimating the likelihood by GQ\n")
+    if(inherits(x,"try-error") & saemixObject@options$warnings) message("Problem estimating the likelihood by GQ\n")
   }
   
 #### Pretty printing the results (TODO finish in particular cov2cor)
@@ -317,25 +343,25 @@ saemix<-function(model,data,control=list()) {
      if(!xsave) {
 # Check that we're not trying to create a directory with the same name as a file
        if(!file_test("-d",saemix.options$directory)) {
-         if(saemix.options$warnings) cat("Unable to create directory",saemix.options$directory)
+         if(saemix.options$warnings) message("Unable to create directory",saemix.options$directory)
          saemix.options$directory<-"newdir"
          dir.create(saemix.options$directory)         
          xsave<-file_test("-d",saemix.options$directory)
          if(!xsave) {
            saemix.options$directory<-""
            xsave<-TRUE
-           if(saemix.options$warnings) cat(", saving in current directory.\n")
-         } else {if(saemix.options$warnings) cat(", saving results in newdir instead.\n")}
+           if(saemix.options$warnings) message(", saving in current directory.\n")
+         } else {if(saemix.options$warnings) message(", saving results in newdir instead.\n")}
        } else {
        xsave<-TRUE
-       if(saemix.options$warnings) cat("Overwriting files in directory",saemix.options$directory,"\n")
+       if(saemix.options$warnings) message("Overwriting files in directory",saemix.options$directory,"\n")
        }
      }
    }
   if(saemix.options$save) {
     namres<-ifelse(saemix.options$directory=="","pop_parameters.txt", file.path(saemix.options$directory,"pop_parameters.txt"))
     xtry<-try(sink(namres))
-    if(!is(xtry,"try-error")) {
+    if(!inherits(xtry,"try-error")) {
     print(saemixObject)
     sink()
     namres<-ifelse(saemix.options$directory=="","indiv_parameters.txt", file.path(saemix.options$directory,"indiv_parameters.txt"))
@@ -348,18 +374,16 @@ saemix<-function(model,data,control=list()) {
        message("Unable to save results, check writing permissions and/or path to directory.\n")
      }
   }
-
 # ECO TODO finish, adding all
   if(saemix.options$save.graphs) {
     saemixObject<-saemix.predict(saemixObject)
     if(saemix.options$directory=="") namgr<-"diagnostic_graphs.ps" else
       namgr<-file.path(saemix.options$directory,"diagnostic_graphs.ps")
     xtry<-try(postscript(namgr,horizontal=TRUE))
-    if(!is(xtry,"try-error")) {
+    if(!inherits(xtry,"try-error")) {
       oldpar <- par(no.readonly = TRUE)    # code line i
       on.exit(par(oldpar))            # code line i + 1 
       par(mfrow=c(1,1))
-    
       try(plot(saemixObject,plot.type="data"))
       
       try(plot(saemixObject,plot.type="convergence"))
@@ -391,6 +415,5 @@ saemix<-function(model,data,control=list()) {
   }
 
   options(warn=opt.warn)
-
   return(saemixObject)
 }

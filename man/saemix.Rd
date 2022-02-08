@@ -54,7 +54,7 @@ model1cpt<-function(psi,id,xidep) {
 	  return(ypred)
 }
 
-saemix.model<-saemixModel(model=model1cpt,
+saemix.model<-saemixModel(model=model1cpt,modeltype="structural",
   description="One-compartment model with first-order absorption", 
   psi0=matrix(c(1.,20,0.5,0.1,0,-0.01),ncol=3, byrow=TRUE,
   dimnames=list(NULL, c("ka","V","CL"))),transform.par=c(1,1,1),
@@ -76,16 +76,16 @@ psi(saemix.fit)
 # Shows some diagnostic plots to evaluate the fit
 plot(saemix.fit)
 }
-
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-20th meeting of the Population Approach Group in Europe, Athens, Greece
-(2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 }
 \seealso{
 \code{\link{SaemixData}},\code{\link{SaemixModel}},
@@ -93,7 +93,10 @@ Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
 \code{\link{plot.saemix}}
 }
 \author{
-Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu,
-Marc Lavielle.
+Emmanuelle Comets \email{emmanuelle.comets@inserm.fr}
+
+Audrey Lavenu
+
+Marc Lavielle
 }
 \keyword{models}

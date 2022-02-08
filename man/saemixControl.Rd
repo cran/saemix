@@ -10,6 +10,7 @@ saemixControl(
   ll.is = TRUE,
   ll.gq = FALSE,
   nbiter.saemix = c(300, 100),
+  nbiter.sa = NA,
   nb.chains = 1,
   fix.seed = TRUE,
   seed = 23456,
@@ -17,9 +18,10 @@ saemixControl(
   nu.is = 4,
   print.is = FALSE,
   nbdisplay = 100,
-  displayProgress = TRUE,
+  displayProgress = FALSE,
   nbiter.burn = 5,
-  nbiter.mcmc = c(2, 2, 2),
+  nbiter.map = 5,
+  nbiter.mcmc = c(2, 2, 2, 0),
   proba.mcmc = 0.4,
   stepsize.rw = 0.4,
   rw.init = 0.5,
@@ -41,7 +43,7 @@ saemixControl(
 \arguments{
 \item{map}{a boolean specifying whether to estimate the individual parameters (MAP estimates). Defaults to TRUE}
 
-\item{fim}{a boolean specifying whether to estimate the Fisher Information Matrix and derive the estimation errors 
+\item{fim}{a boolean specifying whether to estimate the Fisher Information Matrix and derive the estimation errors
 for the parameters. Defaults to TRUE. The linearised approximation to the log-likelihood is also computed in the process}
 
 \item{ll.is}{a boolean specifying whether to estimate the log-likelihood by importance sampling. Defaults to TRUE}
@@ -49,10 +51,15 @@ for the parameters. Defaults to TRUE. The linearised approximation to the log-li
 \item{ll.gq}{a boolean specifying whether to estimate the log-likelihood by Gaussian quadrature. Defaults to FALSE}
 
 \item{nbiter.saemix}{nb of iterations in each step (a vector containing 2
-elements)}
+elements, nbiter.saemix[1] for the exploration phase of the algorithm (K1) and nbiter.saemix[2]
+for the smoothing phase (K2))}
 
-\item{nb.chains}{nb of chains to be run in parallel in the MCMC algorithm.
-Defaults to 1.}
+\item{nbiter.sa}{nb of iterations subject to simulated annealing (defaults to nbiter.saemix[1]/2,
+will be cut down to K1=nbiter.saemix[1] if greater than that value). We recommend to stop
+simulated annealing before the end of the exploration phase (nbiter.saemix[1]).}
+
+\item{nb.chains}{nb of chains to be run in parallel in the MCMC algorithm
+(defaults to 1)}
 
 \item{fix.seed}{TRUE (default) to use a fixed seed for the random number
 generator. When FALSE, the random number generator is initialised using a
@@ -78,20 +85,24 @@ sampling is produced and updated every 500 samples. Defaults to FALSE}
 \item{displayProgress}{when TRUE, the convergence plots are plotted after
 every nbdisplay iteration, and a dot is written in the terminal window to
 indicate progress. When FALSE, plots are not shown and the algorithm runs
-silently. Defaults to TRUE}
+silently. Defaults to FALSE}
 
 \item{nbiter.burn}{nb of iterations for burning}
+
+\item{nbiter.map}{nb of iterations of the MAP kernel (4th kernel) to run at the beginning
+of the estimation process (defaults to nbiter.saemix[1]/10 if nbiter.mcmc[4] is more than 0)
+(EXPERIMENTAL, see Karimi et al. 2019 for details)}
 
 \item{nbiter.mcmc}{nb of iterations in each kernel during the MCMC step}
 
 \item{proba.mcmc}{probability of acceptance}
 
-\item{stepsize.rw}{stepsize for kernels q2 and q3. Defaults to 0.4}
+\item{stepsize.rw}{stepsize for kernels q2 and q3 (defaults to 0.4)}
 
-\item{rw.init}{initial variance parameters for kernels. Defaults to 0.5}
+\item{rw.init}{initial variance parameters for kernels (defaults to 0.5)}
 
 \item{alpha.sa}{parameter controlling cooling in the Simulated Annealing
-algorithm. Defaults to 0.97}
+algorithm (defaults to 0.97)}
 
 \item{nnodes.gq}{number of nodes to use for the Gaussian quadrature when
 computing the likelihood with this method (defaults to 12)}
@@ -106,7 +117,7 @@ fixed effects in the algorithm. Defaults to 100}
 compute npde. Defaults to 1000}
 
 \item{nb.simpred}{number of simulations used to compute mean predictions
-(ppred element), taken as a random sample within the nb.sim simulations used
+(ypred element), taken as a random sample within the nb.sim simulations used
 for npde}
 
 \item{ipar.lmcmc}{number of iterations required to assume convergence for
@@ -147,30 +158,32 @@ directly.
 }
 \examples{
 
-
 # All default options
 saemix.options<-saemixControl()
 
 # All default options, changing seed
 saemix.options<-saemixControl(seed=632545)
 
-
 }
 \references{
-Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 
-Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models.
+Computational Statistics and Data Analysis, 49(4):1020-1038.
 
-Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-20th meeting of the Population Approach Group in Europe, Athens, Greece
-(2011), Abstr 2173.
+E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the
+Population Approach Group in Europe, Athens, Greece, Abstr 2173.
+
+B Karimi, M Lavielle , E Moulines E  (2019). f-SAEM: A fast Stochastic Approximation of the EM algorithm for nonlinear mixed effects models.
+Computational Statistics & Data Analysis, 141:123-38
 }
 \seealso{
 \code{\link{SaemixData}},\code{\link{SaemixModel}},
 \code{\link{SaemixObject}}, \code{\link{saemix}}
 }
 \author{
-Emmanuelle Comets <emmanuelle.comets@inserm.fr>, Audrey Lavenu,
+Emmanuelle Comets \href{mailto:emmanuelle.comets@inserm.fr}{emmanuelle.comets@inserm.fr}, Audrey Lavenu,
 Marc Lavielle.
 }
 \keyword{models}

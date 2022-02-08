@@ -38,10 +38,15 @@ NULL
 #'     \item{show}{\code{signature(object = "SaemixObject")}: prints details about the object}
 #'     \item{summary}{\code{signature(object = "SaemixObject")}: summary of the object. Returns a list with a number of elements extracted from the object.}
 #' 	 }
-#' @references Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear  mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' @references E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+#' an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 #' 
-#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
-#' Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
+#' E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models. 
+#' Computational Statistics and Data Analysis, 49(4):1020-1038.
+#' 
+#' E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece, Abstr 2173.
+#' 
 #' @author Emmanuelle Comets \email{emmanuelle.comets@@inserm.fr}
 #' @author Audrey Lavenu
 #' @author Marc Lavielle.
@@ -151,6 +156,7 @@ setMethod(
     opt<-saemixControl()
     if(length(options)>0) {
     for(i in names(options)) opt[i]<-options[i]
+    while(length(options["nbiter.mcmc"][[1]])<4) options["nbiter.mcmc"][[1]]<-c(options["nbiter.mcmc"][[1]],0) # nb of kernels now 4, complete if shorter
       if(!opt$fix.seed) {
       rm(.Random.seed)
       runif(1)
@@ -170,11 +176,11 @@ setMethod(
       cat("Value of L_MCMC too small, setting it to 2 (computation of the conditional means and variances of the individual parameters)\n")
     }
 
-    if(is.null(opt$nbiter.sa)){
-      opt$nbiter.sa<-round(opt$nbiter.saemix[1]/2)
-    } else{
-      opt$nbiter.sa<-max(1,opt$nbiter.sa)
-    }
+    # if(is.null(opt$nbiter.sa)){
+    #   opt$nbiter.sa<-round(opt$nbiter.saemix[1]/2)
+    # } else{
+    #   opt$nbiter.sa<-max(1,opt$nbiter.sa)
+    # }
 
     opt$nbiter.tot<-sum(opt$nbiter.saemix)
     .Object@options<-opt
@@ -210,16 +216,23 @@ setMethod(
 #' @param ll.is a boolean specifying whether to estimate the log-likelihood by importance sampling. Defaults to TRUE
 #' @param ll.gq a boolean specifying whether to estimate the log-likelihood by Gaussian quadrature. Defaults to FALSE
 #' @param nbiter.saemix nb of iterations in each step (a vector containing 2
-#' elements)
-#' @param nb.chains nb of chains to be run in parallel in the MCMC algorithm.
-#' Defaults to 1.
+#' elements, nbiter.saemix\[1\] for the exploration phase of the algorithm (K1) and nbiter.saemix\[2\]
+#' for the smoothing phase (K2))
+#' @param nb.chains nb of chains to be run in parallel in the MCMC algorithm
+#' (defaults to 1)
 #' @param nbiter.burn nb of iterations for burning
+#' @param nbiter.map nb of iterations of the MAP kernel (4th kernel) to run at the beginning 
+#' of the estimation process (defaults to nbiter.saemix\[1\]/10 if nbiter.mcmc\[4\] is more than 0) 
+#' (EXPERIMENTAL, see Karimi et al. 2019 for details)
 #' @param nbiter.mcmc nb of iterations in each kernel during the MCMC step
+#' @param nbiter.sa nb of iterations subject to simulated annealing (defaults to nbiter.saemix\[1\]/2, 
+#' will be cut down to K1=nbiter.saemix\[1\] if greater than that value). We recommend to stop 
+#' simulated annealing before the end of the exploration phase (nbiter.saemix\[1\]).
 #' @param proba.mcmc probability of acceptance
-#' @param stepsize.rw stepsize for kernels q2 and q3. Defaults to 0.4
-#' @param rw.init initial variance parameters for kernels. Defaults to 0.5
+#' @param stepsize.rw stepsize for kernels q2 and q3 (defaults to 0.4)
+#' @param rw.init initial variance parameters for kernels (defaults to 0.5)
 #' @param alpha.sa parameter controlling cooling in the Simulated Annealing
-#' algorithm. Defaults to 0.97
+#' algorithm (defaults to 0.97)
 #' @param fix.seed TRUE (default) to use a fixed seed for the random number
 #' generator. When FALSE, the random number generator is initialised using a
 #' new seed, created from the current time.  Hence, different sessions started
@@ -238,7 +251,7 @@ setMethod(
 #' @param displayProgress when TRUE, the convergence plots are plotted after
 #' every nbdisplay iteration, and a dot is written in the terminal window to
 #' indicate progress. When FALSE, plots are not shown and the algorithm runs
-#' silently. Defaults to TRUE
+#' silently. Defaults to FALSE
 #' @param nnodes.gq number of nodes to use for the Gaussian quadrature when
 #' computing the likelihood with this method (defaults to 12)
 #' @param nsd.gq span (in SD) over which to integrate when computing the
@@ -248,7 +261,7 @@ setMethod(
 #' @param nb.sim number of simulations to perform to produce the VPC plots or
 #' compute npde. Defaults to 1000
 #' @param nb.simpred number of simulations used to compute mean predictions
-#' (ppred element), taken as a random sample within the nb.sim simulations used
+#' (ypred element), taken as a random sample within the nb.sim simulations used
 #' for npde
 #' @param ipar.lmcmc number of iterations required to assume convergence for
 #' the conditional estimates. Defaults to 50
@@ -263,20 +276,27 @@ setMethod(
 #' @param directory the directory in which to save the results. Defaults to
 #' "newdir" in the current directory
 #' @param warnings whether warnings should be output during the fit. Defaults to FALSE
+#' 
 #' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
 #' Marc Lavielle.
+#' 
 #' @seealso \code{\link{SaemixData}},\code{\link{SaemixModel}},
 #' \code{\link{SaemixObject}}, \code{\link{saemix}}
-#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
 #' 
-#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' @references E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+#' an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 #' 
-#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-#' 20th meeting of the Population Approach Group in Europe, Athens, Greece
-#' (2011), Abstr 2173.
+#' E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models. 
+#' Computational Statistics and Data Analysis, 49(4):1020-1038.
+#' 
+#' E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece, Abstr 2173.
+#' 
+#' B Karimi, M Lavielle , E Moulines E  (2019). f-SAEM: A fast Stochastic Approximation of the EM algorithm for nonlinear mixed effects models.
+#' Computational Statistics & Data Analysis, 141:123-38
+#' 
 #' @keywords models
 #' @examples
-#' 
 #' 
 #' # All default options
 #' saemix.options<-saemixControl()
@@ -284,10 +304,9 @@ setMethod(
 #' # All default options, changing seed
 #' saemix.options<-saemixControl(seed=632545)
 #' 
-#' 
 #' @export saemixControl
 
-saemixControl<-function(map=TRUE,fim=TRUE,ll.is=TRUE,ll.gq=FALSE,nbiter.saemix=c(300,100), nb.chains=1,fix.seed=TRUE,seed=23456,nmc.is=5000,nu.is=4, print.is=FALSE,nbdisplay=100,displayProgress=TRUE,nbiter.burn=5, nbiter.mcmc=c(2,2,2),proba.mcmc=0.4,stepsize.rw=0.4,rw.init=0.5,alpha.sa=0.97,  nnodes.gq=12,nsd.gq=4,maxim.maxiter=100,nb.sim=1000,nb.simpred=100, ipar.lmcmc=50,ipar.rmcmc=0.05, print=TRUE, save=TRUE, save.graphs=TRUE,directory="newdir",warnings=FALSE) {
+saemixControl<-function(map=TRUE,fim=TRUE,ll.is=TRUE,ll.gq=FALSE,nbiter.saemix=c(300,100), nbiter.sa=NA, nb.chains=1,fix.seed=TRUE,seed=23456,nmc.is=5000,nu.is=4, print.is=FALSE, nbdisplay=100, displayProgress=FALSE, nbiter.burn=5,nbiter.map=5, nbiter.mcmc=c(2,2,2,0),proba.mcmc=0.4,stepsize.rw=0.4,rw.init=0.5,alpha.sa=0.97,  nnodes.gq=12,nsd.gq=4,maxim.maxiter=100,nb.sim=1000,nb.simpred=100, ipar.lmcmc=50,ipar.rmcmc=0.05, print=TRUE, save=TRUE, save.graphs=TRUE,directory="newdir",warnings=FALSE) {
   if(fix.seed) seed<-seed else {
     rm(.Random.seed)
     runif(1)
@@ -297,8 +316,16 @@ saemixControl<-function(map=TRUE,fim=TRUE,ll.is=TRUE,ll.gq=FALSE,nbiter.saemix=c
     ipar.lmcmc<-2
     cat("Value of L_MCMC too small, setting it to 2 (computation of the conditional means and variances of the individual parameters)\n")
   }
-  list(map=map,fim=fim,ll.is=ll.is,ll.gq=ll.gq,nbiter.saemix=nbiter.saemix, nbiter.burn=nbiter.burn,nb.chains=nb.chains,fix.seed=fix.seed,seed=seed, nmc.is=nmc.is,nu.is=nu.is,print.is=print.is, nbdisplay=nbdisplay,displayProgress=displayProgress,print=print,save=save, save.graphs=save.graphs,directory=directory,warnings=warnings, nbiter.mcmc=nbiter.mcmc,proba.mcmc=proba.mcmc,stepsize.rw=stepsize.rw, rw.init=rw.init,alpha.sa=alpha.sa,nnodes.gq=nnodes.gq,nsd.gq=nsd.gq, maxim.maxiter=maxim.maxiter,nb.sim=nb.sim,nb.simpred=nb.simpred,
-ipar.lmcmc=ipar.lmcmc,ipar.rmcmc=ipar.rmcmc)
+  if(is.na(nbiter.sa)) nbiter.sa<-nbiter.saemix[1]/2
+  if(nbiter.sa>nbiter.saemix[1]) {
+    if(warnings) message("The number of iterations for the simulated annealing should be lower or equal to K1, setting it to nbiter.saemix[1]. We advise setting it to nbiter.saemix[1]/2.\n")
+    nbiter.sa<-nbiter.saemix[1]
+  }
+  list(map=map,fim=fim,ll.is=ll.is,ll.gq=ll.gq,nbiter.saemix=nbiter.saemix, nbiter.sa=nbiter.sa, nbiter.burn=nbiter.burn, nbiter.map=nbiter.map,nb.chains=nb.chains,
+       fix.seed=fix.seed,seed=seed, nmc.is=nmc.is,nu.is=nu.is,print.is=print.is, nbdisplay=nbdisplay,displayProgress=displayProgress,
+       print=print,save=save, save.graphs=save.graphs,directory=directory,warnings=warnings, nbiter.mcmc=nbiter.mcmc,proba.mcmc=proba.mcmc,
+       stepsize.rw=stepsize.rw, rw.init=rw.init,alpha.sa=alpha.sa,nnodes.gq=nnodes.gq,nsd.gq=nsd.gq, maxim.maxiter=maxim.maxiter,
+       nb.sim=nb.sim,nb.simpred=nb.simpred, ipar.lmcmc=ipar.lmcmc,ipar.rmcmc=ipar.rmcmc)
 }
 
 ####################################################################################
@@ -307,7 +334,7 @@ ipar.lmcmc=ipar.lmcmc,ipar.rmcmc=ipar.rmcmc)
 
 ##' Get/set methods for SaemixObject object
 ##' 
-##' Access slots of a SaemixObject object using the object["slot"] format
+##' Access slots of a SaemixObject object using the object\["slot"\] format
 ##' 
 #' @param x object
 #' @param i element to be replaced
@@ -370,7 +397,7 @@ setReplaceMethod(
 
 setMethod("summary","SaemixObject",
   function(object, print=TRUE, ...) {
-    if(length(object@results@fixed.effects)==0) {
+    if(object@results@status %in% c("empty")) {
       cat("Object of class SaemixObject, no fit performed yet.\n")
       return()
     }
@@ -380,11 +407,20 @@ setMethod("summary","SaemixObject",
     cat("-----------------  Fixed effects  ------------------\n")
     cat("----------------------------------------------------\n")
     }
+#    browser()
     if(length(object@results@se.fixed)==0) {
+       if(object@model@modeltype=="structural") {
       tab<-data.frame(c(object@results@name.fixed, object@results@name.sigma[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]))
+        }else{
+          tab<-data.frame(c(object@results@name.fixed), c(object@results@fixed.effects))
+        }
       colnames(tab)<-c("Parameter","Estimate")
     } else {
+       if(object@model@modeltype=="structural") {
       tab<-data.frame(c(object@results@name.fixed, object@results@name.sigma[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]),c(object@results@se.fixed,object@results@se.respar[object@results@indx.res]), stringsAsFactors=FALSE)
+        }else{
+            tab<-data.frame(c(object@results@name.fixed), c(object@results@fixed.effects),c(object@results@se.fixed), stringsAsFactors=FALSE)
+        }
       tab<-cbind(tab,100*abs(as.double(tab[,3])/as.double(tab[,2])))
       colnames(tab)<-c("Parameter","Estimate","SE","CV(%)")
       if(length(object@results@indx.cov)>0) {
@@ -473,7 +509,7 @@ setMethod("summary","SaemixObject",
     coef<-list(fixed=tab.fix[1:npar,2],random=list(map.psi=object@results@map.psi, cond.mean.psi=tab))
     sigma<-tab.fix[-c(1:npar),2]
 
-    res<-list(fixed.effects=tab.fix,sigma=sigma,random.effects=tab.random, correlation.matrix=tab.corr,logLik=tab.ll,coefficients=coef)
+    res<-list(modeltype=object@model@modeltype,fixed.effects=tab.fix,sigma=sigma,random.effects=tab.random, correlation.matrix=tab.corr,logLik=tab.ll,coefficients=coef)
     if(length(object@results@fim)>0) res$FIM<-object@results@fim
     res$data<-list(N=object@data@N,nobs=list(ntot=object@data@ntot.obs, nind=object@data@nind.obs),data=object@data@data)
     if(length(object@results@ypred)>0 | length(object@results@ipred)>0  | length(object@results@ppred)>0 | length(object@results@icpred)>0) {
@@ -628,6 +664,7 @@ setMethod("showall","SaemixObject",
     cat("    Number of iterations: ",st1,"\n")
     cat("        nb of iterations for SA: ",object@options$nbiter.sa,"\n")
     cat("        nb of burning iterations: ",object@options$nbiter.burn,"\n")
+    cat("        nb of map kernel iterations: ",object@options$nbiter.map,"\n")
     cat("    Seed:\n")
     cat("        setting a random seed: ",!object@options$fix.seed,"\n")
     cat("        seed for the random number generator: ",object@options$seed,"\n")
@@ -680,14 +717,16 @@ setMethod("showall","SaemixObject",
 #' @rdname predict-methods
 #' 
 #' @param object an SaemixObject
-#' @param newdata an optional dataframe for which predictions are desired
-#' @param type the type of predictions (ipred= individual, ppred= mean of the population predictions, ypred=population predictions obtained with the population estimates, icpred=conditional predictions). With newdata, individual parameters can be estimated if the new data contains observations; otherwise, predictions correspond to the population predictions ypred, and type is ignored.
+#' @param newdata an optional dataframe for which predictions are desired. If newdata is given, it must contain the predictors needed for the model in object
+#' @param type the type of predictions (ipred= individual, ppred=population predictions obtained with the population estimates, ypred=mean of the population predictions, icpred=conditional predictions). With newdata, individual parameters can be estimated if the new data contains observations; otherwise, predictions correspond to the population predictions ppred, and type is ignored.
 #' @param se.fit whether the SE are to be taken into account in the model predictions
 #' @param ... additional arguments passed on to fitted()
 #' 
-# The default is to return individual predictions using MAP. If newdata is given and does not have response data, population predictions are returned instead.
+#' @return a vector or a dataframe (if more than one type) with the corresponding predictions for each observation in the dataframe
 #' 
 #' @exportMethod predict
+
+# Default is to return individual predictions using MAP. If newdata is given and does not have response data, population predictions are returned instead.
 
 setMethod(f="predict",
           signature="SaemixObject",
@@ -701,7 +740,7 @@ setMethod(f="predict",
             saemix.data<-object["data"]
             saemix.model<-object["model"]
             #    se.fit<-match.arg(se.fit) # doesn't work with logical type, change
-            #    if(se.fit) cat("Currently predict() does not handle argument se.fit=TRUE.\n")
+            #    if(se.fit & object@options$warnings) message("Currently predict() does not handle argument se.fit=TRUE.\n")
             if(missing(newdata)) { # Return predictions from fitted object
               xpred<-fitted(object,type,...)
               if(length(xpred)==0) {
@@ -717,65 +756,91 @@ setMethod(f="predict",
               if(type %in% c("ipred","icpred")) {
                 if(length(grep(saemix.data["name.response"],colnames(newdata)))==0) {
                   if(object["options"]$warnings) cat("Observed",saemix.data["name.response"],"in the new subjects are required to estimate individual parameters. The population predictions will be computed instead.\n")
-                  type<-"ypred"
+                  type<-"ppred"
                 }
               }
               has.y<-grep(saemix.data["name.response"],colnames(newdata))
-              listpred<-saemixpredict.newdata(object,newdata,type=type)
+              if(length(has.y)==0 & saemix.model["modeltype"]=="likelihood") {
+                if(object["options"]$warnings) cat("Please provide values of the response to obtain predictions for a model defined by loglikelihood\n")
+                return()
+              }
+              listpred<-saemixPredictNewdata(object,newdata,type=type)
               xpred<-listpred$predictions[,type]
             }
             return(xpred)
           }
 )
+
 #' Compute model predictions after an saemix fit
 #' 
-#' In nonlinear mixed effect models, different types of predictions may be obtained, including individual predictions and population predictions
+#' In nonlinear mixed effect models, different types of predictions may be obtained, including individual predictions and population predictions.
+#' This function takes an SaemixObject and adds any missing predictions for maximum a posteriori and conditional mean estimations of the individual
+#' parameters, and for the different types of individual and population predictions for the response variable.
+#' 
 #' @param object an SaemixObject object
+#' @param type the type of predictions (ipred= individual, ppred=population predictions obtained with the population estimates, 
+#' ypred=mean of the population predictions, icpred=conditional predictions). 
+#' By default, computes all the predictions and residuals, along with the corresponding parameter estimates
+#' 
 #' @return an updated SaemixObject object
+#' 
+#' @details This function is used internally by saemix to automatically compute a number of elements needed for diagnostic plots.
+#' It is normally executed directly during a call to saemix() but can be called to add residuals
+#' 
 #' @keywords methods
 #' @export saemix.predict
 
-saemix.predict<-function(object) {
-  if(length(object["results"]["map.psi"])==0)
+saemix.predict<-function(object, type=c("ipred", "ypred", "ppred", "icpred")) {
+  type<-intersect(type, c("ipred", "ypred", "ppred", "icpred"))
+  # Estimate individual parameters
+  if(length(object["results"]["map.psi"])==0 & ("ipred" %in% type))
     object<-map.saemix(object)
   # en principe n'arrive jamais car on les calcule pdt le fit...
-  if(length(object["results"]["cond.mean.phi"])==0)
+  if(length(object["results"]["cond.mean.phi"])==0 & ("icpred" %in% type))
     object<-conddist.saemix(object)
   saemix.res<-object["results"]
+  
+  # Population predictions using the population parameters [ f(mu) ] - always computed
   xind<-object["data"]["data"][,c(object["data"]["name.predictors"],object["data"]["name.cens"],object["data"]["name.mdv"],object["data"]["name.ytype"]),drop=FALSE]
   # If exponential model, this is the transformed data
   yobs<-object["data"]["data"][,object["data"]["name.response"]]
-
   index<-object["data"]["data"][,"index"]
-  # Individual predictions
-  ipred<-object["model"]["model"](saemix.res["map.psi"],index,xind)
-  ires<-object["data"]["data"][,object["data"]["name.response"]]-ipred
-  psiM<-transphi(saemix.res["cond.mean.phi"],object["model"]["transform.par"])
-  icond.pred<-object["model"]["model"](psiM,index,xind)
-  saemix.res["ipred"]<-ipred
-  saemix.res["icpred"]<-icond.pred
-  # Individual weighted residuals
-  pres<-saemix.res["respar"]
-  gpred<-error(ipred,pres,xind$ytype)
-  iwres<-(ipred-yobs)/gpred
-  gpred<-error(icond.pred,pres,xind$ytype)
-  icwres<-(icond.pred-yobs)/gpred
-  saemix.res["iwres"]<-iwres
-  saemix.res["icwres"]<-icwres
-  # Population predictions using the population parameters [ f(mu) ]
   psiM<-transphi(saemix.res["mean.phi"],object["model"]["transform.par"])
-  ypred<-object["model"]["model"](psiM,index,xind)
-  saemix.res["ypred"]<-unname(ypred)
-  if(length(saemix.res["predictions"])==0) 
-    saemix.res["predictions"]<-data.frame(ypred=ypred,ipred=ipred,icpred=icond.pred,ires=ires,iwres=iwres,icwres=icwres) else {
-      saemix.res["predictions"]$ypred<-ypred
+  ppred<-object["model"]["model"](psiM,index,xind)
+  saemix.res["ppred"]<-unname(ppred)
+  if(length(saemix.res["predictions"])==0)
+    saemix.res["predictions"]<-data.frame(ppred=ppred) # create dataframe for predictions if not yet available
+  
+  # Compute predictions and residuals
+  if(length(intersect(c("ipred","icpred"),type))>0) {
+    # Individual predictions
+    pres<-saemix.res["respar"]
+    if("ipred" %in% type) {
+      ipred<-object["model"]["model"](saemix.res["map.psi"],index,xind) # Predictions with MAP
+      ires<-yobs-ipred
+      # Individual weighted residuals
+      gpred<-error(ipred,pres,xind$ytype)
+      iwres<-(yobs-ipred)/gpred
+      saemix.res["ipred"]<-ipred
+      saemix.res["ires"]<-ires
+      saemix.res["iwres"]<-iwres
       saemix.res["predictions"]$ipred<-ipred
-      saemix.res["predictions"]$icpred<-icond.pred
       saemix.res["predictions"]$ires<-ires
       saemix.res["predictions"]$iwres<-iwres
+    } 
+    if("icpred" %in% type) {
+      psiM<-transphi(saemix.res["cond.mean.phi"],object["model"]["transform.par"])
+      icond.pred<-object["model"]["model"](psiM,index,xind) # Predictions with Conditional mean
+      gpred<-error(icond.pred,pres,xind$ytype)
+      icwres<-(yobs-icond.pred)/gpred
+      saemix.res["icpred"]<-icond.pred
+      saemix.res["icwres"]<-icwres
+      saemix.res["predictions"]$icpred<-icond.pred
       saemix.res["predictions"]$icwres<-icwres
     }
-  # Population weighted residuals: needs the individual variance-covariance matrix => use compute.sres to estimate these by simulations
+  } 
+  
+  # Population weighted residuals, npde: needs the individual variance-covariance matrix => use compute.sres to estimate these by simulations
   object["results"]<-saemix.res
   return(object)
 }
@@ -787,7 +852,7 @@ saemix.predict<-function(object) {
 #' 
 #' Several plots (selectable by the type argument) are currently available:
 #' convergence plot, individual plots, predictions versus observations,
-#' distribution plots, VPC, residual plots.
+#' distribution plots, VPC, residual plots, mirror.
 #' 
 #' This is the generic plot function for an SaemixObject object, which
 #' implements different graphs related to the algorithm (convergence plots,
@@ -821,6 +886,7 @@ saemix.predict<-function(object) {
 #' \item{both.fit:}{Individual fits, superposing fits obtained using the population 
 #' parameters with the individual covariates (red) and using the individual parameters 
 #' with the individual covariates (green)} 
+#' \item{mirror:}{Mirror plots assessing the compatibility of simulated data compared to the original}
 #' \item{marginal.distribution:}{Distribution of
 #' the parameters (conditional on covariates when some are included in the
 #' model). A histogram of individual parameter estimates can be overlayed on
@@ -871,13 +937,15 @@ saemix.predict<-function(object) {
 #' @seealso \code{\link{SaemixObject}},\code{\link{saemix}},
 #' \code{\link{saemix.plot.setoptions}}, \code{\link{saemix.plot.select}},
 #' \code{\link{saemix.plot.data}}
-#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' @references E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+#' an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 #' 
-#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models. 
+#' Computational Statistics and Data Analysis, 49(4):1020-1038.
 #' 
-#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-#' 20th meeting of the Population Approach Group in Europe, Athens, Greece
-#' (2011), Abstr 2173.
+#' E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece, Abstr 2173.
+#' 
 #' @keywords plot
 #' @examples
 #' 
@@ -967,12 +1035,12 @@ setMethod(f="plot",
     } else plot.type<-"reduced"
 #    cat("plot.type=",plot.type,"\n")
     if(plot.type[1]=="reduced") plot.type<-c("data","convergence","likelihood", "observations.vs.predictions")
-    if(plot.type[1]=="full") plot.type<-c("data","convergence","likelihood", "observations.vs.predictions","residuals.scatter","residuals.distribution","vpc")
+    if(plot.type[1]=="full") plot.type<-c("data","convergence","likelihood", "observations.vs.predictions") #,"residuals.scatter","residuals.distribution","vpc")
     
-    pltyp<-c("data","convergence","likelihood","individual.fit", "population.fit", "both.fit","observations.vs.predictions","residuals.scatter", "residuals.distribution","vpc","npde","random.effects","marginal.distribution", "correlations","parameters.vs.covariates","randeff.vs.covariates")
+    pltyp<-c("data","convergence","likelihood","individual.fit", "population.fit", "both.fit","observations.vs.predictions","residuals.scatter", "residuals.distribution","vpc","npde","random.effects","marginal.distribution", "correlations","parameters.vs.covariates","randeff.vs.covariates", "mirror")
     ifnd<-pmatch(plot.type,pltyp)
     if(sum(is.na(ifnd))>0) {
-      cat("The following plot types were not found or are ambiguous:", plot.type[is.na(ifnd)],"\n")
+      if(x@options$warnings) message("The following plot types were not found or are ambiguous:", plot.type[is.na(ifnd)],"\n")
     }
     ifnd<-ifnd[!is.na(ifnd)]
     if(length(ifnd)==0) return()
@@ -981,9 +1049,9 @@ setMethod(f="plot",
     id.pred<-match(plot.type,c("observations.vs.predictions","individual.fit", "residuals.scatter","residuals.distribution"))
     if(x@prefs$which.poppred=="ppred") id.pred<-c(id.pred,match(plot.type, c("population.fit", "both.fit")))
     id.map<-match(plot.type,c("randeff.vs.covariates","parameters.vs.covariates"))
-    id.sim<-match(plot.type, c("vpc"))
+    id.sim<-match(plot.type, c("vpc","mirror"))
     id.res<-match(plot.type, c("npde","residuals.scatter", "residuals.distribution"))
-    if(x@prefs$which.poppred=="ypred") id.sim<-c(id.sim,match(plot.type, c("population.fit", "both.fit")))
+    if(x@prefs$which.poppred=="ppred") id.sim<-c(id.sim,match(plot.type, c("population.fit", "both.fit")))
     id.pred<-id.pred[!is.na(id.pred)]
     id.sim<-id.sim[!is.na(id.sim)]
     id.map<-id.map[!is.na(id.map)]
@@ -1010,10 +1078,10 @@ setMethod(f="plot",
         cok<-readline(prompt="Simulations will be performed. This might take a while, proceed ? (y/Y) [default=yes] ")
         if(!cok %in% c("y","Y","yes","")) return()
         } else {
-        	cat("Performing simulations under the model.\n")
+        	if(x@options$warnings) message("Performing simulations under the model.\n")
         }
         if(boolpred) {
-          x<-simul.saemix(x)
+          x<-simulate(x)
           assign(namObj,x,envir=parent.frame())
         }
       }
@@ -1033,7 +1101,7 @@ setMethod(f="plot",
     }
     if(length(id.map)>0) {
       if(length(x["results"]["map.eta"])==0) {
-        cat("Computing ETA estimates and adding them to fitted object.\n")
+        if(x@options$warnings) message("Computing ETA estimates and adding them to fitted object.\n")
 	x<-compute.eta.map(x)
         assign(namObj,x,envir=parent.frame())
       }
@@ -1041,40 +1109,46 @@ setMethod(f="plot",
     for(ipl in plot.type) {
       switch (EXPR=ipl,
     "data"={
-       cat("Plotting the data\n")
+       if(x@options$warnings) message("Plotting the data\n")
        saemix.plot.data(x,...)
     },
     "convergence"={
-       cat("Plotting convergence plots\n")
+       if(x@options$warnings) message("Plotting convergence plots\n")
        saemix.plot.convergence(x,...)
     },
     "likelihood"={  
-       cat("Plotting the likelihood\n")
+       if(x@options$warnings) message("Plotting the likelihood\n")
        saemix.plot.llis(x,...)
     },
     "observations.vs.predictions"={
-       cat("Plotting observations versus predictions\n")      
+       if(x@options$warnings) message("Plotting observations versus predictions\n")      
        saemix.plot.obsvspred(x,...)
     },
     "individual.fit"={
-      cat("Plotting individual fits\n")
+      if(x@options$warnings) message("Plotting individual fits\n")
       saemix.plot.fits(x,...)
     },
     "population.fit"={
-      cat("Plotting fits obtained with population predictions\n")
+      if(x@options$warnings) message("Plotting fits obtained with population predictions\n")
       saemix.plot.fits(x,level=0,...)
     },
     "both.fit"={
-      cat("Plotting the fits overlaying individual and population predictions\n")
+      if(x@options$warnings) message("Plotting the fits overlaying individual and population predictions\n")
       saemix.plot.fits(x,level=c(0,1),...)
     },
+    "individual.fit"={
+      if(x@options$warnings) message("Mirror plots\n")
+      saemix.plot.mirror(x,...)
+    },
     "residuals.scatter"={
-      cat("Plotting scatterplots of residuals\n")
-      saemix.plot.scatterresiduals(x,...)
+      message("Please use npdeSaemix to obtain VPC and npde\n")
+#      if(x@options$warnings) message("Plotting scatterplots of residuals\n")
+#      saemix.plot.scatterresiduals(x,...)
     },
     "residuals.distribution"={
-      cat("Plotting the distribution of residuals\n")
-      saemix.plot.distribresiduals(x,...)
+      message("Please use npdeSaemix to obtain VPC and npde\n")
+#      if(x@options$warnings) message("Plotting the distribution of residuals\n")
+#      saemix.plot.distribresiduals(x,...)
     },
     "random.effects"={
       saemix.plot.randeff(x,...)
@@ -1084,13 +1158,13 @@ setMethod(f="plot",
     },
     "parameters.vs.covariates"={
       if(length(x@data@name.covariates)==0) {
-        cat("No covariates in the dataset\n")
+        if(x@options$warnings) message("No covariates in the dataset\n")
         return()
       } else saemix.plot.parcov(x,...)
     },
     "randeff.vs.covariates"={
       if(length(x@data@name.covariates)==0) {
-        cat("No covariates in the dataset\n")
+        if(x@options$warnings) message("No covariates in the dataset\n")
         return()
       } else saemix.plot.randeffcov(x,...)
     },
@@ -1098,12 +1172,13 @@ setMethod(f="plot",
       saemix.plot.distpsi(x,...)
     },
     "vpc"={
-      cat("Plotting VPC\n")
+      if(x@options$warnings) message("Plotting VPC\n")
       saemix.plot.vpc(x,...)
     },
     "npde"={
-      cat("Plotting npde\n")
-      saemix.plot.npde(x,...)
+      message("Please use npdeSaemix to obtain VPC and npde\n")
+#      if(x@options$warnings) message("Plotting npde\n")
+#      saemix.plot.npde(x,...)
     },
     cat("Plot ",ipl," not implemented yet\n")
      )
@@ -1115,29 +1190,30 @@ setMethod(f="plot",
 ####			Likelihood and tests		####
 ####################################################################################
 
-##' Extract likelihood from a saemixObject resulting from a call to saemix
-##'
-##' The likelihood in saemix can be computed by one of three methods: linearisation (linearisation of the model), importance sampling (stochastic integration) and gaussian quadrature (numerical integration). The linearised likelihood is obtained as a byproduct of the computation of the Fisher Information Matrix (argument FIM=TRUE in the options given to the saemix function).
-##' If no method argument is given, this function will attempt to extract the likelihood computed by importance sampling (method="is"), unless the object contains the likelihood computed by linearisation, in which case the function will extract this component instead.
-##' If the requested likelihood is not present in the object, it will be computed and aded to the object before returning.
-##' 
-##' BIC.covariate implements the computation of the BIC from Delattre et al. 2014.
-##'
-##' @name logLik
-##' @aliases AIC.SaemixObject BIC.SaemixObject logLik.SaemixObject BIC.covariate
-##'
-##' @param object name of an SaemixObject object
-##' @param method character string, one of c("is","lin","gq"), to select one of the available approximations to the log-likelihood (is: Importance Sampling; lin: linearisation and gq: Gaussian Quadrature). See documentation for details
-##' @param ... additional arguments
-##' @param k numeric, the penalty per parameter to be used; the default k = 2 is the classical AIC
-##' @return Returns the selected statistical criterion (log-likelihood, AIC, BIC) extracted from the SaemixObject, computed with the 'method' argument if given (defaults to IS).
-##' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' Extract likelihood from a saemixObject resulting from a call to saemix
+#'
+#' The likelihood in saemix can be computed by one of three methods: linearisation (linearisation of the model), importance sampling (stochastic integration) and gaussian quadrature (numerical integration). The linearised likelihood is obtained as a byproduct of the computation of the Fisher Information Matrix (argument FIM=TRUE in the options given to the saemix function).
+#' If no method argument is given, this function will attempt to extract the likelihood computed by importance sampling (method="is"), unless the object contains the likelihood computed by linearisation, in which case the function will extract this component instead.
+#' If the requested likelihood is not present in the object, it will be computed and aded to the object before returning.
 #' 
-#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
-##' 
-##' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm. 20th meeting of the Population Approach Group in Europe, Athens, Greece (2011), Abstr 2173.
-##' 
-#' Delattre M. Lavielle M. Poursat MA. A note on BIC in mixed-effects models. Electronic Journal of Statistics (2014) 8, 456-475.
+#' BIC.covariate implements the computation of the BIC from Delattre et al. 2014.
+#'
+#' @name logLik
+#' @aliases AIC.SaemixObject BIC.SaemixObject logLik.SaemixObject BIC.covariate
+#'
+#' @param object name of an SaemixObject object
+#' @param method character string, one of c("is","lin","gq"), to select one of the available approximations to the log-likelihood (is: Importance Sampling; lin: linearisation and gq: Gaussian Quadrature). See documentation for details
+#' @param ... additional arguments
+#' @param k numeric, the penalty per parameter to be used; the default k = 2 is the classical AIC
+#' @return Returns the selected statistical criterion (log-likelihood, AIC, BIC) extracted from the SaemixObject, computed with the 'method' argument if given (defaults to IS).
+#' @references E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+#' an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
+#' 
+#' E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models. 
+#' Computational Statistics and Data Analysis, 49(4):1020-1038.
+#' 
+#' E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece, Abstr 2173.
 #' 
 #' @author Emmanuelle Comets \email{emmanuelle.comets@@inserm.fr}
 #' @author Audrey Lavenu
@@ -1149,47 +1225,26 @@ setMethod(f="plot",
 #' @keywords methods
 #' @export
 
-## log-likelihood for SaemixObject objects
-logLik.SaemixObject<- function(object, method="is", ...) {
-#   args1<-match.call(expand.dots=TRUE)
-#   i1<-match("method",names(args1))
-#   if(!is.na(i1)) {
-#     str1<-as.character(args1[[i1]])
-#     if(str1 %in% c("is","lin","gq")) method<-str1
-#   } else {
-#     if(length(object@results@ll.is)!=0 | length(object@results@ll.lin)==0) method<-"is" else method<-"lin"
-#   }
-  # Compute the requested LL if not present
-  namObj<-deparse(substitute(object))
-  if(method=="is" & length(object@results@ll.is)==0) {
-    object<-llis.saemix(object)
-    assign(namObj,object,envir=parent.frame())
-  }
+## log-likelihood for SaemixObject objects (changes adding stop() by Johannes)
+logLik.SaemixObject<- function(object, method=c("is","lin","gq"), ...) {
+  method <- match.arg(method)
+  
   if(method=="gq" & length(object@results@ll.gq)==0) {
-    object<-llgq.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    #    object<-llis.saemix(object)
+    #    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by Gaussian Quadrature has not yet been computed.")
+  }
+  if(method=="is" & length(object@results@ll.is)==0) {
+    #    object<-llgq.saemix(object)
+    #    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by Importance Sampling has not yet been computed.")
   }
   if(method=="lin" & length(object@results@ll.lin)==0) {
-    object<-fim.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    #    object<-fim.saemix(object)
+    #    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by linearisation has not yet been computed.")
   }
-  # OR: return if desired LL has not been computed
-  #     if(method=="gq" & length(object@results@ll.gq)==0) {
-  #     	cat("The log-likelihood by Gaussian Quadrature has not yet been computed.\n")
-  #     	invisible(NULL)
-  #     }
-  #     if(method=="is" & length(object@results@ll.is)==0) {
-  #     	cat("The log-likelihood by Importance Sampling has not yet been computed.\n")
-  #     	invisible(NULL)
-  #     }
-  #     if(method=="lin" & length(object@results@ll.lin)==0) {
-  #     	cat("The log-likelihood by linearisation has not yet been computed.\n")
-  #     	invisible(NULL)
-  #     }
   val<-switch(method,is=object@results@ll.is,lin=object@results@ll.lin, gq=object@results@ll.gq)
-  res<-paste(format(val,digits=2,nsmall=2)," (df=",object@results@npar.est,")", sep="")
-  res<-matrix(res,dimnames=list(paste("LL by",method)," "))
-  print(res)
   attr(val, "nall") <- object@data@N
   attr(val, "nobs") <- object@data@ntot.obs
   attr(val, "df") <- object@results@npar.est
@@ -1200,28 +1255,17 @@ logLik.SaemixObject<- function(object, method="is", ...) {
 #' @export 
 #' @rdname logLik
 
-AIC.SaemixObject<-function(object, ..., k=2) {
-  args1<-match.call(expand.dots=TRUE)
-  i1<-match("method",names(args1))
-  if(!is.na(i1)) {
-    str1<-as.character(args1[[i1]])
-    if(str1 %in% c("is","lin","gq")) method<-str1
-  } else {
-    if(length(object@results@ll.is)!=0 | length(object@results@ll.lin)==0) method<-"is" else method<-"lin"
-  }
-  # Compute the requested LL if not present
-  namObj<-deparse(substitute(object))
+AIC.SaemixObject<-function(object, method=c("is","lin","gq"), ..., k=2) {
+  method <- match.arg(method)
+
   if(method=="is" & length(object@results@ll.is)==0) {
-    object<-llis.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by Importance Sampling has not yet been computed.")
   }
   if(method=="gq" & length(object@results@ll.gq)==0) {
-    object<-llgq.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by Gaussian Quadrature has not yet been computed.")
   }
   if(method=="lin" & length(object@results@ll.lin)==0) {
-    object<-fim.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by linearisation has not yet been computed.")
   }
   val<-switch(method,is=object@results@aic.is,lin=object@results@aic.lin, gq=object@results@aic.gq)
   val
@@ -1230,29 +1274,18 @@ AIC.SaemixObject<-function(object, ..., k=2) {
 #' @export
 #' @rdname logLik
 
-BIC.SaemixObject<-function(object, ...) {
+BIC.SaemixObject<-function(object, method=c("is","lin","gq"), ...) {
+  method <- match.arg(method)
 #  -2 * as.numeric(object) + attr(object, "df") * log(nobs(object))
-  args1<-match.call(expand.dots=TRUE)
-  i1<-match("method",names(args1))
-  if(!is.na(i1)) {
-    str1<-as.character(args1[[i1]])
-    if(str1 %in% c("is","lin","gq")) method<-str1
-  } else {
-    if(length(object@results@ll.is)!=0 | length(object@results@ll.lin)==0) method<-"is" else method<-"lin"
-  }
-  # Compute the requested LL if not present
-  namObj<-deparse(substitute(object))
+
   if(method=="is" & length(object@results@ll.is)==0) {
-    object<-llis.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by Importance Sampling has not yet been computed.")
   }
   if(method=="gq" & length(object@results@ll.gq)==0) {
-    object<-llgq.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by Gaussian Quadrature has not yet been computed.")
   }
   if(method=="lin" & length(object@results@ll.lin)==0) {
-    object<-fim.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by linearisation has not yet been computed.")
   }
   val<-switch(method,is=object@results@bic.is,lin=object@results@bic.lin, gq=object@results@bic.gq)
   val
@@ -1261,33 +1294,23 @@ BIC.SaemixObject<-function(object, ...) {
 #' @export
 #' @rdname logLik
 
-BIC.covariate<-function(object, ...) {
+BIC.covariate<-function(object, method=c("is","lin","gq"), ...) {
+  method <- match.arg(method)
   #  -2 * as.numeric(object) + attr(object, "df") * log(nobs(object))
-  args1<-match.call(expand.dots=TRUE)
-  i1<-match("method",names(args1))
-  if(!is.na(i1)) {
-    str1<-as.character(args1[[i1]])
-    if(str1 %in% c("is","lin","gq")) method<-str1
-  } else {
-    if(length(object@results@ll.is)!=0 | length(object@results@ll.lin)==0) method<-"is" else method<-"lin"
-  }
-  # Compute the requested LL if not present
-  namObj<-deparse(substitute(object))
+
   if(method=="is" & length(object@results@ll.is)==0) {
-    object<-llis.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by Importance Sampling has not yet been computed.")
   }
   if(method=="gq" & length(object@results@ll.gq)==0) {
-    object<-llgq.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by Gaussian Quadrature has not yet been computed.")
   }
   if(method=="lin" & length(object@results@ll.lin)==0) {
-    object<-fim.saemix(object)
-    assign(namObj,object,envir=parent.frame())
+    stop("The log-likelihood by linearisation has not yet been computed.")
   }
   val<-switch(method,is=object@results@bic.covariate.is,lin=object@results@bic.covariate.lin, gq=object@results@bic.covariate.gq)
   val
 }
+
 # Log-likelihood ratio test, given 2 models
 # ECO TODO
 
@@ -1421,7 +1444,8 @@ fitted.SaemixObject<-function (object, type = c("ipred", "ypred", "ppred", "icpr
           {
             type <- match.arg(type)
             fitted(object@results, type=type, ...)
-          }
+}
+
 
 ####################################################################################
 ####            SaemixObject class - extract variance-covariance matrix         ####
@@ -1575,8 +1599,8 @@ createSaemixObject.empty<-function(model,data,control=list()) {
   
   saemixObject<-new(Class="SaemixObject",data=data,model=model,options=control)
   #  saemixObject<-new(Class="SaemixObject",data=saemix.data, model=saemix.model,options=saemix.options)
-  # opt.warn<-getOption("warn")
-  # if(!saemixObject["options"]$warnings) options(warn=-1)
+  opt.warn<-getOption("warn")
+  if(!saemixObject["options"]$warnings) options(warn=-1)
   
   saemix.data<-saemixObject["data"]
   saemix.data@ocov<-saemix.data@ocov[saemix.data@data[,"mdv"]==0,,drop=FALSE]
@@ -1599,8 +1623,8 @@ createSaemixObject.initial<-function(model,data,control=list()) {
   }
   # Creating saemixObject (empty results)
   saemixObject<-new(Class="SaemixObject",data=data,model=model,options=control)
-  # opt.warn<-getOption("warn")
-  # if(!saemixObject["options"]$warnings) options(warn=-1)
+  opt.warn<-getOption("warn")
+  if(!saemixObject["options"]$warnings) options(warn=-1)
   
   saemix.options<-saemixObject["options"]
   saemix.model<-saemixObject["model"]
@@ -1615,13 +1639,22 @@ createSaemixObject.initial<-function(model,data,control=list()) {
   Uargs<-xinit$Uargs
   varList<-xinit$varList
   
-  xres1<-new(Class="SaemixRes", #modeltype="structural",status="initial",
-             name.fixed=saemix.model["name.fixed"], name.random=saemix.model["name.random"],
-             name.sigma=saemix.model["name.sigma"],
+  if(saemix.model["modeltype"]=="structural"){
+    xres1<-new(Class="SaemixRes",modeltype="structural",status="initial",
+           name.fixed=saemix.model["name.fixed"], name.random=saemix.model["name.random"],name.sigma=saemix.model["name.sigma"],
              fixed.effects=saemix.model@psi0[saemix.model@betaest.model==1],
              fixed.psi=xinit$fixedpsi.ini,
              betaC=xinit$betas[xinit$Uargs$indx.betaC],betas=xinit$betas,
              omega=varList$omega,respar=varList$pres,MCOV=varList$MCOV)
+  } else{
+    xres1<-new(Class="SaemixRes",modeltype=saemix.model["modeltype"],status="initial",
+           name.fixed=saemix.model["name.fixed"], name.random=saemix.model["name.random"],name.sigma=saemix.model["name.sigma"],
+           fixed.effects=saemix.model@psi0[saemix.model@betaest.model==1],
+           fixed.psi=xinit$fixedpsi.ini,
+           betaC=xinit$betas[xinit$Uargs$indx.betaC],betas=xinit$betas,
+           omega=varList$omega,MCOV=varList$MCOV)
+  }
+
   xres1@indx.cov<-saemix.model@indx.cov
   xres1@indx.res<-saemix.model@indx.res
   xres1@indx.fix<-saemix.model@indx.fix
@@ -1632,3 +1665,4 @@ createSaemixObject.initial<-function(model,data,control=list()) {
 }
 
 ####################################################################################
+

@@ -9,7 +9,7 @@
 Methods for function \code{plot}
 }
 \section{Methods}{
- 
+
 \describe{
 \item{list("signature(x = \"ANY\")")}{ default plot function ?}
 \item{list("signature(x = \"SaemixData\")")}{ Plots the data. Defaults to a

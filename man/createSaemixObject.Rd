@@ -19,14 +19,14 @@ createSaemixObject.empty(model, data, control = list())
 an object of class \code{"\linkS4class{SaemixObject}"}.
 }
 \description{
-Create saemix objects either with empty results or with parameters set by the user. 
+Create saemix objects either with empty results or with parameters set by the user.
 This is an internal function used as a preliminary step to obtain predictions for new data
 and is not intended to be used directly.
 }
 \details{
 with createSaemixObject.empty, the data component is set to the data object, the model component is set to the model object, and the result component is empty
 
-with createSaemixObject.initial, the data and model are set as with createSaemixObject.empty, 
+with createSaemixObject.initial, the data and model are set as with createSaemixObject.empty,
 but the population parameter estimates are used to initialise the result component
 as in the initialisation step of the algorithm (initialiseMainAlgo)
 }

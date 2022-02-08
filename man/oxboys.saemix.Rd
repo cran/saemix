@@ -5,10 +5,10 @@
 \alias{oxboys.saemix}
 \title{Heights of Boys in Oxford}
 \format{
-This data frame contains the following columns: 
+This data frame contains the following columns:
 \describe{
-\item{Subject}{an ordered factor giving a unique identifier for each boy in the experiment } 
-\item{age}{a numeric vector giving the standardized age (dimensionless)} 
+\item{Subject}{an ordered factor giving a unique identifier for each boy in the experiment }
+\item{age}{a numeric vector giving the standardized age (dimensionless)}
 \item{height}{a numeric vector giving the height of the boy (cm)}
 \item{Occasion}{ an ordered factor - the result of converting 'age' from a continuous variable to a count so these slightly unbalanced data can be analyzed as balanced } }
 }
@@ -20,10 +20,10 @@ The \code{oxboys.saemix} data collects the height and age of students in Oxford 
 The data frame has 234 rows and 4 columns.
 }
 \details{
-These data are described in Goldstein (1987) as data on the height of a selection of boys from Oxford, England 
+These data are described in Goldstein (1987) as data on the height of a selection of boys from Oxford, England
 versus a standardized age. The dataset can be found in the package \code{nlme}.
- We use an linear model for this data:
- y_ij = Base_i + slope_i x_ij +epsilon_ij
+We use an linear model for this data:
+y_ij = Base_i + slope_i x_ij +epsilon_ij
 }
 \examples{
 data(oxboys.saemix)
@@ -47,13 +47,13 @@ saemix.model<-saemixModel(model=growth.linear,description="Linear model",
       error.model="constant")
 
 saemix.options<-list(algorithms=c(1,1,1),nb.chains=1,seed=201004,
-      save=FALSE,save.graphs=FALSE)
+      save=FALSE,save.graphs=FALSE,displayProgress=FALSE)
 \donttest{
 saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
 }
 
 }
 \references{
-Pinheiro, J. C. and Bates, D. M. (2000), \emph{Mixed-Effects Models in S and S-PLUS}, Springer, New York.  (Appendix A.19)
+JC Pinheiro, DM Bates (2000) \emph{Mixed-effects Models in S and S-PLUS}, Springer, New York (Appendix A.19)
 }
 \keyword{datasets}

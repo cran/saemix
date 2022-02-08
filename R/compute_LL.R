@@ -7,20 +7,22 @@
 #' The likelihood of the observations is estimated without any approximation
 #' using a Monte-Carlo approach (see documentation).
 #' 
-#' @aliases llis.saemix gqg.mlx
+#' @aliases llis.saemix
 #' @param saemixObject an object returned by the \code{\link{saemix}} function
 #' @return the log-likelihood estimated by Importance Sampling
 #' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
 #' Marc Lavielle.
 #' @seealso
 #' \code{\link{SaemixObject}},\code{\link{saemix}},\code{\link{llgq.saemix}}
-#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' @references E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+#' an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 #' 
-#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models. 
+#' Computational Statistics and Data Analysis, 49(4):1020-1038.
 #' 
-#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-#' 20th meeting of the Population Approach Group in Europe, Athens, Greece
-#' (2011), Abstr 2173.
+#' E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece, Abstr 2173.
+#' 
 #' @keywords models
 #' @examples
 #'  
@@ -42,7 +44,7 @@
 #' 	  return(ypred)
 #' }
 #' saemix.model<-saemixModel(model=model1cpt,
-#'   description="One-compartment model with first-order absorption", 
+#'   description="One-compartment model with first-order absorption", modeltype="structural",
 #'   psi0=matrix(c(1.,20,0.5,0.1,0,-0.01),ncol=3, byrow=TRUE,
 #'   dimnames=list(NULL, c("ka","V","CL"))),transform.par=c(1,1,1),
 #'   covariate.model=matrix(c(0,1,0,0,0,0),ncol=3,byrow=TRUE),fixed.estim=c(1,1,1),
@@ -141,8 +143,12 @@ llis.saemix<-function(saemixObject) {
 		for(i in idx.exp) f[saemix.data["data"][,"ytype"]==i]<-log(cutoff(f[saemix.data["data"][,"ytype"]==i]))
 #		if(saemix.model["error.model"]=="exponential")
 #			f<-log(cutoff(f))
+		if (saemixObject["model"]["modeltype"]=="structural"){
 		g<-error(f,pres,XM$ytype)
 		DYF[ind.ioM] <- -0.5*((yM-f)/g)**2 - log(g) - 0.5*c1
+		} else {
+			DYF[ind.ioM] <- f
+		}
 		e1<-matrix(colSums(DYF),nrow=saemix.data["N"],ncol=MM)
 		sume<-e1+e2-e3
 		newa<-rowMeans(exp(sume),na.rm=TRUE)
@@ -162,13 +168,11 @@ llis.saemix<-function(saemixObject) {
 	    try(plot(x1,y1,type="l",xlab="Size of the Monte-Carlo sample", ylab="'-2xLog-Likelihood",main=tit))
 	  }
 	}
-
 	saemixObject["results"]["LL"]<-c(LL)
 	saemixObject["results"]["ll.is"]<-LL[KM]
 	saemixObject["results"]["aic.is"]<-(-2)*saemixObject["results"]["ll.is"]+ 2*saemixObject["results"]["npar.est"]
 	saemixObject["results"]["bic.is"]<-(-2)*saemixObject["results"]["ll.is"]+ log(saemixObject["data"]["N"])*saemixObject["results"]["npar.est"]
 	saemixObject["results"]["bic.covariate.is"]<-(-2)*saemixObject["results"]["ll.is"]+ log(saemixObject["data"]["N"])*saemixObject["results"]["nbeta.random"]+log(sum(saemixObject["data"]["nind.obs"]))*saemixObject["results"]["nbeta.fixed"]
-	
 	return(saemixObject)
 }
 
@@ -182,20 +186,22 @@ llis.saemix<-function(saemixObject) {
 #' The likelihood of the observations is estimated using Gaussian Quadrature
 #' (see documentation).
 #' 
-#' @aliases llqg.saemix ggq.mlx
+#' @aliases llqg.saemix gqg.mlx
 #' @param saemixObject an object returned by the \code{\link{saemix}} function
 #' @return the log-likelihood estimated by Gaussian Quadrature
 #' @author Emmanuelle Comets <emmanuelle.comets@@inserm.fr>, Audrey Lavenu,
 #' Marc Lavielle.
 #' @seealso
 #' \code{\link{SaemixObject}},\code{\link{saemix}},\code{\link{llis.saemix}}
-#' @references Comets  E, Lavenu A, Lavielle M. Parameter estimation in nonlinear mixed effect models using saemix, an R implementation of the SAEM algorithm. Journal of Statistical Software 80, 3 (2017), 1-41.
+#' @references E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
+#' an R implementation of the SAEM algorithm. Journal of Statistical Software, 80(3):1-41.
 #' 
-#' Kuhn E, Lavielle M. Maximum likelihood estimation in nonlinear mixed effects models. Computational Statistics and Data Analysis 49, 4 (2005), 1020-1038.
+#' E Kuhn, M Lavielle (2005). Maximum likelihood estimation in nonlinear mixed effects models. 
+#' Computational Statistics and Data Analysis, 49(4):1020-1038.
 #' 
-#' Comets E, Lavenu A, Lavielle M. SAEMIX, an R version of the SAEM algorithm.
-#' 20th meeting of the Population Approach Group in Europe, Athens, Greece
-#' (2011), Abstr 2173.
+#' E Comets, A Lavenu, M Lavielle (2011). SAEMIX, an R version of the SAEM algorithm. 20th meeting of the 
+#' Population Approach Group in Europe, Athens, Greece, Abstr 2173.
+#' 
 #' @keywords models
 #' @examples
 #'  
@@ -252,8 +258,8 @@ llgq.saemix<-function(saemixObject) {
 	cond.var.phi<-saemix.res["cond.var.phi"]
 	cond.mean.phi<-saemix.res["cond.mean.phi"]
 	nphi1<-length(i1.omega2)
-	IOmega.phi1<-solve(Omega[i1.omega2,i1.omega2])
-	mean.phi1<-saemix.res["mean.phi"][,i1.omega2]
+	IOmega.phi1<-solve(Omega[i1.omega2,i1.omega2,drop=FALSE])
+	mean.phi1<-saemix.res["mean.phi"][,i1.omega2,drop=FALSE]
 	
 	io<-matrix(0,nrow=saemix.data["N"],ncol=max(saemix.data["nind.obs"]))
 	for(isuj in 1:saemix.data["N"])
@@ -267,9 +273,9 @@ llgq.saemix<-function(saemixObject) {
 	w<-(y$weights)*(2**nphi1)
 	# ECO TODO check dimensions (unclear in matlab)
 	nx<-dim(x)[1]
-	condsd.eta<-sqrt(cond.var.phi[,i1.omega2])
-	xmin<-cond.mean.phi[,i1.omega2]-nsd.gq*condsd.eta
-	xmax<-cond.mean.phi[,i1.omega2]+nsd.gq*condsd.eta
+	condsd.eta<-sqrt(cond.var.phi[,i1.omega2,drop=FALSE])
+	xmin<-cond.mean.phi[,i1.omega2,drop=FALSE]-nsd.gq*condsd.eta
+	xmax<-cond.mean.phi[,i1.omega2,drop=FALSE]+nsd.gq*condsd.eta
 	a<-(xmin+xmax)/2
 	b<-(xmax-xmin)/2
 	log.const<-0
@@ -282,24 +288,29 @@ llgq.saemix<-function(saemixObject) {
 	for (j in 1:nx) {
 		phi[,i1.omega2] <- a+b*matrix(rep(x[j,],saemix.data["N"]),ncol=nphi1,byrow=TRUE)
 		psi<-transphi(phi,saemixObject["model"]["transform.par"])
+		if(saemixObject["model"]["modeltype"]=="structural"){
 		f<-saemixObject["model"]["model"](psi, saemix.data["data"][,"index"], xind)
 		for(i in idx.exp) f[saemix.data["data"][,"ytype"]==i]<-log(cutoff(f[saemix.data["data"][,"ytype"]==i]))
 		g<-error(f,pres,saemix.data["data"][,"ytype"])
 		DYF[ind.io] <- -0.5*((yobs-f)/g)**2 - log(g)
 		ly<-colSums(DYF)
-		dphi1<-phi[,i1.omega2]-saemix.res["mean.phi"][,i1.omega2]
+		} else {
+			f<-saemixObject["model"]["model"](psi, saemix.data["data"][,"index"], xind)
+			DYF[ind.io] <- f
+			ly<-colSums(DYF)
+		}
+		dphi1<-phi[,i1.omega2,drop=FALSE]-saemix.res["mean.phi"][,i1.omega2,drop=FALSE]
 		lphi1<-(-0.5)*rowSums((dphi1%*%IOmega.phi1)*dphi1)
 		ltot<-ly+lphi1
 		ltot[is.na(ltot)]<-(-Inf)
 		Q<-Q+w[j]*exp(ltot)
 	}
-	S<-saemix.data["N"]*log(det(Omega[i1.omega2,i1.omega2]))+ saemix.data["N"]*nphi1*log(2*pi)+ saemix.data["ntot.obs"]*log(2*pi)
+	S<-saemix.data["N"]*log(det(Omega[i1.omega2,i1.omega2, drop=FALSE]))+ saemix.data["N"]*nphi1*log(2*pi)+ saemix.data["ntot.obs"]*log(2*pi)
 	ll<-(-S/2) + sum(log(Q)+rowSums(log(b)))+ log.const
 	saemixObject["results"]["ll.gq"]<-ll
 	saemixObject["results"]["aic.gq"]<-(-2)*saemixObject["results"]["ll.gq"]+ 2*saemixObject["results"]["npar.est"]
 	saemixObject["results"]["bic.gq"]<-(-2)*saemixObject["results"]["ll.gq"]+ log(saemixObject["data"]["N"])*saemixObject["results"]["npar.est"]
 	saemixObject["results"]["bic.covariate.gq"]<-(-2)*saemixObject["results"]["ll.gq"]+ log(saemixObject["data"]["N"])*saemixObject["results"]["nbeta.random"]+log(sum(saemixObject["data"]["nind.obs"]))*saemixObject["results"]["nbeta.fixed"]
-	
 	return(saemixObject)
 }
 

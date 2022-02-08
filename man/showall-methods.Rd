@@ -32,15 +32,15 @@ None
 This function is used to visualise the majority of the elements of an object
 }
 \section{Methods}{
- 
-\describe{ 
+
+\describe{
 \item{list("signature(x = \"SaemixData\")")}{
 Prints a extensive summary of a SaemixData object }
 \item{list("signature(x = \"SaemixModel\")")}{ Prints a extensive summary of
 a SaemixModel object }
 \item{list("signature(x = \"SaemixObject\")")}{ Prints a extensive summary
 of the results from a SAEMIX fit }
-\item{list("signature(x = \"SaemixRes\")")}{ Not user-level } 
+\item{list("signature(x = \"SaemixRes\")")}{ Not user-level }
 }
 }
 

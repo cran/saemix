@@ -32,7 +32,7 @@
 a list with a number of elements extracted from the dataset
 \describe{
 \item{N}{ number of subjects}
-\item{nobs}{ the total number of observations} 
+\item{nobs}{ the total number of observations}
 \item{nind.obs}{a vector giving the number of observations for each subject}
 \item{id}{subject ID; x: predictors; y: response, and, if present in the data, covariates: the covariates (as many lines as observations) and ind.covariates: the individual covariates (one}
 }
