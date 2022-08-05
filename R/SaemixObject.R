@@ -155,22 +155,32 @@ setMethod(
 # Initialising options
     opt<-saemixControl()
     if(length(options)>0) {
-    for(i in names(options)) opt[i]<-options[i]
-    while(length(options["nbiter.mcmc"][[1]])<4) options["nbiter.mcmc"][[1]]<-c(options["nbiter.mcmc"][[1]],0) # nb of kernels now 4, complete if shorter
+      for(i in names(options)) opt[i]<-options[i]
+      while(length(options["nbiter.mcmc"][[1]])<4) options["nbiter.mcmc"][[1]]<-c(options["nbiter.mcmc"][[1]],0) # nb of kernels now 4, complete if shorter
       if(!opt$fix.seed) {
-      rm(.Random.seed)
-      runif(1)
-      opt$seed<-.Random.seed[5]
+        rm(.Random.seed)
+        runif(1)
+        opt$seed<-.Random.seed[5]
       }
-    if(is.null(options$nb.chains) & data@N>0) opt$nb.chains<-ceiling(50/data@N)
+      if(is.null(options$nb.chains) & data@N>0) opt$nb.chains<-ceiling(50/data@N)
       if(data@N>0 && data@N<50 & opt$nb.chains<ceiling(50/data@N)) {
-      cat("The number of subjects is small, increasing the number of chains to", ceiling(50/data@N),"to improve convergence\n")
-      opt$nb.chains<-ceiling(50/data@N)
-    }
+        cat("The number of subjects is small, increasing the number of chains to", ceiling(50/data@N),"to improve convergence\n")
+        opt$nb.chains<-ceiling(50/data@N)
+      }
+      # Options that would have been changed in saemixControl and need to be set here from the elements of the options list
+      if(is.null(options$nbiter.sa)) opt$nbiter.sa<-opt$nbiter.saemix[1]/2
+      if(opt$nbiter.sa>opt$nbiter.saemix[1]) {
+        if(opt$warnings) message("The number of iterations for the simulated annealing should be lower or equal to the number of iterations in the first stage of the algorithm, setting it to K1=nbiter.saemix[1]. We advise setting it to nbiter.saemix[1]/2.\n")
+        opt$nbiter.sa<-opt$nbiter.saemix[1]
+      }
+      if(!is.null(options$fix.seed) && !(options$fix.seed)) {
+        rm(.Random.seed)
+        runif(1)
+        opt$seed<-.Random.seed[5]
+      }
     } else{
       opt$nb.chains<-opt$nb.chains
     }
-    
     if(opt$ipar.lmcmc<2) {
       opt$ipar.lmcmc<-2
       cat("Value of L_MCMC too small, setting it to 2 (computation of the conditional means and variances of the individual parameters)\n")
@@ -307,6 +317,7 @@ setMethod(
 #' @export saemixControl
 
 saemixControl<-function(map=TRUE,fim=TRUE,ll.is=TRUE,ll.gq=FALSE,nbiter.saemix=c(300,100), nbiter.sa=NA, nb.chains=1,fix.seed=TRUE,seed=23456,nmc.is=5000,nu.is=4, print.is=FALSE, nbdisplay=100, displayProgress=FALSE, nbiter.burn=5,nbiter.map=5, nbiter.mcmc=c(2,2,2,0),proba.mcmc=0.4,stepsize.rw=0.4,rw.init=0.5,alpha.sa=0.97,  nnodes.gq=12,nsd.gq=4,maxim.maxiter=100,nb.sim=1000,nb.simpred=100, ipar.lmcmc=50,ipar.rmcmc=0.05, print=TRUE, save=TRUE, save.graphs=TRUE,directory="newdir",warnings=FALSE) {
+  # ECO: Need to duplicate some code in the creation of the object (initialize from SaemixObject) so that arguments like nbiter.sa or the random seed get correctly assigned :-/ 
   if(fix.seed) seed<-seed else {
     rm(.Random.seed)
     runif(1)
@@ -318,7 +329,7 @@ saemixControl<-function(map=TRUE,fim=TRUE,ll.is=TRUE,ll.gq=FALSE,nbiter.saemix=c
   }
   if(is.na(nbiter.sa)) nbiter.sa<-nbiter.saemix[1]/2
   if(nbiter.sa>nbiter.saemix[1]) {
-    if(warnings) message("The number of iterations for the simulated annealing should be lower or equal to K1, setting it to nbiter.saemix[1]. We advise setting it to nbiter.saemix[1]/2.\n")
+    if(warnings) message("The number of iterations for the simulated annealing should be lower or equal to the number of iterations in the first stage of the algorithm, setting it to K1=nbiter.saemix[1]. We advise setting it to nbiter.saemix[1]/2.\n")
     nbiter.sa<-nbiter.saemix[1]
   }
   list(map=map,fim=fim,ll.is=ll.is,ll.gq=ll.gq,nbiter.saemix=nbiter.saemix, nbiter.sa=nbiter.sa, nbiter.burn=nbiter.burn, nbiter.map=nbiter.map,nb.chains=nb.chains,
@@ -1102,7 +1113,7 @@ setMethod(f="plot",
     if(length(id.map)>0) {
       if(length(x["results"]["map.eta"])==0) {
         if(x@options$warnings) message("Computing ETA estimates and adding them to fitted object.\n")
-	x<-compute.eta.map(x)
+      	x<-compute.eta.map(x)
         assign(namObj,x,envir=parent.frame())
       }
     }
@@ -1172,7 +1183,7 @@ setMethod(f="plot",
       saemix.plot.distpsi(x,...)
     },
     "vpc"={
-      if(x@options$warnings) message("Plotting VPC\n")
+      if(x@options$warnings) message("Direct call to VPC will soon be deprecated, please use npdeSaemix for VPC\n")
       saemix.plot.vpc(x,...)
     },
     "npde"={
@@ -1511,8 +1522,8 @@ replaceData.saemixObject<-function(saemixObject, newdata) {
     }
   }
   tempname<-tempfile()
-  write.table(newdata,tempname,quote=F,col.names=T)
-  saemix.newdata<-saemixData(name.data=tempname, name.group=orig.data["name.group"], name.response =orig.data["name.response"], name.predictors=orig.data["name.predictors"], name.covariates=rownames(saemixObject["model"]["covariate.model"]), units=orig.data["units"], name.X=orig.data["name.X"],verbose=FALSE)
+  write.table(newdata,tempname,quote=F,col.names=T, sep=";")
+  saemix.newdata<-saemixData(name.data=tempname, name.group=orig.data["name.group"], name.response =orig.data["name.response"], name.predictors=orig.data["name.predictors"], name.covariates=rownames(saemixObject["model"]["covariate.model"]), units=orig.data["units"], name.X=orig.data["name.X"],verbose=FALSE, sep=";")
   if(iflag==1) saemix.newdata["data"][,orig.data["name.response"]]<-NA
   
   saemix.newObj<-saemixObject
@@ -1588,11 +1599,11 @@ replaceData.saemixObject<-function(saemixObject, newdata) {
 
 
 createSaemixObject.empty<-function(model,data,control=list()) {
-  if(class(model)!="SaemixModel") {
+  if(!is(model,"SaemixModel")) {
     message("Please provide a valid model object (see the help page for SaemixModel)\n")
     return("Need a valid model object")
   }
-  if(class(data)!="SaemixData") {
+  if(!is(data,"SaemixData")) {
     message("Please provide a valid data object (see the help page for SaemixData)\n")
     return("Need a valid data object")
   }
@@ -1613,14 +1624,15 @@ createSaemixObject.empty<-function(model,data,control=list()) {
 
 createSaemixObject.initial<-function(model,data,control=list()) {
   # Checking validity of input
-  if(class(model)!="SaemixModel") {
+  if(!is(model,"SaemixModel")) {
     message("Please provide a valid model object (see the help page for SaemixModel)\n")
     return("Need a valid model object")
   }
-  if(class(data)!="SaemixData") {
+  if(!is(data,"SaemixData")) {
     message("Please provide a valid data object (see the help page for SaemixData)\n")
     return("Need a valid data object")
   }
+  
   # Creating saemixObject (empty results)
   saemixObject<-new(Class="SaemixObject",data=data,model=model,options=control)
   opt.warn<-getOption("warn")

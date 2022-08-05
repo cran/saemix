@@ -18,30 +18,53 @@ An object of the SaemixData class, representing a longitudinal data structure, u
 \section{Slots}{
 
 \describe{
-\item{\code{name.data}}{Object of class \code{"character"}: name of the dataset
-@slot header Object of class \code{"logical"}: whether the dataset/file contains a header. Defaults to TRUE
-@slot sep Object of class \code{"character"}: the field separator character
-@slot na Object of class \code{"character"}: a character vector of the strings which are to be interpreted as NA values
-@slot messages Object of class \code{"logical"}: if TRUE, the program will display information about the creation of the data object
-@slot automatic Object of class \code{"logical"}: if TRUE, automatic name recognition is on (used at the creation of the object)
-@slot name.group Object of class \code{"character"}: name of the column containing the subject id
-@slot name.predictors Object of class \code{"character"}: name of the column(s) containing the predictors
-@slot name.response Object of class \code{"character"}: name of the column containing the response variable y modelled by predictor(s) x
-@slot name.covariates Object of class \code{"character"}: name of the column(s) containing the covariates, if present (otherwise empty)
-@slot name.X Object of class \code{"character"}: name of the column containing the regression variable to be used on the X axis in the plots
-@slot name.mdv Object of class \code{"character"}: name of the column containing the indicator variable denoting missing data
-@slot name.cens Object of class \code{"character"}: name of the column containing the indicator variable denoting censored data (the value in the name.response column will be taken as the censoring value)
-@slot name.occ Object of class \code{"character"}: name of the column containing the value of the occasion
-@slot name.ytype Object of class \code{"character"}: name of the column containing the response number
-@slot trans.cov Object of class \code{"list"}: the list of transformation applied to the covariates (currently unused, TODO)
-@slot units Object of class \code{"list"}: list with up to three elements, x, y and optionally covariates, containing the units for the X and Y variables respectively, as well as the units for the different covariates
-@slot data Object of class \code{"data.frame"}: dataframe containing the data, with columns for id (name.group), predictors (name.predictors), response (name.response), and covariates if present in the dataset (name.covariates). A column "index" contains the subject index (used to map the subject id). The column names, except for the additional column index, correspond to the names in the original dataset.
-@slot N Object of class \code{"numeric"}: number of subjects
-@slot yorig Object of class \code{"numeric"}: response data, on the original scale. Used when the error model is exponential
-@slot ocov Object of class \code{"data.frame"}: original covariate data (before transformation in the algorithm)
-@slot ind.gen Object of class \code{"logical"}: indicator for genetic covariates (internal)
-@slot ntot.obs Object of class \code{"numeric"}: total number of observations
-@slot nind.obs Object of class \code{"numeric"}: vector containing the number of observations for each subject}
+\item{\code{name.data}}{Object of class \code{"character"}: name of the dataset}
+
+\item{\code{header}}{Object of class \code{"logical"}: whether the dataset/file contains a header. Defaults to TRUE}
+
+\item{\code{sep}}{Object of class \code{"character"}: the field separator character}
+
+\item{\code{na}}{Object of class \code{"character"}: a character vector of the strings which are to be interpreted as NA values}
+
+\item{\code{messages}}{Object of class \code{"logical"}: if TRUE, the program will display information about the creation of the data object}
+
+\item{\code{automatic}}{Object of class \code{"logical"}: if TRUE, automatic name recognition is on (used at the creation of the object)}
+
+\item{\code{name.group}}{Object of class \code{"character"}: name of the column containing the subject id}
+
+\item{\code{name.predictors}}{Object of class \code{"character"}: name of the column(s) containing the predictors}
+
+\item{\code{name.response}}{Object of class \code{"character"}: name of the column containing the response variable y modelled by predictor(s) x}
+
+\item{\code{name.covariates}}{Object of class \code{"character"}: name of the column(s) containing the covariates, if present (otherwise empty)}
+
+\item{\code{name.X}}{Object of class \code{"character"}: name of the column containing the regression variable to be used on the X axis in the plots}
+
+\item{\code{name.mdv}}{Object of class \code{"character"}: name of the column containing the indicator variable denoting missing data}
+
+\item{\code{name.cens}}{Object of class \code{"character"}: name of the column containing the indicator variable denoting censored data (the value in the name.response column will be taken as the censoring value)}
+
+\item{\code{name.occ}}{Object of class \code{"character"}: name of the column containing the value of the occasion}
+
+\item{\code{name.ytype}}{Object of class \code{"character"}: name of the column containing the response number}
+
+\item{\code{trans.cov}}{Object of class \code{"list"}: the list of transformation applied to the covariates (currently unused, TODO)}
+
+\item{\code{units}}{Object of class \code{"list"}: list with up to three elements, x, y and optionally covariates, containing the units for the X and Y variables respectively, as well as the units for the different covariates}
+
+\item{\code{data}}{Object of class \code{"data.frame"}: dataframe containing the data, with columns for id (name.group), predictors (name.predictors), response (name.response), and covariates if present in the dataset (name.covariates). A column "index" contains the subject index (used to map the subject id). The column names, except for the additional column index, correspond to the names in the original dataset.}
+
+\item{\code{N}}{Object of class \code{"numeric"}: number of subjects}
+
+\item{\code{yorig}}{Object of class \code{"numeric"}: response data, on the original scale. Used when the error model is exponential}
+
+\item{\code{ocov}}{Object of class \code{"data.frame"}: original covariate data (before transformation in the algorithm)}
+
+\item{\code{ind.gen}}{Object of class \code{"logical"}: indicator for genetic covariates (internal)}
+
+\item{\code{ntot.obs}}{Object of class \code{"numeric"}: total number of observations}
+
+\item{\code{nind.obs}}{Object of class \code{"numeric"}: vector containing the number of observations for each subject}
 }}
 
 \section{Objects from the Class}{

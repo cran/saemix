@@ -99,16 +99,17 @@ map.saemix<-function(saemixObject) {
   colnames(map.psi)<-c(saemixObject["model"]["name.modpar"])
   saemixObject["results"]["map.psi"]<-map.psi
   saemixObject["results"]["map.phi"]<-map.phi
+  saemixObject<-compute.eta.map(saemixObject) # compute phi, eta and shrinkage from psi
   return(saemixObject)
 }
 
 compute.eta.map<-function(saemixObject) {
 # Compute individual estimates of the MAP random effects from the MAP estimates of the parameters
 # returns the parameters (psi), newly computed if needs be, the corresponding random effects, and the associated shrinkage
-  if(length(saemixObject["results"]["map.psi"])) {
+  if(length(saemixObject["results"]["map.psi"])==0) {
       saemixObject<-map.saemix(saemixObject)
   }
-  psi<-saemixObject["results"]["map.psi"][,-c(1)]
+  psi<-saemixObject["results"]["map.psi"] # [,-c(1)]
   phi<-transpsi(as.matrix(psi),saemixObject["model"]["transform.par"])
 
 # Computing COV again here (no need to include it in results)  
@@ -121,9 +122,9 @@ compute.eta.map<-function(saemixObject) {
   }
   eta<-phi-COV%*%saemixObject["results"]["MCOV"] 
   shrinkage<-100*(1-apply(eta,2,var)/mydiag(saemixObject["results"]["omega"]))
-  names(shrinkage)<-paste("Sh.",names(shrinkage),".%",sep="")
-  colnames(eta)<-paste("ETA(",colnames(eta),")",sep="")
-  eta<-cbind(id=saemixObject["results"]["map.psi"][,1],eta)
+  names(shrinkage)<-paste("Sh.",saemixObject["model"]["name.modpar"],".%",sep="")
+  colnames(eta)<-paste("eta.",saemixObject["model"]["name.modpar"],sep="")
+#  eta<-cbind(id=saemixObject["results"]["map.psi"][,1],eta)
   
   saemixObject["results"]["map.eta"]<-eta
   saemixObject["results"]["map.shrinkage"]<-shrinkage
@@ -146,13 +147,15 @@ compute.sres<-function(saemixObject) {
 # ECO TODO: maybe here be more clever and use simulations if available (adding some if not enough, truncating if too much ?)  
   ysim<-saemixObject["sim.data"]["datasim"]$ysim
   idsim<-saemixObject["sim.data"]["datasim"]$idsim
-  idy<-saemixObject["data"]["data"][,"index"]
+  idy<-saemixObject["data"]["data"][,saemixObject["data"]["name.group"]]
   yobsall<-saemixObject["data"]["data"][,saemixObject["data"]["name.response"]]
   ypredall<-pd<-npde<-wres<-c()
 #  pde<-c()
   cat("Computing WRES and npde ")
-  for(isuj in 1:saemixObject["data"]["N"]) {
-    if(isuj%%10==1) cat(".")
+  isuj1<-1
+  for(isuj in unique(saemixObject["data"]["data"][,saemixObject["data"]["name.group"]])) {
+    if(isuj1%%10==1) cat(".")
+    isuj1<-isuj1+1
     ysimi<-matrix(ysim[idsim==isuj],ncol=nsim)
 #    ysimi.pred<-ysimi[,1:saemixObject["options"]$nb.simpred]
     yobs<-yobsall[idy==isuj]
@@ -231,6 +234,7 @@ compute.sres<-function(saemixObject) {
 #' 
 #' @keywords internal
 
+# Moved these functions to SaemixOutcome.R (define error models) in Rext
 cutoff<-function(x,seuil=.Machine$double.xmin) {x[x<seuil]<-seuil; return(x)}
 cutoff.max<-function(x) max(x,.Machine$double.xmin)
 cutoff.eps<-function(x) max(x,.Machine$double.eps)

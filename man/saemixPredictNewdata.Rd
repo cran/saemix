@@ -16,7 +16,7 @@ saemixPredictNewdata(
 \arguments{
 \item{saemixObject}{an SaemixObject from a fitted run}
 
-\item{newdata}{a dataframe containing the new data. The dataframe must contain the same information as the original dataset (colunm names, etc...)}
+\item{newdata}{a dataframe containing the new data. The dataframe must contain the same information as the original dataset (column names, etc...)}
 
 \item{type}{one or several of "ipred" (individual predictions using the MAP estimates), "ppred" (population predictions obtained using the population parameters f(E(theta))), "ypred" (mean of the population predictions (E(f(theta)))), "icpred"  (individual predictions using the conditional mean estimates). Defaults to "ppred".}
 

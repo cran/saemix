@@ -1,7 +1,7 @@
 Package: saemix
 Title: Stochastic Approximation Expectation Maximization (SAEM)
         Algorithm
-Version: 3.0
+Version: 3.1
 Authors@R: c(
     person("Emmanuelle", "Comets", role = c("aut", "cre"),
            email = "emmanuelle.comets@inserm.fr"),
@@ -30,7 +30,7 @@ Collate: 'aaa_generics.R' 'SaemixData.R' 'SaemixModel.R' 'SaemixRes.R'
         'func_estimParam.R' 'func_npde.R' 'func_plots.R'
         'func_simulations.R' 'func_stepwise.R' 'main.R' 'main_estep.R'
         'main_initialiseMainAlgo.R' 'main_mstep.R' 'stepwise.R' 'zzz.R'
-Packaged: 2022-02-08 11:23:32 UTC; eco
+Packaged: 2022-08-05 13:05:34 UTC; eco
 Author: Emmanuelle Comets [aut, cre],
   Audrey Lavenu [aut],
   Marc Lavielle [aut],
@@ -42,4 +42,4 @@ Author: Emmanuelle Comets [aut, cre],
   Lucie Fayette [ctb]
 Maintainer: Emmanuelle Comets <emmanuelle.comets@inserm.fr>
 Repository: CRAN
-Date/Publication: 2022-02-08 15:30:05 UTC
+Date/Publication: 2022-08-05 15:00:08 UTC

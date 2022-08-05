@@ -99,11 +99,13 @@ saemix.options<-list(algorithm=c(1,0,0),seed=632545,save=FALSE,save.graphs=FALSE
 displayProgress=FALSE)
 
 # Not run (strict time constraints for CRAN)
-# saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+\donttest{
+saemix.fit<-saemix(saemix.model,saemix.data,saemix.options)
+psi(saemix.fit)
+phi(saemix.fit)
+eta(saemix.fit,type="mean")
+}
 
-# psi(saemix.fit)
-# phi(saemix.fit)
-# eta(saemix.fit,type="mean")
 }
 \references{
 E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,
