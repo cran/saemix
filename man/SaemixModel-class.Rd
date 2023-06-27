@@ -21,6 +21,7 @@ An object of the SaemixModel class can be created by using the function \code{\l
 \item{\code{model}:}{Object of class \code{"function"}: name of the function used to get predictions from the model (see the User Guide and the online examples for the format and what this function should return).}
 \item{\code{description}:}{Object of class \code{"character"}: an optional text description of the model}
 \item{\code{psi0}:}{Object of class \code{"matrix"}: a matrix with named columns containing the initial estimates for the parameters in the model (first line) and for the covariate effects (second and subsequent lines, optional). The number of columns should be equal to the number of parameters in the model.}
+\item{\code{simulate.function}:}{Object of class \code{"function"}: for non-Gaussian data models, name of the function used to simulate from the model.}
 \item{\code{transform.par}:}{Object of class \code{"numeric"}: vector giving the distribution for each model parameter (0: normal, 1: log-normal, 2: logit, 3: probit). Its length should be equal to the number of parameters in the model.}
 \item{\code{fixed.estim}:}{Object of class \code{"numeric"}: for each parameter, 0 if the parameter is fixed and 1 if it should be estimated. Defaults to a vector of 1 (all parameters are estimated). Its length should be equal to the number of parameters in the model.}
 \item{\code{error.model}:}{Object of class \code{"character"}: name of the error model. Valid choices are "constant" (default), "proportional" and "combined" (see equations in User Guide, except for combined which was changed to y = f + sqrt(a^2+b^2*f^2)*e )}
@@ -49,6 +50,66 @@ Additional elements are added to the model object after a call to \code{saemix} 
 
 showClass("SaemixModel")
 
+# Model function for continuous data 
+## structural model: a one-compartment model with oral absorption
+model1cpt<-function(psi,id,xidep) { 
+	  dose<-xidep[,1]
+	  tim<-xidep[,2]  
+	  ka<-psi[id,1]
+	  V<-psi[id,2]
+	  CL<-psi[id,3]
+	  k<-CL/V
+	  ypred<-dose*ka/(V*(ka-k))*(exp(-k*tim)-exp(-ka*tim))
+	  return(ypred)
+}
+
+# Corresponding SaemixModel, assuming starting parameters ka=1, V=20, CL=0.5
+# and log-normal distributions for the parameters
+model1 <-saemixModel(model=model1cpt,
+  description="One-compartment model with first-order absorption", 
+  psi0=matrix(c(1,20,0.5),ncol=3, byrow=TRUE,
+  dimnames=list(NULL, c("ka","V","CL"))),transform.par=c(1,1,1))
+
+# Model function for discrete data
+## logistic regression for the probability of the observed outcome
+binary.model<-function(psi,id,xidep) {
+  tim<-xidep[,1]
+  y<-xidep[,2]
+  inter<-psi[id,1]
+  slope<-psi[id,2]
+  logit<-inter+slope*tim
+  pevent<-exp(logit)/(1+exp(logit))
+  pobs = (y==0)*(1-pevent)+(y==1)*pevent
+  logpdf <- log(pobs)
+  return(logpdf)
+}
+
+## Corresponding SaemixModel, assuming starting parameters inter=-5, slope=-1
+# and normal distributions for both parameters
+# note that the modeltype argument is set to likelihood
+saemix.model<-saemixModel(model=binary.model,description="Binary model",
+     modeltype="likelihood",
+     psi0=matrix(c(-5,-.1,0,0),ncol=2,byrow=TRUE,dimnames=list(NULL,c("inter","slope"))),
+     transform.par=c(0,0))
+     
+## saemix cannot infer the distribution of the outcome directly from the model
+## Here we therefore define a simulation function, needed for diagnostics
+### Note the similarity and differences with the model function
+simulBinary<-function(psi,id,xidep) {
+    tim<-xidep[,1]
+    y<-xidep[,2]
+    inter<-psi[id,1]
+    slope<-psi[id,2]
+    logit<-inter+slope*tim
+    pevent<-1/(1+exp(-logit))
+    ysim<-rbinom(length(tim),size=1, prob=pevent)
+    return(ysim)
+    }
+
+saemix.model<-saemixModel(model=binary.model,description="Binary model",
+     modeltype="likelihood", simulate.function=simulBinary,
+     psi0=matrix(c(-5,-.1,0,0),ncol=2,byrow=TRUE,dimnames=list(NULL,c("inter","slope"))),
+     transform.par=c(0,0))
 }
 \references{
 E Comets, A Lavenu, M Lavielle M (2017). Parameter estimation in nonlinear mixed effect models using saemix,

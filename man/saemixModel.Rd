@@ -19,6 +19,7 @@ saemixModel(
   omega.init = matrix(nrow = 0, ncol = 0),
   error.init = numeric(),
   name.modpar = character(),
+  simulate.function = NULL,
   verbose = TRUE
 )
 }
@@ -74,6 +75,14 @@ model}
 
 \item{name.modpar}{names of the model parameters, if they are not given as
 the column names (or names) of psi0}
+
+\item{simulate.function}{for non-Gaussian data models, defined as modeltype='likelihood',
+the name of the function used to simulate from the structural model. The
+function should have the same header as the model function, and should return
+a vector of simulated values given a matrix of individual parameters,
+a vector of indices specifying which records belong to a given individual,
+and a matrix of dependent variables (see example in the documentation, section
+discrete data examples)}
 
 \item{verbose}{a boolean, controlling whether information about the created should be printed out. Defaults to TRUE}
 }

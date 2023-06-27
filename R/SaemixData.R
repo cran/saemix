@@ -854,7 +854,7 @@ setMethod("print","SaemixData",
 #    if(length(x@data)>0) print(x@data)
       }
       xdat<-x@data
-      if(length(x@ocov)>0) xdat[,x@name.covariates]<-x@ocov
+      if(length(x@ocov)>0) try(xdat[,x@name.covariates]<-x@ocov)
       if(nlines==(-1)) {
         cat("Data:\n")
         print(xdat)
@@ -890,7 +890,7 @@ setMethod("show","SaemixData",
       for(icov in 1:ncov) {
       if(is.factor(object@ocov[,icov])) cat("      reference class for covariate",object@name.covariates[icov],": ",levels(object@ocov[,icov])[1],"\n")
       }
-      if(length(object@data)>0) object@data[,object@name.covariates]<-object@ocov
+      if(length(object@data)>0) try(object@data[,object@name.covariates]<-object@ocov)
       }
     }
     if(length(object@data)>0) {
@@ -929,7 +929,7 @@ setMethod("showall",signature="SaemixData",
       for(icov in 1:ncov) {
       if(is.factor(object@ocov[,icov])) cat("      reference class for covariate",object@name.covariates[icov],": ",levels(object@ocov[,icov])[1],"\n")
       }
-      if(length(object@data)>0) object@data[,object@name.covariates]<-object@ocov
+      if(length(object@data)>0) try(object@data[,object@name.covariates]<-object@ocov)
       }
     }
     cat("Dataset characteristics:\n")
@@ -1033,10 +1033,12 @@ setMethod("summary","SaemixData",
     res<-list(N=object@N,nobs=list(ntot=object@ntot.obs,nind=object@nind.obs), id=object@data[,object@name.group],x=object@data[,object@name.predictors,drop=FALSE], y=object@data[,object@name.response])
     if(length(object@name.covariates)>0) {
       res$covariates<-object@ocov
-      ucov<-cbind(object@data[,object@name.group],object@ocov)
-      colnames(ucov)[1]<-object@name.group
-			ucov<-ucov[match(unique(object@data$index),object@data$index),]
-      res$ind.covariates<-ucov
+      if(dim(object@data)[1]==dim(object@ocov)[1]) {
+        ucov<-cbind(object@data[,object@name.group],object@ocov)
+        colnames(ucov)[1]<-object@name.group
+        ucov<-ucov[match(unique(object@data$index),object@data$index),]
+        res$ind.covariates<-ucov
+      }
     }
     invisible(res)
  }
@@ -1064,6 +1066,7 @@ saemix.data.setoptions<-function(saemix.data) {
     limit=TRUE,					# limit to nmax plots
     sample=FALSE,				# if FALSE=use the (nmax) first subjects; TRUE=randomly sample (nmax) subjects from the dataset
     interactive=FALSE,  # whether the program should prompt the user for the number of subjects to plot in the individual plots if this number exceeds nmax
+    which.cov="none",  # whether to split over covariates
 # Layout and plots options
     mfrow=c(),				# page layout (if empty, defaults to the default layout for each graph type)
     main=" ",				# title

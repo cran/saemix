@@ -6,17 +6,16 @@
 \usage{
 simulateDiscreteSaemix(
   object,
-  simulate.function,
   nsim,
   seed,
-  uncertainty = FALSE
+  uncertainty = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
-\item{object}{an saemixObject object returned by the \code{\link{saemix}} function}
-
-\item{simulate.function}{a function with the same structure as the model functions (arguments
-(psi, id, xidep)) which returns simulated responses when given a set of individual parameters (psi)
+\item{object}{an saemixObject object returned by the \code{\link{saemix}} function.
+The model must contain a slot simulate.function, containing a function with the same structure as the model functions
+(arguments (psi, id, xidep)) which returns simulated responses when given a set of individual parameters (psi)
 and the corresponding predictors (xidep)}
 
 \item{nsim}{Number of simulations to perform. Defaults to the nb.simpred
@@ -25,6 +24,8 @@ element in options}
 \item{seed}{if non-null, seed used to initiate the random number generator (defaults to NULL)}
 
 \item{uncertainty}{Uses uncertainty (currently not implemented). Defaults to FALSE}
+
+\item{verbose}{if TRUE, prints messages (defaults to FALSE)}
 }
 \description{
 This function is used to simulate from discrete response models.

@@ -98,6 +98,7 @@ setMethod(
   signature="SaemixObject",
   definition= function (.Object, data, model, options=list()){
 #    cat ("--- initialising SaemixObject --- \n")
+    if(is.null(options$verbose) || (is.logical(options$verbose) & !(options$verbose))) verbose<-FALSE else verbose<-options$verbose
     ind.exp<-which(model["error.model"]=='exponential')
     if(length(ind.exp)>0) {
       y<-yobs<-data["data"][,data["name.response"]]
@@ -108,14 +109,22 @@ setMethod(
     .Object@data<-data
 # Adjusting number of covariates
     if(dim(model@covariate.model)[1]>length(data@name.covariates)) {
-      cat("The number of covariates in model (",dim(model@covariate.model)[1],") is larger than the number of covariates in the dataset (",length(data@name.covariates),"), keeping only the first",length(data@name.covariates),":",data@name.covariates,".\n")
+      message("The number of covariates in model (",dim(model@covariate.model)[1],") is larger than the number of covariates in the dataset (",length(data@name.covariates),"), keeping only the first",length(data@name.covariates),":",data@name.covariates,".\n")
       model@covariate.model<-model@covariate.model[1:length(data@name.covariates),]
     }
     if(dim(model@covariate.model)[1]<length(data@name.covariates) & dim(model@covariate.model)[1]>0) {
-    	cat("The number of covariates in model (",dim(model@covariate.model)[1],") is smaller than the number of covariates in the dataset (",length(data@name.covariates),"), assuming no covariate-parameter relationship for the remaining covariates; please check covariates:",data@name.covariates,".\n")
-    	l1<-rep(0,dim(model@covariate.model)[2])
-    	n1<-length(data@name.covariates)-dim(model@covariate.model)[1]
-    	model@covariate.model<-rbind(model@covariate.model, matrix(rep(l1,n1),nrow=n1))
+    	if(verbose) cat("The number of covariates in model (",dim(model@covariate.model)[1],") is smaller than the number of covariates in the dataset (",length(data@name.covariates),"), assuming no covariate-parameter relationship for the remaining covariates; please check covariates:",data@name.covariates,".\n")
+      if(is.null(rownames(model@covariate.model))) {
+        l1<-rep(0,dim(model@covariate.model)[2])
+        n1<-length(data@name.covariates)-dim(model@covariate.model)[1]
+        model@covariate.model<-rbind(model@covariate.model, matrix(rep(l1,n1),nrow=n1))
+      } else {
+        covmodel<-matrix(data=0, nrow=length(data@name.covariates), ncol=model@nb.parameters)
+        for(icov in 1:length(data@name.covariates)) {
+          imod <- grep(data@name.covariates[icov], rownames(model@covariate.model))
+          if(length(imod)>0) covmodel[icov]<-model@covariate.model[imod]
+        }
+      }
     }
 # setting the names of the fixed effects
     if(dim(model@covariate.model)[1]>0) {
@@ -147,7 +156,7 @@ setMethod(
       	xdat<-subset(.Object@data@data,is.na(get(icov)))
       	if(dim(xdat)[1]>0) {
       		imis<-unique(xdat[,.Object@data@name.group])
-      		cat("Missing values for covariate",as.character(icov),"for which a parameter-covariate relationship is estimated: removing subject(s)",imis,"from the dataset.\n")
+      		if(verbose) cat("Missing values for covariate",as.character(icov),"for which a parameter-covariate relationship is estimated: removing subject(s)",imis,"from the dataset.\n")
       	}
       	.Object@data<-subset(.Object@data,!is.na(get(icov)))
       }
@@ -158,7 +167,7 @@ setMethod(
       for(i in names(options)) opt[i]<-options[i]
       while(length(options["nbiter.mcmc"][[1]])<4) options["nbiter.mcmc"][[1]]<-c(options["nbiter.mcmc"][[1]],0) # nb of kernels now 4, complete if shorter
       if(!opt$fix.seed) {
-        rm(.Random.seed)
+        suppressWarnings(rm(.Random.seed))
         runif(1)
         opt$seed<-.Random.seed[5]
       }
@@ -174,7 +183,7 @@ setMethod(
         opt$nbiter.sa<-opt$nbiter.saemix[1]
       }
       if(!is.null(options$fix.seed) && !(options$fix.seed)) {
-        rm(.Random.seed)
+        suppressWarnings(rm(.Random.seed))
         runif(1)
         opt$seed<-.Random.seed[5]
       }
@@ -420,15 +429,15 @@ setMethod("summary","SaemixObject",
     }
 #    browser()
     if(length(object@results@se.fixed)==0) {
-       if(object@model@modeltype=="structural") {
+      if(length(grep("structural",object@model["modeltype"]))>0) {
       tab<-data.frame(c(object@results@name.fixed, object@results@name.sigma[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]))
         }else{
           tab<-data.frame(c(object@results@name.fixed), c(object@results@fixed.effects))
         }
       colnames(tab)<-c("Parameter","Estimate")
     } else {
-       if(object@model@modeltype=="structural") {
-      tab<-data.frame(c(object@results@name.fixed, object@results@name.sigma[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]),c(object@results@se.fixed,object@results@se.respar[object@results@indx.res]), stringsAsFactors=FALSE)
+      if(length(grep("structural",object@model["modeltype"]))>0) {
+        tab<-data.frame(c(object@results@name.fixed, object@results@name.sigma[object@results@indx.res]), c(object@results@fixed.effects,object@results@respar[object@results@indx.res]),c(object@results@se.fixed,object@results@se.respar[object@results@indx.res]), stringsAsFactors=FALSE)
         }else{
             tab<-data.frame(c(object@results@name.fixed), c(object@results@fixed.effects),c(object@results@se.fixed), stringsAsFactors=FALSE)
         }
@@ -437,7 +446,7 @@ setMethod("summary","SaemixObject",
       if(length(object@results@indx.cov)>0) {
       wstat<-as.double(tab[,2])/as.double(tab[,3])
       pval<-rep("-",length(wstat))
-      pval[object@results@indx.cov]<-1-normcdf(abs(wstat[object@results@indx.cov]))
+      pval[object@results@indx.cov]<-2*(1-normcdf(abs(wstat[object@results@indx.cov])))
       tab<-cbind(tab,"p-value"=pval,stringsAsFactors=FALSE)
       }
     }
@@ -821,6 +830,12 @@ saemix.predict<-function(object, type=c("ipred", "ypred", "ppred", "icpred")) {
   saemix.res["ppred"]<-unname(ppred)
   if(length(saemix.res["predictions"])==0)
     saemix.res["predictions"]<-data.frame(ppred=ppred) # create dataframe for predictions if not yet available
+  
+  # Population predictions as E(f(theta))
+  if("ypred" %in% type) {
+      x<-compute.sres(object)
+      saemix.res["ypred"]<-x["results"]["ypred"]
+  }
   
   # Compute predictions and residuals
   if(length(intersect(c("ipred","icpred"),type))>0) {
@@ -1526,8 +1541,24 @@ replaceData.saemixObject<-function(saemixObject, newdata) {
   saemix.newdata<-saemixData(name.data=tempname, name.group=orig.data["name.group"], name.response =orig.data["name.response"], name.predictors=orig.data["name.predictors"], name.covariates=rownames(saemixObject["model"]["covariate.model"]), units=orig.data["units"], name.X=orig.data["name.X"],verbose=FALSE, sep=";")
   if(iflag==1) saemix.newdata["data"][,orig.data["name.response"]]<-NA
   
+  id<-saemix.newdata["data"][,saemix.newdata["name.group"]]
+  if(length(saemix.newdata["name.covariates"])==0) tab<-data.frame(id=id) else
+    tab<-data.frame(id=id,saemix.newdata["data"][, saemix.newdata["name.covariates",drop=FALSE]])
+  temp2<-unique(tab)
+  temp<-tab[!duplicated(id),,drop=FALSE]
+  #temp<-temp[order(temp[,1]),]
+  if(length(saemix.newdata["name.covariates"])>0) {
+    Mcovariates<-data.frame(id=rep(1,saemix.newdata@N),temp[,2:dim(temp)[2]])} else {
+      Mcovariates<-data.frame(id=rep(1,saemix.newdata@N))
+    }
+  j.cov<-which(rowSums(saemixObject["model"]["betaest.model"])>0)
+  Mcovariates<-Mcovariates[,j.cov,drop=FALSE] # eliminate all the unused covariates
+  for(icol in dim(Mcovariates)[2])
+    if(is.factor(Mcovariates[,icol])) Mcovariates[,icol]<-as.numeric(Mcovariates[,icol])-1
+  
   saemix.newObj<-saemixObject
   saemix.newObj["data"]<-saemix.newdata
+  saemix.newObj["model"]["Mcovariates"] <-Mcovariates
   saemix.newObj["results"]["cond.mean.phi"] <-matrix(nrow=0,ncol=0)
   saemix.newObj["results"]["cond.mean.psi"] <-matrix(nrow=0,ncol=0)
   saemix.newObj["results"]["cond.var.phi"] <-matrix(nrow=0,ncol=0)
@@ -1651,14 +1682,14 @@ createSaemixObject.initial<-function(model,data,control=list()) {
   Uargs<-xinit$Uargs
   varList<-xinit$varList
   
-  if(saemix.model["modeltype"]=="structural"){
-    xres1<-new(Class="SaemixRes",modeltype="structural",status="initial",
+  if(length(grep("structural",saemix.model["modeltype"]))>0) {
+    xres1<-new(Class="SaemixRes",modeltype=saemix.model["modeltype"],status="initial",
            name.fixed=saemix.model["name.fixed"], name.random=saemix.model["name.random"],name.sigma=saemix.model["name.sigma"],
              fixed.effects=saemix.model@psi0[saemix.model@betaest.model==1],
              fixed.psi=xinit$fixedpsi.ini,
              betaC=xinit$betas[xinit$Uargs$indx.betaC],betas=xinit$betas,
              omega=varList$omega,respar=varList$pres,MCOV=varList$MCOV)
-  } else{
+  } else {
     xres1<-new(Class="SaemixRes",modeltype=saemix.model["modeltype"],status="initial",
            name.fixed=saemix.model["name.fixed"], name.random=saemix.model["name.random"],name.sigma=saemix.model["name.sigma"],
            fixed.effects=saemix.model@psi0[saemix.model@betaest.model==1],

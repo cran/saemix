@@ -38,8 +38,19 @@ count.poisson<-function(psi,id,xidep) {
   logp <- -lambda + y*log(lambda) - log(factorial(y))
   return(logp)
 }
+countsimulate.poisson<-function(psi, id, xidep) {
+   time<-xidep[,1]
+   y<-xidep[,2]
+   ymax<-max(y)
+   intercept<-psi[id,1]
+   slope<-psi[id,2]
+   lambda<- exp(intercept + slope*time)
+   y<-rpois(length(time), lambda=lambda)
+   y[y>ymax]<-ymax+1 # truncate to maximum observed value to avoid simulating aberrant values
+   return(y)
+}
 # Gender effect on intercept and slope
-rapimod.poisson<-saemixModel(model=count.poisson,
+rapimod.poisson<-saemixModel(model=count.poisson, simulate.function=countsimulate.poisson,
    description="Count model Poisson",modeltype="likelihood",   
    psi0=matrix(c(log(5),0.01),ncol=2,byrow=TRUE,dimnames=list(NULL, c("intercept","slope"))), 
    transform.par=c(0,0), omega.init=diag(c(0.5, 0.5)),
@@ -61,7 +72,21 @@ count.poissonzip<-function(psi,id,xidep) {
   logp[y==0]<-logp0[y==0]
   return(logp)
 }
-rapimod.zip<-saemixModel(model=count.poissonzip,
+countsimulate.poissonzip<-function(psi, id, xidep) {
+  time<-xidep[,1]
+  y<-xidep[,2]
+  ymax<-max(y)
+  intercept<-psi[id,1]
+  slope<-psi[id,2]
+  p0<-psi[id,3] # Probability of zero's
+  lambda<- exp(intercept + slope*time)
+  prob0<-rbinom(length(time), size=1, prob=p0)
+  y<-rpois(length(time), lambda=lambda)
+  y[prob0==1]<-0
+  y[y>ymax]<-ymax+1 # truncate to maximum observed value to avoid simulating aberrant values
+  return(y)
+}
+rapimod.zip<-saemixModel(model=count.poissonzip, simulate.function=countsimulate.poissonzip,
    description="count model ZIP",modeltype="likelihood",   
    psi0=matrix(c(1.5, 0.01, 0.2),ncol=3,byrow=TRUE,
    dimnames=list(NULL, c("intercept", "slope","p0"))), 
@@ -69,33 +94,10 @@ rapimod.zip<-saemixModel(model=count.poissonzip,
    covariate.model = matrix(c(1,1,0),ncol=3, byrow=TRUE))
 zippoisson.fit<-saemix(rapimod.zip,saemix.data,saemix.options)
 
-# Simulation functions to simulate from the models
-saemix.simulatePoisson<-function(psi, id, xidep) {
-  time<-xidep[,1]
-  y<-xidep[,2]
-  intercept<-psi[id,1]
-  slope<-psi[id,2]
-  lambda<- exp(intercept + slope*time)
-  y<-rpois(length(time), lambda=lambda)
-  return(y)
-}
-saemix.simulatePoissonZIP<-function(psi, id, xidep) {
-  time<-xidep[,1]
-  y<-xidep[,2]
-  intercept<-psi[id,1]
-  slope<-psi[id,2]
-  p0<-psi[id,3] 
-  lambda<- exp(intercept + slope*time)
-  prob0<-rbinom(length(time), size=1, prob=p0)
-  y<-rpois(length(time), lambda=lambda)
-  y[prob0==1]<-0
-  return(y)
-}
-
 # Using simulations to compare the predicted proportion of 0's in the two models
 nsim<-100
-yfit1<-simulateDiscreteSaemix(poisson.fit, saemix.simulatePoisson, nsim=nsim)
-yfit2<-simulateDiscreteSaemix(zippoisson.fit, saemix.simulatePoissonZIP, 100)
+yfit1<-simulateDiscreteSaemix(poisson.fit,  nsim=nsim)
+yfit2<-simulateDiscreteSaemix(zippoisson.fit,  nsim=100)
 {
 nobssim<-length(yfit1@sim.data@datasim$ysim)
 cat("Observed proportion of 0's", 
