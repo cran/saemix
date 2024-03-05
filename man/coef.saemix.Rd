@@ -6,12 +6,12 @@
 \alias{coef}
 \alias{coef,SaemixObject}
 \alias{coef,SaemixObject-method}
-\title{Extract coefficients from a saemix fit}
+\title{Extract coefficients from an saemix fit}
 \usage{
 \method{coef}{SaemixObject}(object, ...)
 }
 \arguments{
-\item{object}{a SaemixObject}
+\item{object}{an SaemixObject object}
 
 \item{...}{further arguments to be passed to or from other methods}
 }
@@ -24,5 +24,5 @@ a list with 3 components:
 }
 }
 \description{
-Extract coefficients from a saemix fit
+Extract coefficients from an saemix fit
 }

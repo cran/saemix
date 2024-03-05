@@ -2,7 +2,7 @@
 % Please edit documentation in R/SaemixData.R
 \name{saemixData}
 \alias{saemixData}
-\title{Function to create a SaemixData object}
+\title{Function to create an SaemixData object}
 \usage{
 saemixData(
   name.data,
@@ -60,10 +60,10 @@ saemixData(
 \item{automatic}{a boolean indicating whether to attempt automatic name recognition when some colum names are missing or wrong (defaults to TRUE)}
 }
 \value{
-A SaemixData object (see \code{\link{saemixData}}).
+An SaemixData object (see \code{\link{saemixData}}).
 }
 \description{
-This function creates a SaemixData object. The only mandatory argument is
+This function creates an SaemixData object. The only mandatory argument is
 the name of the dataset. If the dataset has a header (or named columns), the
 program will attempt to detect which column correspond to ID, predictor(s)
 and response. Warning messages will be printed during the object creation

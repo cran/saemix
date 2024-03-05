@@ -4,7 +4,7 @@
 \alias{replaceData}
 \alias{replaceData.saemixObject}
 \alias{replaceData-methods}
-\title{Replace the data element in a SaemixObject object}
+\title{Replace the data element in an SaemixObject object}
 \usage{
 replaceData.saemixObject(saemixObject, newdata)
 }

@@ -2,12 +2,14 @@
 % Please edit documentation in R/func_simulations.R
 \name{simulateDiscreteSaemix}
 \alias{simulateDiscreteSaemix}
+\alias{simulateTTESaemix}
 \title{Perform simulations under the model for an saemixObject object defined by its log-likelihood}
 \usage{
 simulateDiscreteSaemix(
   object,
   nsim,
   seed,
+  predictions = TRUE,
   uncertainty = FALSE,
   verbose = FALSE
 )
@@ -22,6 +24,9 @@ and the corresponding predictors (xidep)}
 element in options}
 
 \item{seed}{if non-null, seed used to initiate the random number generator (defaults to NULL)}
+
+\item{predictions}{Whether the simulated parameters should be used to
+compute predictions. Defaults to TRUE. If FALSE, only individual parameters are simulated.}
 
 \item{uncertainty}{Uses uncertainty (currently not implemented). Defaults to FALSE}
 

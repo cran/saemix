@@ -6,21 +6,36 @@
 \alias{exploreDataCat}
 \alias{exploreDataCountHist}
 \alias{plotDiscreteData.aux}
+\alias{plotDiscreteDataElement}
 \title{Plot non Gaussian data}
 \usage{
 plotDiscreteData(object, outcome = "continuous", verbose = FALSE, ...)
+
+plotDiscreteDataElement(
+  object,
+  outcome = "categorical",
+  mirror = FALSE,
+  irep = 1,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
-\item{object}{an SaemixData object returned by the \code{\link{saemixData}} function.}
+\item{object}{an SaemixData object returned by the \code{\link{saemixData}} function.
+For plotDiscreteDataElement, an SaemixObject object returned by the \code{\link{saemix}} function}
 
 \item{outcome}{type of outcome (valid types are "TTE", "binary", "categorical", "count")}
 
 \item{verbose}{whether to print messages (defaults to FALSE)}
 
 \item{\dots}{additional arguments, used to pass graphical options (to be implemented, currently not available)}
+
+\item{mirror}{if TRUE, plots a mirror plot of the same type as the data (the object must include simulated data)}
+
+\item{irep}{number of the replication to use in the mirror plot}
 }
 \description{
-This function provides exploration plots for non Gaussian longitudinal data (work in progress)
+This function provides exploration plots for non Gaussian longitudinal data (work in progress, doesn't work yet for RTTE)
 }
 \details{
 This function is a very rough first attempt at automatically creating plots to explore

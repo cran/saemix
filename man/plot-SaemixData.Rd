@@ -14,7 +14,7 @@
 \usage{
 \method{plot}{SaemixData}(x, y, ...)
 
-\method{plot}{SaemixSimData}(x, y, irep = -1, ...)
+\method{plot}{SaemixSimData}(x, y, irep = -1, prediction = FALSE, ...)
 }
 \arguments{
 \item{x}{an SaemixData object or an SaemixSimData object}
@@ -25,8 +25,14 @@
 
 \item{irep}{which replicate datasets to use in the mirror plot (defaults to -1, causing a random simulated dataset to be sampled from the nsim
 simulated datasets)}
+
+\item{prediction}{if TRUE, plot the predictions without residual variability (ypred instead of ysim). Defaults to FALSE.}
 }
 \description{
 This function will plot a longitudinal dataframe contained in an SaemixData object. By default it produces a spaghetti plot, but arguments can be passed on to modify this behaviour.
+}
+\details{
+this function can also be used to visualise the predictions for simulated values of the individual parameters,
+using the ypred element instead of the ysim element normally used here
 }
 \keyword{plot}

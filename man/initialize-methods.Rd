@@ -81,7 +81,7 @@
 \S4method{initialize}{SaemixObject}(.Object, data, model, options = list())
 }
 \arguments{
-\item{.Object}{a SaemixObject, SaemixRes, SaemixData or SaemixModel object to initialise}
+\item{.Object}{an SaemixObject, SaemixRes, SaemixData or SaemixModel object to initialise}
 
 \item{name.data}{name of the dataset (can be a character string giving the name of a file on disk or of a dataset in the R session, or the name of a dataset}
 

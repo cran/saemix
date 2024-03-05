@@ -7,7 +7,7 @@
 \alias{AIC.SaemixObject}
 \alias{BIC.SaemixObject}
 \alias{BIC.covariate}
-\title{Extract likelihood from a saemixObject resulting from a call to saemix}
+\title{Extract likelihood from an SaemixObject resulting from a call to saemix}
 \usage{
 \method{logLik}{SaemixObject}(object, method = c("is", "lin", "gq"), ...)
 

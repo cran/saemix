@@ -36,6 +36,6 @@
 \item{value}{value to replace with}
 }
 \description{
-Access slots of a SaemixData object using the object["slot"] format
+Access slots of an SaemixData object using the object["slot"] format
 }
 \keyword{methods}

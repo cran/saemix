@@ -2,7 +2,7 @@
 % Please edit documentation in R/SaemixModel.R
 \name{saemixModel}
 \alias{saemixModel}
-\title{Function to create a SaemixModel object}
+\title{Function to create an SaemixModel object}
 \usage{
 saemixModel(
   model,
@@ -87,10 +87,10 @@ discrete data examples)}
 \item{verbose}{a boolean, controlling whether information about the created should be printed out. Defaults to TRUE}
 }
 \value{
-A SaemixModel object (see \code{\link{saemixModel}}).
+An SaemixModel object (see \code{\link{saemixModel}}).
 }
 \description{
-This function creates a SaemixModel object. The two mandatory arguments are
+This function creates an SaemixModel object. The two mandatory arguments are
 the name of a R function computing the model in the SAEMIX format (see
 details and examples) and a matrix psi0 giving the initial estimates of the
 fixed parameters in the model, with one row for the population mean

@@ -3,13 +3,16 @@
 \name{simulate.SaemixObject}
 \alias{simulate.SaemixObject}
 \alias{simul.saemix}
+\alias{simulateContinuousSaemix}
+\alias{simulateIndividualParameters}
 \title{Perform simulations under the model for an saemixObject object}
 \usage{
 \method{simulate}{SaemixObject}(
   object,
   nsim,
   seed,
-  predictions = TRUE,
+  predictions,
+  outcome = "continuous",
   res.var = TRUE,
   uncertainty = FALSE,
   ...
@@ -18,13 +21,16 @@
 \arguments{
 \item{object}{an saemixObject object returned by the \code{\link{saemix}} function}
 
-\item{nsim}{Number of simulations to perform. Defaults to the nb.simpred
+\item{nsim}{Number of simulations to perform. Defaults to the nb.sim
 element in options}
 
 \item{seed}{if non-null, seed used to initiate the random number generator (defaults to NULL)}
 
-\item{predictions}{Whether the simulated parameters should be used to
-compute predictions. Defaults to TRUE. If FALSE, only individual parameters are simulated.}
+\item{predictions}{Whether the simulated parameters should be used to compute predictions.
+Defaults to TRUE for continuous data, and to FALSE for non-Gaussian data models.
+If FALSE, only individual parameters are simulated.}
+
+\item{outcome}{the type of outcome (used to specify TTE or RTTE models)}
 
 \item{res.var}{Whether residual variability should be added to the
 predictions. Defaults to TRUE}

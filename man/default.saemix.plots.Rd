@@ -18,20 +18,20 @@ default.saemix.plots(saemixObject, ...)
 \value{
 Depending on the type argument, the following plots are produced:
 \itemize{
-\item{default.saemix.plots}{ by default, the following plots are
+\item default.saemix.plots by default, the following plots are
 produced: a plot of the data, convergence plots, plot of the likelihood by
 importance sampling (if computed), plots of observations versus predictions,
 scatterplots and distribution of residuals, boxplot of the random effects,
-correlations between random effects, distribution of the parameters, VPC}
-\item{basic.gof}{ basic goodness-of-fit plots: convergence plots, plot of
+correlations between random effects, distribution of the parameters, VPC
+\item basic.gof basic goodness-of-fit plots: convergence plots, plot of
 the likelihood by importance sampling (if computed), plots of observations
-versus predictions}
-\item{advanced.gof}{ advanced goodness-of-fit plots:
-scatterplots and distribution of residuals, VPC,...}
-\item{covariate.fits}{
-plots of all estimated parameters versus all covariates in the dataset}
-\item{individual.fits}{ plots of individual predictions (line) overlayed on
-individual observations (dots) for all subjects in the dataset}
+versus predictions
+\item advanced.gof advanced goodness-of-fit plots:
+scatterplots and distribution of residuals, VPC,...
+\item covariate.fits
+plots of all estimated parameters versus all covariates in the dataset
+\item individual.fits plots of individual predictions (line) overlayed on
+individual observations (dots) for all subjects in the dataset
 }
 }
 \description{
