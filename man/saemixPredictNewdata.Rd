@@ -10,7 +10,8 @@ saemixPredictNewdata(
   saemixObject,
   newdata,
   type = c("ipred", "ypred", "ppred", "icpred"),
-  nsamp = 1
+  nsamp = 1,
+  max.iter = NULL
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ saemixPredictNewdata(
 \item{type}{one or several of "ipred" (individual predictions using the MAP estimates), "ppred" (population predictions obtained using the population parameters f(E(theta))), "ypred" (mean of the population predictions (E(f(theta)))), "icpred"  (individual predictions using the conditional mean estimates). Defaults to "ppred".}
 
 \item{nsamp}{an integer, ignored for other types than icpred; if icpred, returns both the mean of the conditional distribution and nsamp samples, with the corresponding predictions. Defaults to 1.}
+
+\item{max.iter}{an integer, ignored for other types than icpred; for icpred, maximum number of iterations to run for the conditional distribution. Defaults to NULL, in which case the maximum number of iterations will be set to the total number of iterations in the population estimation algorithm. Note that a minimum of 50 iterations will be run by the algorithm if max.iter is set to a lower value than that.}
 }
 \value{
 a list with three components (five if type includes "icpred" and nsamp>1)

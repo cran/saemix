@@ -48,7 +48,7 @@ An object of the SaemixData class, representing a longitudinal data structure, u
 
 \item{\code{name.ytype}}{Object of class \code{"character"}: name of the column containing the response number}
 
-\item{\code{trans.cov}}{Object of class \code{"list"}: the list of transformation applied to the covariates (currently unused, TODO)}
+\item{\code{trans.cov}}{Object of class \code{"list"}: the list of transformations leading to the new covariate # note: there could be a covariate class}
 
 \item{\code{units}}{Object of class \code{"list"}: list with up to three elements, x, y and optionally covariates, containing the units for the X and Y variables respectively, as well as the units for the different covariates}
 

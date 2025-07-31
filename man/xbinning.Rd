@@ -31,7 +31,7 @@ population pharmacokinetics of gliclazide. \emph{Pharmaceutical Research},
 23:2036--49, 2006.
 }
 \seealso{
-\code{\link{npde}}, \code{\link{autonpde}}
+\code{\link[npde]{npde}}, \code{\link[npde]{autonpde}}
 }
 \author{
 Emmanuelle Comets \href{mailto:emmanuelle.comets@bichat.inserm.fr}{emmanuelle.comets@bichat.inserm.fr}

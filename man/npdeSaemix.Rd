@@ -13,7 +13,7 @@ npdeSaemix(saemixObject, nsim = 1000)
 it for large datasets)}
 }
 \value{
-An object of class \code{\link{NpdeObject}}
+An object of class \code{\link[npde]{NpdeObject}}
 }
 \description{
 This function uses the npde library to compute normalised prediction distribution errors (npde)
@@ -24,7 +24,7 @@ plot functions from the library npde).
 }
 \details{
 Since version 3.0, the saemix package depends on the npde package, which computes the npd/npde and
-produces graphs. See the documentation for \code{\link{npde}} for details on the computation methods
+produces graphs. See the documentation for \code{\link[npde]{npde}} for details on the computation methods
 See the PDF documentation and the bookdown \url{https://iame-researchcenter.github.io/npde_bookdown/}
 for details on the different plots available.
 }
@@ -81,11 +81,11 @@ with an application to the population pharmacokinetics of gliclazide. Pharmaceut
 PDF documentation for npde 3.0: \url{https://github.com/ecomets/npde30/blob/main/userguide_npde_3.1.pdf}
 }
 \seealso{
-\code{\link{npde.graphs}}, \code{\link{gof.test}}
+\code{\link[npde]{npde.graphs}}, \code{\link[npde]{gof.test}}
 
-\code{\link{NpdeObject}} \code{\link{npde.plot.select}}  \code{\link{autonpde}}
+\code{\link[npde]{NpdeObject}} \code{\link[npde]{npde.plot.select}}  \code{\link[npde]{autonpde}}
 
-\code{\link{npde.plot.scatterplot}} \code{\link{npde.plot.dist}}
+\code{\link[npde]{npde.plot.scatterplot}} \code{\link[npde]{npde.plot.dist}}
 }
 \author{
 Emmanuelle Comets \href{mailto:emmanuelle.comets@bichat.inserm.fr}{emmanuelle.comets@bichat.inserm.fr}

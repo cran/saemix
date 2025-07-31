@@ -1,3 +1,7 @@
+
+#' @include aaa_generics.R
+NULL
+
 ####################################################################################
 ####		Defining class containing data, model and options		####
 ####################################################################################
@@ -844,7 +848,8 @@ saemix.predict<-function(object, type=c("ipred", "ypred", "ppred", "icpred")) {
     if("ipred" %in% type) {
       ipred<-object["model"]["model"](saemix.res["map.psi"],index,xind) # Predictions with MAP
       # Individual weighted residuals
-      if(object@model@modeltype=="structural") {
+      if(length(grep("structural",object@model@modeltype))>0) {
+      # if(object@model@modeltype=="structural") {
         ires<-yobs-ipred
         gpred<-error(ipred,pres,xind$ytype)
         iwres<-(yobs-ipred)/gpred
@@ -859,7 +864,8 @@ saemix.predict<-function(object, type=c("ipred", "ypred", "ppred", "icpred")) {
     if("icpred" %in% type) {
       psiM<-transphi(saemix.res["cond.mean.phi"],object["model"]["transform.par"])
       icond.pred<-object["model"]["model"](psiM,index,xind) # Predictions with Conditional mean
-      if(object@model@modeltype=="structural") {
+      if(length(grep("structural",object@model@modeltype))>0) {
+        # if(object@model@modeltype=="structural") {
         gpred<-error(icond.pred,pres,xind$ytype)
         icwres<-(yobs-icond.pred)/gpred
         saemix.res["icwres"]<-icwres
